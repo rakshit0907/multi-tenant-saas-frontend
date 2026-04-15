@@ -1,0 +1,17 @@
+# Flutter / Dart
+.dart_tool/
+.packages
+build/
+.pub/
+.pub-cache/
+
+# Android / iOS
+android/.gradle/
+android/app/build/
+ios/Pods/
+
+# VS Code
+.vscode/
+
+# Misc
+.DS_Store
