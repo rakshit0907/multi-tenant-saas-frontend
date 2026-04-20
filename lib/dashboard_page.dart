@@ -1,16 +1,60 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
-class DashboardPage extends StatelessWidget {
+class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
 
-  Future<void> logout(BuildContext context) async {
+  @override
+  State<DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends State<DashboardPage> {
+
+  String data = "Loading...";
+
+  @override
+  void initState() {
+    super.initState();
+    fetchProtectedData();
+  }
+
+  Future<void> fetchProtectedData() async {
+    print("FETCHING PROTECTED DATA");
+
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    print("TOKEN: $token");
+
+    final response = await http.get(
+      Uri.parse('http://10.0.2.2:3000/api/protected'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    print("Status: ${response.statusCode}");
+    print("Body: ${response.body}");
+
+    if (response.statusCode == 200) {
+      setState(() {
+        data = response.body;
+      });
+    } else {
+      setState(() {
+        data = "Unauthorized / Failed";
+      });
+    }
+  }
+
+  Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
 
-    if (!context.mounted) return;
+    if (!mounted) return;
 
-    Navigator.pushReplacementNamed(context, '/');
+    Navigator.pushReplacementNamed(context, '/login');
   }
 
   @override
@@ -20,9 +64,16 @@ class DashboardPage extends StatelessWidget {
         title: const Text("Dashboard"),
       ),
       body: Center(
-        child: ElevatedButton(
-          onPressed: () => logout(context),
-          child: const Text("Logout"),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(data),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: logout,
+              child: const Text("Logout"),
+            ),
+          ],
         ),
       ),
     );
