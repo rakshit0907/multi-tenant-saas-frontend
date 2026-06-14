@@ -40,7 +40,7 @@ class LoginPage extends StatelessWidget {
       url,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        "email": "debug@gmail.com",
+        "email": "rakshit@test.com",
         "password": "123456"
       }),
     );

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
-
+import 'dart:convert';
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
 
@@ -38,8 +38,10 @@ class _DashboardPageState extends State<DashboardPage> {
     print("Body: ${response.body}");
 
     if (response.statusCode == 200) {
+      final decoded = jsonDecode(response.body);
+
       setState(() {
-        data = response.body;
+        data = decoded['message'];
       });
     } else {
       setState(() {
@@ -54,7 +56,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
     if (!mounted) return;
 
-    Navigator.pushReplacementNamed(context, '/login');
+    Navigator.pushReplacementNamed(context, '/');
   }
 
   @override
@@ -67,12 +69,14 @@ class _DashboardPageState extends State<DashboardPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(data),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: logout,
-              child: const Text("Logout"),
+            Text(
+              data.contains("message")
+                  ? "Protected API Wprking"
+                  : data,
+              style: const TextStyle(fontSize: 18),    
+
             ),
+          
           ],
         ),
       ),
