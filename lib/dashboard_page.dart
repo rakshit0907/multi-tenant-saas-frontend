@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:jwt_decoder/jwt_decoder.dart';
+import 'models/project.dart';
+import 'services/api_service.dart';
+
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
 
@@ -10,42 +12,43 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
-
-  String data = "Loading...";
+  String userId = "";
+  String tenantId = "";
+  String role = "";
+  List<Project> projects = [];
+  bool loading = true;
 
   @override
   void initState() {
     super.initState();
-    fetchProtectedData();
+    loadUserInfo();
+    loadProjects();
   }
-
-  Future<void> fetchProtectedData() async {
-    print("FETCHING PROTECTED DATA");
-
+  Future<void> loadUserInfo() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
-
-    print("TOKEN: $token");
-
-    final response = await http.get(
-      Uri.parse('http://10.0.2.2:3000/api/protected'),
-      headers: {
-        'Authorization': 'Bearer $token',
-      },
-    );
-
-    print("Status: ${response.statusCode}");
-    print("Body: ${response.body}");
-
-    if (response.statusCode == 200) {
-      final decoded = jsonDecode(response.body);
+    if (token == null) return;
+    final decodedToken = JwtDecoder.decode(token);
+    setState(() {
+      userId = decodedToken['userId'] ?? '';
+      tenantId = decodedToken['tenantId'] ?? '';
+      role = decodedToken['role'] ?? '';
+    });
+  }
+  Future<void> loadProjects() async {
+    try {
+      final data = await ApiService.getProjects();
 
       setState(() {
-        data = decoded['message'];
+        projects =
+            data.map<Project>((e) => Project.fromJson(e)).toList();
+        loading = false;
       });
-    } else {
+    } catch (e) {
+      print(e);
+
       setState(() {
-        data = "Unauthorized / Failed";
+        loading = false;
       });
     }
   }
@@ -53,33 +56,56 @@ class _DashboardPageState extends State<DashboardPage> {
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
-
     if (!mounted) return;
-
-    Navigator.pushReplacementNamed(context, '/');
+    Navigator.pushReplacementNamed(context, '/login');
   }
+
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Dashboard"),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              data.contains("message")
-                  ? "Protected API Wprking"
-                  : data,
-              style: const TextStyle(fontSize: 18),    
-
-            ),
-          
-          ],
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      title: const Text('Projects'),
+      actions: [
+        IconButton(
+          onPressed: logout,
+          icon: const Icon(Icons.logout),
         ),
-      ),
-    );
-  }
+      ],
+    ),
+    body: loading
+        ? const Center(
+            child: CircularProgressIndicator(),
+          )
+        : Column(
+            children: [
+              const SizedBox(height: 20),
+
+              Text("Role: $role"),
+              Text("Tenant: $tenantId"),
+
+              const Divider(),
+
+              Expanded(
+                child: ListView.builder(
+                  itemCount: projects.length,
+                  itemBuilder: (context, index) {
+                    final project = projects[index];
+
+                    return Card(
+                      child: ListTile(
+                        title: Text(project.name),
+                        subtitle: Text(project.id),
+                        onTap: () {
+                          print(project.id);
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+  );
+}
 }

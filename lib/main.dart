@@ -30,11 +30,13 @@ class MyApp extends StatelessWidget {
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
-
   Future<void> login(BuildContext context) async {
+  try {
     print("LOGIN BUTTON CLICKED");
 
     final url = Uri.parse('http://10.0.2.2:3000/auth/login');
+
+    print("CALLING API...");
 
     final response = await http.post(
       url,
@@ -45,23 +47,33 @@ class LoginPage extends StatelessWidget {
       }),
     );
 
-    print("Status Code: ${response.statusCode}");
-    print("Response Body: ${response.body}");
+    print("STATUS CODE: ${response.statusCode}");
+    print("BODY: ${response.body}");
 
     final data = jsonDecode(response.body);
 
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      print("LOGIN SUCCESS FLOW");
+    if (response.statusCode == 200 ||
+        response.statusCode == 201) {
+
+      print("LOGIN SUCCESS");
 
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('token', data['token']);
 
-      // ✅ Navigate properly
-      Navigator.pushReplacementNamed(context, '/dashboard');
-    } else {
-      print("Login failed: ${data['message']}");
+      await prefs.setString(
+        'token',
+        data['token'],
+      );
+
+      Navigator.pushReplacementNamed(
+        context,
+        '/dashboard',
+      );
     }
+  } catch (e) {
+    print("LOGIN ERROR:");
+    print(e);
   }
+}
 
   @override
   Widget build(BuildContext context) {
