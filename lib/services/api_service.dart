@@ -19,6 +19,22 @@ class ApiService {
     throw Exception('Failed to toggle task');
   }
 }
+  static Future<void> deleteTask(String taskId) async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('token');
+
+  final response = await http.delete(
+    Uri.parse('$baseUrl/tasks/$taskId'),
+    headers: {
+      'Authorization': 'Bearer $token',
+    },
+  );
+
+  if (response.statusCode != 200 &&
+      response.statusCode != 204) {
+    throw Exception('Failed to delete task');
+  }
+}
   static Future<List<dynamic>> getProjects() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');

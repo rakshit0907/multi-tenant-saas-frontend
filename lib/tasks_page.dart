@@ -32,6 +32,19 @@ class _TasksPageState extends State<TasksPage> {
     print(e);
   }
 }
+  Future<void> deleteTask(String taskId) async {
+  try {
+    await ApiService.deleteTask(taskId);
+
+    setState(() {
+      loading = true;
+    });
+
+    await loadTasks();
+  } catch (e) {
+    print(e);
+  }
+}
   final TextEditingController titleController =
       TextEditingController();
 
@@ -118,16 +131,27 @@ class _TasksPageState extends State<TasksPage> {
                       child: ListTile(
                         title: Text(task.title),
                         subtitle: Text(task.id),
-                        trailing: IconButton(
-                          icon: Icon(
-                            task.completed
-                                ? Icons.check_circle
-                                : Icons.circle_outlined,
-                              ),
-                              onPressed: () {
-                                toggleTask(task.id);
-                              },
-                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: Icon(
+                                task.completed
+                                    ? Icons.check_circle
+                                    : Icons.circle_outlined,
+                               ),
+                               onPressed: () {
+                                 toggleTask(task.id);
+                               },
+                             ),
+                             IconButton(
+                               icon: const Icon(Icons.delete),
+                               onPressed: () {
+                                 deleteTask(task.id);
+                             },
+                            ),
+                           ],
+                          ),
                       ),
                     );
                   },
