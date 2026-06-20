@@ -19,6 +19,28 @@ class ApiService {
     throw Exception('Failed to toggle task');
   }
 }
+  static Future<void> createProject(
+  String name,
+) async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('token');
+
+  final response = await http.post(
+    Uri.parse('$baseUrl/projects'),
+    headers: {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json',
+    },
+    body: jsonEncode({
+      'name': name,
+    }),
+  );
+
+  if (response.statusCode != 201 &&
+      response.statusCode != 200) {
+    throw Exception('Failed to create project');
+  }
+}
   static Future<void> deleteTask(String taskId) async {
   final prefs = await SharedPreferences.getInstance();
   final token = prefs.getString('token');
