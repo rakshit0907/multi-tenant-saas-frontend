@@ -17,7 +17,27 @@ class _DashboardPageState extends State<DashboardPage> {
   String role = "";
   List<Project> projects = [];
   bool loading = true;
+  final TextEditingController projectController =
+    TextEditingController();
+    Future<void> createProject() async {
+  try {
+    await ApiService.createProject(
+      projectController.text,
+    );
 
+    projectController.clear();
+
+    Navigator.pop(context);
+
+    setState(() {
+      loading = true;
+    });
+
+    await loadProjects();
+  } catch (e) {
+    print(e);
+  }
+}
   @override
   void initState() {
     super.initState();
@@ -64,6 +84,44 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
 Widget build(BuildContext context) {
   return Scaffold(
+    floatingActionButton: FloatingActionButton(
+  onPressed: () {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text(
+            "Create Project",
+          ),
+          content: TextField(
+            controller: projectController,
+            decoration:
+                const InputDecoration(
+              hintText: "Project name",
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text(
+                "Cancel",
+              ),
+            ),
+            ElevatedButton(
+              onPressed: createProject,
+              child: const Text(
+                "Create",
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  },
+  child: const Icon(Icons.add),
+),
     appBar: AppBar(
       title: const Text('Projects'),
       actions: [
