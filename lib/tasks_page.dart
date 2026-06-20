@@ -19,7 +19,19 @@ class TasksPage extends StatefulWidget {
 class _TasksPageState extends State<TasksPage> {
   List<Task> tasks = [];
   bool loading = true;
+  Future<void> toggleTask(String taskId) async {
+  try {
+    await ApiService.toggleTask(taskId);
 
+    setState(() {
+      loading = true;
+    });
+
+    await loadTasks();
+  } catch (e) {
+    print(e);
+  }
+}
   final TextEditingController titleController =
       TextEditingController();
 
@@ -106,10 +118,15 @@ class _TasksPageState extends State<TasksPage> {
                       child: ListTile(
                         title: Text(task.title),
                         subtitle: Text(task.id),
-                        trailing: Icon(
-                          task.completed
-                              ? Icons.check_circle
-                              : Icons.circle_outlined,
+                        trailing: IconButton(
+                          icon: Icon(
+                            task.completed
+                                ? Icons.check_circle
+                                : Icons.circle_outlined,
+                              ),
+                              onPressed: () {
+                                toggleTask(task.id);
+                              },
                         ),
                       ),
                     );
