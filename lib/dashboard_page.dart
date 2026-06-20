@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'models/project.dart';
 import 'services/api_service.dart';
-
+import 'tasks_page.dart';
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
 
@@ -97,7 +97,18 @@ Widget build(BuildContext context) {
                         title: Text(project.name),
                         subtitle: Text(project.id),
                         onTap: () {
-                          print(project.id);
+                          print("PROJECT: ${project.name}");
+                          print("ID: ${project.id}");
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => TasksPage(
+                                projectId: project.id,
+                                projectName: project.name,
+
+                              ),
+                            ),
+                          );
                         },
                       ),
                     );

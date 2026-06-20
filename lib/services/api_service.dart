@@ -8,15 +8,65 @@ class ApiService {
   static Future<List<dynamic>> getProjects() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
+
     final response = await http.get(
       Uri.parse('$baseUrl/projects'),
       headers: {
         'Authorization': 'Bearer $token',
       },
     );
+
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     }
+
     throw Exception('Failed to load projects');
   }
+
+  static Future<List<dynamic>> getTasks(
+    String projectId,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    final response = await http.get(
+      Uri.parse(
+        '$baseUrl/tasks/project/$projectId',
+      ),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+
+    throw Exception('Failed to load tasks');
+  }
+  static Future<void> createTask(
+  String projectId,
+  String title,
+) async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('token');
+
+  final response = await http.post(
+    Uri.parse(
+      '$baseUrl/tasks/project/$projectId',
+    ),
+    headers: {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json',
+    },
+    body: jsonEncode({
+      'title': title,
+    }),
+  );
+
+  if (response.statusCode != 201 &&
+      response.statusCode != 200) {
+    throw Exception('Failed to create task');
+  }
+}
 }
