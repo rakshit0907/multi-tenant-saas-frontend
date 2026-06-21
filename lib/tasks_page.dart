@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'models/task.dart';
+import 'models/task_stats.dart';
 import 'services/api_service.dart';
 
 class TasksPage extends StatefulWidget {
@@ -18,33 +19,10 @@ class TasksPage extends StatefulWidget {
 
 class _TasksPageState extends State<TasksPage> {
   List<Task> tasks = [];
+  TaskStats? stats;
+
   bool loading = true;
-  Future<void> toggleTask(String taskId) async {
-  try {
-    await ApiService.toggleTask(taskId);
 
-    setState(() {
-      loading = true;
-    });
-
-    await loadTasks();
-  } catch (e) {
-    print(e);
-  }
-}
-  Future<void> deleteTask(String taskId) async {
-  try {
-    await ApiService.deleteTask(taskId);
-
-    setState(() {
-      loading = true;
-    });
-
-    await loadTasks();
-  } catch (e) {
-    print(e);
-  }
-}
   final TextEditingController titleController =
       TextEditingController();
 
@@ -52,6 +30,34 @@ class _TasksPageState extends State<TasksPage> {
   void initState() {
     super.initState();
     loadTasks();
+  }
+
+  Future<void> toggleTask(String taskId) async {
+    try {
+      await ApiService.toggleTask(taskId);
+
+      setState(() {
+        loading = true;
+      });
+
+      await loadTasks();
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  Future<void> deleteTask(String taskId) async {
+    try {
+      await ApiService.deleteTask(taskId);
+
+      setState(() {
+        loading = true;
+      });
+
+      await loadTasks();
+    } catch (e) {
+      print(e);
+    }
   }
 
   Future<void> createTask() async {
@@ -79,12 +85,25 @@ class _TasksPageState extends State<TasksPage> {
 
   Future<void> loadTasks() async {
     try {
-      final data =
-          await ApiService.getTasks(widget.projectId);
+      final statsData =
+          await ApiService.getTaskStats(
+        widget.projectId,
+      );
+
+      final tasksData =
+          await ApiService.getTasks(
+        widget.projectId,
+      );
 
       setState(() {
-        tasks = data
-            .map<Task>((e) => Task.fromJson(e))
+        stats = TaskStats.fromJson(
+          statsData,
+        );
+
+        tasks = tasksData
+            .map<Task>(
+              (e) => Task.fromJson(e),
+            )
             .toList();
 
         loading = false;
@@ -115,71 +134,126 @@ class _TasksPageState extends State<TasksPage> {
           ? const Center(
               child: CircularProgressIndicator(),
             )
-          : tasks.isEmpty
-              ? const Center(
-                  child: Text(
-                    "No tasks found",
-                    style: TextStyle(fontSize: 18),
+          : Column(
+              children: [
+                Card(
+                  margin:
+                      const EdgeInsets.all(12),
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.all(16),
+                    child: Column(
+                      children: [
+                        Text(
+                          "Total Tasks: ${stats?.total ?? 0}",
+                        ),
+                        Text(
+                          "Completed: ${stats?.completed ?? 0}",
+                        ),
+                        Text(
+                          "Pending: ${stats?.pending ?? 0}",
+                        ),
+                      ],
+                    ),
                   ),
-                )
-              : ListView.builder(
-                  itemCount: tasks.length,
-                  itemBuilder: (context, index) {
-                    final task = tasks[index];
-
-                    return Card(
-                      child: ListTile(
-                        title: Text(task.title),
-                        subtitle: Text(task.id),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: Icon(
-                                task.completed
-                                    ? Icons.check_circle
-                                    : Icons.circle_outlined,
-                               ),
-                               onPressed: () {
-                                 toggleTask(task.id);
-                               },
-                             ),
-                             IconButton(
-                               icon: const Icon(Icons.delete),
-                               onPressed: () {
-                                 deleteTask(task.id);
-                             },
-                            ),
-                           ],
-                          ),
-                      ),
-                    );
-                  },
                 ),
-      floatingActionButton: FloatingActionButton(
+                Expanded(
+                  child: tasks.isEmpty
+                      ? const Center(
+                          child: Text(
+                            "No tasks found",
+                            style: TextStyle(
+                              fontSize: 18,
+                            ),
+                          ),
+                        )
+                      : ListView.builder(
+                          itemCount:
+                              tasks.length,
+                          itemBuilder:
+                              (context, index) {
+                            final task =
+                                tasks[index];
+
+                            return Card(
+                              child: ListTile(
+                                title: Text(
+                                  task.title,
+                                ),
+                                subtitle: Text(
+                                  task.id,
+                                ),
+                                trailing: Row(
+                                  mainAxisSize:
+                                      MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      icon: Icon(
+                                        task.completed
+                                            ? Icons.check_circle
+                                            : Icons.circle_outlined,
+                                      ),
+                                      onPressed:
+                                          () {
+                                        toggleTask(
+                                          task.id,
+                                        );
+                                      },
+                                    ),
+                                    IconButton(
+                                      icon:
+                                          const Icon(
+                                        Icons.delete,
+                                      ),
+                                      onPressed:
+                                          () {
+                                        deleteTask(
+                                          task.id,
+                                        );
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                ),
+              ],
+            ),
+      floatingActionButton:
+          FloatingActionButton(
         child: const Icon(Icons.add),
         onPressed: () {
           showDialog(
             context: context,
             builder: (dialogContext) {
               return AlertDialog(
-                title: const Text("Create Task"),
+                title:
+                    const Text("Create Task"),
                 content: TextField(
-                  controller: titleController,
-                  decoration: const InputDecoration(
-                    hintText: "Task title",
+                  controller:
+                      titleController,
+                  decoration:
+                      const InputDecoration(
+                    hintText:
+                        "Task title",
                   ),
                 ),
                 actions: [
                   TextButton(
                     onPressed: () {
-                      Navigator.pop(dialogContext);
+                      Navigator.pop(
+                        dialogContext,
+                      );
                     },
-                    child: const Text("Cancel"),
+                    child:
+                        const Text("Cancel"),
                   ),
                   ElevatedButton(
                     onPressed: createTask,
-                    child: const Text("Create"),
+                    child:
+                        const Text("Create"),
                   ),
                 ],
               );
