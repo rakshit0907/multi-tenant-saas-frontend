@@ -26,6 +26,11 @@ class _TasksPageState extends State<TasksPage> {
   final TextEditingController titleController =
       TextEditingController();
 
+  final TextEditingController descriptionController =
+    TextEditingController();
+
+  DateTime? selectedDueDate;
+
   @override
   void initState() {
     super.initState();
@@ -59,30 +64,68 @@ class _TasksPageState extends State<TasksPage> {
       print(e);
     }
   }
-
   Future<void> createTask() async {
     try {
       await ApiService.createTask(
         widget.projectId,
         titleController.text,
+        descriptionController.text,
+        selectedDueDate,
       );
-
       titleController.clear();
+      descriptionController.clear();
+      selectedDueDate = null;
 
-      if (!mounted) return;
-
-      Navigator.pop(context);
-
-      setState(() {
-        loading = true;
-      });
-
-      await loadTasks();
-    } catch (e) {
-      print(e);
+      if (!mounted) {
+        Navigator.pop(context);
+        await loadTasks();
+      } catch (e) {
+        print(e);
+      }
     }
   }
+  Future<void> editTask(
+  String taskId,
+  String currentTitle,
+) async {
+  final editController =
+      TextEditingController(
+    text: currentTitle,
+  );
+  showDialog(
+  context: context,
+  builder: (context) {
+    return AlertDialog(
+      title: const Text("Edit Task"),
+      content: TextField(
+        controller: editController,
+      ),
+      actions: [
+  TextButton(
+    onPressed: () {
+      Navigator.pop(context);
+    },
+    child: const Text("Cancel"),
+  ),
+  ElevatedButton(
+  onPressed: () async {
+    await ApiService.updateTask(
+      taskId,
+      editController.text,
+    );
 
+    Navigator.pop(context);
+
+    await loadTasks();
+  },
+  child: const Text("Save"),
+),
+],
+
+    );
+},
+);
+}
   Future<void> loadTasks() async {
     try {
       final statsData =
@@ -121,6 +164,7 @@ class _TasksPageState extends State<TasksPage> {
   @override
   void dispose() {
     titleController.dispose();
+    descriptionController.dispose();
     super.dispose();
   }
 
@@ -198,6 +242,14 @@ class _TasksPageState extends State<TasksPage> {
                                         toggleTask(
                                           task.id,
                                         );
+                                      },
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.edit,
+                                      ),
+                                      onPressed: () {
+                                        editTask(task.id, task.title);
                                       },
                                     ),
                                     IconButton(
