@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'models/project.dart';
 import 'services/api_service.dart';
-import 'tasks_page.dart';
+import 'pages/tasks_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
