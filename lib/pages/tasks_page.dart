@@ -82,20 +82,46 @@ class _TasksPageState extends State<TasksPage> {
           await ApiService.getTasks(
         widget.projectId,
       );
+      List<Task> loadedTasks = tasksData
+         .map<Task>((e) => Task.fromJson(e))
+         .toList();
 
-      setState(() {
-        stats = TaskStats.fromJson(
-          statsData,
-        );
+        loadedTasks.sort((a, b) {
+          const priorityOrder = {
+            'HIGH': 0,
+            'MEDIUM': 1,
+            'LOW': 2,
+          };
 
-        tasks = tasksData
-            .map<Task>(
-              (e) => Task.fromJson(e),
-            )
-            .toList();
+          final priorityCompare =
+              (priorityOrder[a.priority] ?? 3)
+                  .compareTo(priorityOrder[b.priority] ?? 3);
+          if (priorityCompare !=0) {
+            return priorityCompare;
+          }
 
-        loading = false;
-      });
+          if (a.dueDate == null && b.dueDate == null) {
+            return 0;
+          }        
+
+          if (a.dueDate == null) {
+            return 1;
+          }
+
+          if (b.dueDate == null) {
+            return -1;
+          }
+
+          return a.dueDate!.compareTo(b.dueDate!);
+        }); 
+
+        setState(() {
+          stats = TaskStats.fromJson(statsData);
+          tasks = loadedTasks;
+          loading = false;
+        });
+        
+      
     } catch (e) {
       print("TASK ERROR:");
       print(e);
