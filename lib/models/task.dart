@@ -5,6 +5,7 @@ class Task {
 
   final String? description;
   final DateTime? dueDate;
+  final String priority;
 
   Task({
     required this.id,
@@ -12,6 +13,7 @@ class Task {
     required this.completed,
     this.description,
     this.dueDate,
+    required this.priority,
   });
 
   factory Task.fromJson(Map<String, dynamic> json) {
@@ -25,6 +27,7 @@ class Task {
       dueDate: json['dueDate'] != null
           ? DateTime.parse(json['dueDate'])
           : null,
+      priority: json['priority'] ??  'MEDIUM',
     );
   }
 }

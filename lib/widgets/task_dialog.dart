@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-
+enum TaskPriority {
+  LOW, MEDIUM, HIGH,
+}
 class TaskDialog extends StatefulWidget {
   final String title;
   final String initialTitle;
@@ -11,6 +13,7 @@ class TaskDialog extends StatefulWidget {
     String title,
     String description,
     DateTime? dueDate,
+    String priority,
   ) onSave;
 
   const TaskDialog({
@@ -32,6 +35,7 @@ class _TaskDialogState extends State<TaskDialog> {
   late TextEditingController descriptionController;
 
   DateTime? dueDate;
+  TaskPriority selectedPriority = TaskPriority.MEDIUM;
 
   @override
   void initState() {
@@ -93,6 +97,29 @@ class _TaskDialogState extends State<TaskDialog> {
               ),
             ),
             const SizedBox(height: 16),
+
+            DropdownButtonFormField<TaskPriority>(
+              value: selectedPriority,
+              decoration: const InputDecoration(
+                labelText: "Priority",
+                border: OutlineInputBorder(),
+              ),
+              items: TaskPriority.values.map((priority) {
+                return DropdownMenuItem(
+                  value: priority,
+                  child: Text(priority.name),
+                );
+              }).toList(),
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() {
+                    selectedPriority = value;
+                  });
+                }
+              },
+            ),
+
+            const SizedBox(height: 16),
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.calendar_today),
@@ -122,6 +149,7 @@ class _TaskDialogState extends State<TaskDialog> {
               titleController.text.trim(),
               descriptionController.text.trim(),
               dueDate,
+              selectedPriority.name,
             );
 
             Navigator.pop(context);

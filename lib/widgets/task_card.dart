@@ -15,7 +15,19 @@ class TaskCard extends StatelessWidget {
     required this.onEdit,
     required this.onDelete,
   });
-
+  
+  Color getPriorityColor() {
+  switch (task.priority) {
+    case 'HIGH':
+      return Colors.red;
+    case 'MEDIUM':
+      return Colors.orange;
+    case 'LOW':
+      return Colors.green;
+    default:
+      return Colors.grey;
+  }
+}
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -54,6 +66,21 @@ class TaskCard extends StatelessWidget {
                     const EdgeInsets.only(top: 4),
                 child: Text(task.description!),
               ),
+
+              const SizedBox(height: 6),
+
+              Chip(
+                label: Text(
+                  task.priority,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    ),
+                 ),
+                 backgroundColor: getPriorityColor(),
+                 materialTapTargetSize:
+                     MaterialTapTargetSize.shrinkWrap,
+                ),
 
             if (task.dueDate != null)
               Padding(

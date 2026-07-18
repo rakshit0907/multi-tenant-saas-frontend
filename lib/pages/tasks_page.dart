@@ -69,72 +69,8 @@ class _TasksPageState extends State<TasksPage> {
       print(e);
     }
   }
-  Future<void> createTask() async {
-    try {
-      await ApiService.createTask(
-        widget.projectId,
-        titleController.text,
-        descriptionController.text,
-        selectedDueDate,
-      );
-      titleController.clear();
-      descriptionController.clear();
-      selectedDueDate = null;
-
-      if (!mounted) return;
-
-        Navigator.pop(context);
-
-        await loadTasks();
-      } catch (e) {
-        print(e);
-      }
-    }
   
-  Future<void> editTask(
-  String taskId,
-  String currentTitle,
-) async {
-  final editController =
-      TextEditingController(
-    text: currentTitle,
-  );
-  showDialog(
-  context: context,
-  builder: (context) {
-    return AlertDialog(
-      title: const Text("Edit Task"),
-      content: TextField(
-        controller: editController,
-      ),
-      actions: [
-  TextButton(
-    onPressed: () {
-      Navigator.pop(context);
-    },
-    child: const Text("Cancel"),
-  ),
-  ElevatedButton(
-  onPressed: () async {
-    await ApiService.updateTask(
-      taskId,
-      editController.text,
-      '',
-      null,
-    );
-
-    Navigator.pop(context);
-
-    await loadTasks();
-  },
-  child: const Text("Save"),
-),
-],
-
-    );
-},
-);
-}
+  
   Future<void> loadTasks() async {
     try {
       final statsData =
@@ -224,12 +160,14 @@ class _TasksPageState extends State<TasksPage> {
               title,
               description,
               dueDate,
+              priority,
             ) async {
               await ApiService.updateTask(
                 task.id,
                 title,
                 description,
                 dueDate,
+                priority,
               );
 
               await loadTasks();
@@ -255,12 +193,14 @@ class _TasksPageState extends State<TasksPage> {
           title,
           description,
           dueDate,
+          priority,
         ) async {
           await ApiService.createTask(
             widget.projectId,
             title,
             description,
             dueDate,
+            priority,
           );
 
           await loadTasks();
