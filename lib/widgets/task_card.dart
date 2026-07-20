@@ -16,8 +16,8 @@ class TaskCard extends StatelessWidget {
     required this.onDelete,
   });
   
-  Color getPriorityColor() {
-  switch (task.priority) {
+  Color getPriorityColor(String? priority) {
+  switch (priority) {
     case 'HIGH':
       return Colors.red;
     case 'MEDIUM':
@@ -28,6 +28,7 @@ class TaskCard extends StatelessWidget {
       return Colors.grey;
   }
 }
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -47,40 +48,50 @@ class TaskCard extends StatelessWidget {
           ),
           onPressed: onToggle,
         ),
-        title: Text(
-          task.title,
-          style: TextStyle(
-            decoration: task.completed
-                ? TextDecoration.lineThrough
-                : null,
-          ),
+        title: Row(
+  children: [
+    Expanded(
+      child: Text(
+        task.title,
+        style: TextStyle(
+          decoration: task.completed
+              ? TextDecoration.lineThrough
+              : null,
+          fontWeight: FontWeight.w600,
         ),
-        subtitle: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.start,
-          children: [
-            if (task.description != null &&
-                task.description!.isNotEmpty)
-              Padding(
-                padding:
-                    const EdgeInsets.only(top: 4),
-                child: Text(task.description!),
-              ),
+        overflow: TextOverflow.ellipsis,
+      ),
+    ),
 
-              const SizedBox(height: 6),
+    const SizedBox(width: 8),
 
-              Chip(
-                label: Text(
-                  task.priority,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    ),
-                 ),
-                 backgroundColor: getPriorityColor(),
-                 materialTapTargetSize:
-                     MaterialTapTargetSize.shrinkWrap,
-                ),
+    Chip(
+      label: Text(
+        task.priority ?? "MEDIUM",
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+      visualDensity: VisualDensity.compact,
+      backgroundColor: getPriorityColor(task.priority),
+      materialTapTargetSize:
+          MaterialTapTargetSize.shrinkWrap,
+    ),
+  ],
+),
+
+subtitle: Column(
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
+    if (task.description != null &&
+        task.description!.isNotEmpty)
+      Padding(
+        padding: const EdgeInsets.only(top: 6),
+        child: Text(task.description!),
+      ),
 
             if (task.dueDate != null)
               Padding(
