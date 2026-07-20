@@ -98,26 +98,6 @@ class _TaskDialogState extends State<TaskDialog> {
             ),
             const SizedBox(height: 16),
 
-            DropdownButtonFormField<TaskPriority>(
-              value: selectedPriority,
-              decoration: const InputDecoration(
-                labelText: "Priority",
-                border: OutlineInputBorder(),
-              ),
-              items: TaskPriority.values.map((priority) {
-                return DropdownMenuItem(
-                  value: priority,
-                  child: Text(priority.name),
-                );
-              }).toList(),
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() {
-                    selectedPriority = value;
-                  });
-                }
-              },
-            ),
 
             const SizedBox(height: 16),
             ListTile(

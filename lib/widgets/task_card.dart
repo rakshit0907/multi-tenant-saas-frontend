@@ -15,19 +15,19 @@ class TaskCard extends StatelessWidget {
     required this.onEdit,
     required this.onDelete,
   });
-  
+
   Color getPriorityColor(String? priority) {
-  switch (priority) {
-    case 'HIGH':
-      return Colors.red;
-    case 'MEDIUM':
-      return Colors.orange;
-    case 'LOW':
-      return Colors.green;
-    default:
-      return Colors.grey;
+    switch (priority) {
+      case 'HIGH':
+        return Colors.red;
+      case 'MEDIUM':
+        return Colors.orange;
+      case 'LOW':
+        return Colors.green;
+      default:
+        return Colors.grey;
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -42,61 +42,62 @@ class TaskCard extends StatelessWidget {
             task.completed
                 ? Icons.check_circle
                 : Icons.circle_outlined,
-            color: task.completed
-                ? Colors.green
-                : Colors.grey,
+            color:
+                task.completed ? Colors.green : Colors.grey,
           ),
           onPressed: onToggle,
         ),
+
         title: Row(
-  children: [
-    Expanded(
-      child: Text(
-        task.title,
-        style: TextStyle(
-          decoration: task.completed
-              ? TextDecoration.lineThrough
-              : null,
-          fontWeight: FontWeight.w600,
+          children: [
+            Expanded(
+              child: Text(
+                task.title,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  decoration: task.completed
+                      ? TextDecoration.lineThrough
+                      : null,
+                ),
+              ),
+            ),
+
+            const SizedBox(width: 8),
+
+            Chip(
+              label: Text(
+                task.priority,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              labelPadding:
+                  const EdgeInsets.symmetric(horizontal: 4),
+              visualDensity: VisualDensity.compact,
+              materialTapTargetSize:
+                  MaterialTapTargetSize.shrinkWrap,
+              backgroundColor:
+                  getPriorityColor(task.priority),
+            ),
+          ],
         ),
-        overflow: TextOverflow.ellipsis,
-      ),
-    ),
 
-    const SizedBox(width: 8),
-
-    Chip(
-      label: Text(
-        task.priority ?? "MEDIUM",
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 11,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      labelPadding: const EdgeInsets.symmetric(horizontal: 4),
-      visualDensity: VisualDensity.compact,
-      backgroundColor: getPriorityColor(task.priority),
-      materialTapTargetSize:
-          MaterialTapTargetSize.shrinkWrap,
-    ),
-  ],
-),
-
-subtitle: Column(
-  crossAxisAlignment: CrossAxisAlignment.start,
-  children: [
-    if (task.description != null &&
-        task.description!.isNotEmpty)
-      Padding(
-        padding: const EdgeInsets.only(top: 6),
-        child: Text(task.description!),
-      ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (task.description != null &&
+                task.description!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(task.description!),
+              ),
 
             if (task.dueDate != null)
               Padding(
-                padding:
-                    const EdgeInsets.only(top: 6),
+                padding: const EdgeInsets.only(top: 6),
                 child: Row(
                   children: [
                     const Icon(
@@ -112,6 +113,7 @@ subtitle: Column(
               ),
           ],
         ),
+
         trailing: PopupMenuButton<String>(
           onSelected: (value) {
             switch (value) {
@@ -138,4 +140,4 @@ subtitle: Column(
       ),
     );
   }
-}
+}    

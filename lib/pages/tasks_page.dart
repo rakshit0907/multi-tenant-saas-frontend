@@ -25,17 +25,23 @@ class TasksPage extends StatefulWidget {
 class _TasksPageState extends State<TasksPage> {
   List<Task> tasks = [];
   TaskStats? stats;
-
-  bool loading = true;
-
-  final TextEditingController titleController =
-      TextEditingController();
-
-  final TextEditingController descriptionController =
+  
+  final TextEditingController searchController =
     TextEditingController();
+  
+  String searchQuery = '';
+  bool loading = true;
+  
+  String selectedFilter = "All";
 
-  DateTime? selectedDueDate;
-
+  final List<String> filters = [
+  "All",
+  "Pending",
+  "Completed",
+  "High",
+  "Medium",
+  "Low",
+];
   @override
   void initState() {
     super.initState();
@@ -46,13 +52,10 @@ class _TasksPageState extends State<TasksPage> {
     try {
       await ApiService.toggleTask(taskId);
 
-      setState(() {
-        loading = true;
-      });
 
       await loadTasks();
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
     }
   }
 
@@ -60,13 +63,11 @@ class _TasksPageState extends State<TasksPage> {
     try {
       await ApiService.deleteTask(taskId);
 
-      setState(() {
-        loading = true;
-      });
+     
 
       await loadTasks();
     } catch (e) {
-      print(e);
+       debugPrint(e.toString());
     }
   }
   
@@ -123,9 +124,7 @@ class _TasksPageState extends State<TasksPage> {
         
       
     } catch (e) {
-      print("TASK ERROR:");
-      print(e);
-
+      debugPrint(e.toString());
       setState(() {
         loading = false;
       });
@@ -134,13 +133,47 @@ class _TasksPageState extends State<TasksPage> {
 
   @override
   void dispose() {
-    titleController.dispose();
-    descriptionController.dispose();
+    searchController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final filteredTasks = tasks.where((task) {
+      final query = searchQuery.toLowerCase();
+
+final matchesSearch =
+    task.title.toLowerCase().contains(query) ||
+    (task.description?.toLowerCase().contains(query) ?? false);
+
+  bool matchesFilter = true;
+
+  switch (selectedFilter) {
+  case "Pending":
+    matchesFilter = !task.completed;
+    break;
+
+  case "Completed":
+    matchesFilter = task.completed;
+    break;
+
+  case "High":
+    matchesFilter = task.priority == "HIGH";
+    break;
+
+  case "Medium":
+    matchesFilter = task.priority == "MEDIUM";
+    break;
+
+  case "Low":
+    matchesFilter = task.priority == "LOW";
+    break;
+
+  default:
+    matchesFilter = true;
+}
+  return matchesSearch && matchesFilter;
+}).toList();
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.projectName),
@@ -151,62 +184,107 @@ class _TasksPageState extends State<TasksPage> {
             )
           : Column(
               children: [
-                if (stats != null)
-                  TaskStatsCard(stats: stats!),
-                Expanded(
-                  child: tasks.isEmpty
-                      ? const Center(
-                          child: Text(
-                            "No tasks found",
-                            style: TextStyle(
-                              fontSize: 18,
-                            ),
-                          ),
-                        )
-                      : ListView.builder(
-  itemCount: tasks.length,
-  itemBuilder: (context, index) {
-    final task = tasks[index];
+                Padding(
+  padding: const EdgeInsets.all(12),
+  child: TextField(
+    controller: searchController,
+    decoration: const InputDecoration(
+      hintText: "Search by title or description..",
+      prefixIcon: Icon(Icons.search),
+      border: OutlineInputBorder(),
+    ),
+    onChanged: (value) {
+      setState(() {
+        searchQuery = value;
+      });
+    },
+  ),
+),
 
-    return TaskCard(
-      task: task,
-      onToggle: () => toggleTask(task.id),
-      onDelete: () => deleteTask(task.id),
-      onEdit: () {
-        showDialog(
-          context: context,
-          builder: (_) => TaskDialog(
-            title: "Edit Task",
-            buttonText: "Save",
-            initialTitle: task.title,
-            initialDescription:
-                task.description ?? '',
-            initialDueDate: task.dueDate,
-            onSave: (
-              title,
-              description,
-              dueDate,
-              priority,
-            ) async {
-              await ApiService.updateTask(
-                task.id,
-                title,
-                description,
-                dueDate,
-                priority,
-              );
-
-              await loadTasks();
-            }
+                Padding(
+  padding: const EdgeInsets.symmetric(
+    horizontal: 12,
+    vertical: 8,
+  ),
+  child: SingleChildScrollView(
+    scrollDirection: Axis.horizontal,
+    child: Row(
+      children: filters.map((filter) {
+        return Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: ChoiceChip(
+            label: Text(filter),
+            selected: selectedFilter == filter,
+            onSelected: (_) {
+              setState(() {
+                selectedFilter = filter;
+              });
+            },
           ),
         );
-      },
-    );
-  },
-)
-                ),
-              ],
+      }).toList(),
+    ),
+  ),
+),
+
+                if (stats != null)
+                  TaskStatsCard(stats: stats!),
+                  Expanded(
+  child: filteredTasks.isEmpty
+      ? Center(
+          child: Text(
+            searchQuery.isNotEmpty || selectedFilter != "All"
+                ? "No matching tasks"
+                : "No tasks yet",
+            style: const TextStyle(
+              fontSize: 18,
             ),
+          ),
+        )
+      : ListView.builder(
+          itemCount: filteredTasks.length,
+          itemBuilder: (context, index) {
+            final task = filteredTasks[index];
+
+            return TaskCard(
+              task: task,
+              onToggle: () => toggleTask(task.id),
+              onDelete: () => deleteTask(task.id),
+              onEdit: () {
+                showDialog(
+                  context: context,
+                  builder: (_) => TaskDialog(
+                    title: "Edit Task",
+                    buttonText: "Save",
+                    initialTitle: task.title,
+                    initialDescription: task.description ?? '',
+                    initialDueDate: task.dueDate,
+                    onSave: (
+                      title,
+                      description,
+                      dueDate,
+                      priority,
+                    ) async {
+                      await ApiService.updateTask(
+                        task.id,
+                        title,
+                        description,
+                        dueDate,
+                        priority,
+                      );
+
+                      await loadTasks();
+                    },
+                  ),
+                );
+              },
+            );
+          },
+        ),
+      ),
+      ],
+    ), 
+        
       floatingActionButton: FloatingActionButton(
   child: const Icon(Icons.add),
   onPressed: () {

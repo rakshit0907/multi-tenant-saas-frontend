@@ -18,17 +18,19 @@ class _SplashPageState extends State<SplashPage> {
   }
 
   Future<void> checkAuth() async {
-    print("SPLASH CHECK START");
+    debugPrint("SPLASH CHECK START");
 
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
 
-    print("TOKEN: $token");
+    debugPrint("TOKEN: $token");
 
     await Future.delayed(const Duration(seconds: 2));
 
     if (token == null) {
-      print("NO TOKEN → LOGIN");
+      debugPrint("NO TOKEN → LOGIN");
+
+      if (!mounted) return;
 
       Navigator.pushReplacementNamed(context, '/login');
       return;
@@ -36,15 +38,18 @@ class _SplashPageState extends State<SplashPage> {
 
     bool isExpired = JwtDecoder.isExpired(token);
 
-    print("IS EXPIRED: $isExpired");
+    debugPrint("IS EXPIRED: $isExpired");
 
     if (isExpired) {
-      print("TOKEN EXPIRED → LOGIN");
+      debugPrint("TOKEN EXPIRED → LOGIN");
 
       await prefs.remove('token');
+      if (!mounted) return;
       Navigator.pushReplacementNamed(context, '/login');
     } else {
-      print("TOKEN VALID → DASHBOARD");
+      debugPrint("TOKEN VALID → DASHBOARD");
+
+      if (!mounted) return;
 
       Navigator.pushReplacementNamed(context, '/dashboard');
     }

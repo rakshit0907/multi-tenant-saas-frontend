@@ -32,11 +32,11 @@ class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
   Future<void> login(BuildContext context) async {
   try {
-    print("LOGIN BUTTON CLICKED");
+    debugPrint("LOGIN BUTTON CLICKED");
 
     final url = Uri.parse('http://10.0.2.2:3000/auth/login');
 
-    print("CALLING API...");
+    debugPrint("CALLING API...");
 
     final response = await http.post(
       url,
@@ -47,15 +47,15 @@ class LoginPage extends StatelessWidget {
       }),
     );
 
-    print("STATUS CODE: ${response.statusCode}");
-    print("BODY: ${response.body}");
+    debugPrint("STATUS CODE: ${response.statusCode}");
+    debugPrint("BODY: ${response.body}");
 
     final data = jsonDecode(response.body);
 
     if (response.statusCode == 200 ||
         response.statusCode == 201) {
 
-      print("LOGIN SUCCESS");
+      debugPrint("LOGIN SUCCESS");
 
       final prefs = await SharedPreferences.getInstance();
 
@@ -64,14 +64,16 @@ class LoginPage extends StatelessWidget {
         data['token'],
       );
 
+      if (!context.mounted) return;
+
       Navigator.pushReplacementNamed(
         context,
         '/dashboard',
       );
     }
   } catch (e) {
-    print("LOGIN ERROR:");
-    print(e);
+    debugPrint("LOGIN ERROR:");
+    debugPrint(e.toString());
   }
 }
 

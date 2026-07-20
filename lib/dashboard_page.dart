@@ -37,7 +37,7 @@ class _DashboardPageState extends State<DashboardPage> {
       });
       await loadProjects();
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
     }
   }
   Future<void> createProject() async {
@@ -58,7 +58,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
       await loadProjects();
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
     }
   }
 
@@ -90,7 +90,7 @@ class _DashboardPageState extends State<DashboardPage> {
         loading = false;
       });
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
 
       setState(() {
         loading = false;
