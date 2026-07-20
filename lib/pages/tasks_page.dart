@@ -259,6 +259,7 @@ final matchesSearch =
                     initialTitle: task.title,
                     initialDescription: task.description ?? '',
                     initialDueDate: task.dueDate,
+                    initialPriority: task.priority,
                     onSave: (
                       title,
                       description,

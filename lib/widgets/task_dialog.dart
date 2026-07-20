@@ -7,6 +7,7 @@ class TaskDialog extends StatefulWidget {
   final String initialTitle;
   final String initialDescription;
   final DateTime? initialDueDate;
+  final String initialPriority;
   final String buttonText;
 
   final Function(
@@ -24,6 +25,7 @@ class TaskDialog extends StatefulWidget {
     this.initialTitle = '',
     this.initialDescription = '',
     this.initialDueDate,
+    this.initialPriority = "MEDIUM",
   });
 
   @override
@@ -35,7 +37,7 @@ class _TaskDialogState extends State<TaskDialog> {
   late TextEditingController descriptionController;
 
   DateTime? dueDate;
-  TaskPriority selectedPriority = TaskPriority.MEDIUM;
+  late TaskPriority selectedPriority;
 
   @override
   void initState() {
@@ -50,6 +52,10 @@ class _TaskDialogState extends State<TaskDialog> {
     );
 
     dueDate = widget.initialDueDate;
+    selectedPriority = TaskPriority.values.firstWhere(
+      (priority) => priority.name == widget.initialPriority,
+      orElse: () => TaskPriority.MEDIUM,
+    );
   }
 
   @override
@@ -97,6 +103,25 @@ class _TaskDialogState extends State<TaskDialog> {
               ),
             ),
             const SizedBox(height: 16),
+
+            DropdownButtonFormField<TaskPriority>(
+              value: selectedPriority,
+              decoration: const InputDecoration(
+                labelText: "Priority",
+                border: OutlineInputBorder(),
+              ),
+              items: TaskPriority.values.map((priority) {
+                return DropdownMenuItem(
+                  value: priority,
+                  child: Text(priority.name),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  selectedPriority = value!;
+                });
+              },
+            ),
 
 
             const SizedBox(height: 16),
