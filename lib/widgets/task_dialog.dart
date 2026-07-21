@@ -2,12 +2,19 @@ import 'package:flutter/material.dart';
 enum TaskPriority {
   LOW, MEDIUM, HIGH,
 }
+
+enum TaskStatus {
+  PENDING,
+  IN_PROGRESS,
+  COMPLETED,
+}
 class TaskDialog extends StatefulWidget {
   final String title;
   final String initialTitle;
   final String initialDescription;
   final DateTime? initialDueDate;
   final String initialPriority;
+  final String initialStatus;
   final String buttonText;
 
   final Function(
@@ -15,6 +22,7 @@ class TaskDialog extends StatefulWidget {
     String description,
     DateTime? dueDate,
     String priority,
+    String status,
   ) onSave;
 
   const TaskDialog({
@@ -26,6 +34,7 @@ class TaskDialog extends StatefulWidget {
     this.initialDescription = '',
     this.initialDueDate,
     this.initialPriority = "MEDIUM",
+    this.initialStatus = "PENDING",
   });
 
   @override
@@ -38,6 +47,7 @@ class _TaskDialogState extends State<TaskDialog> {
 
   DateTime? dueDate;
   late TaskPriority selectedPriority;
+  late TaskStatus selectedStatus;
 
   @override
   void initState() {
@@ -55,6 +65,11 @@ class _TaskDialogState extends State<TaskDialog> {
     selectedPriority = TaskPriority.values.firstWhere(
       (priority) => priority.name == widget.initialPriority,
       orElse: () => TaskPriority.MEDIUM,
+    );
+
+    selectedStatus = TaskStatus.values.firstWhere(
+      (priority) => priority.name == widget.initialStatus,
+      orElse: () => TaskStatus.PENDING,
     );
   }
 
@@ -105,7 +120,7 @@ class _TaskDialogState extends State<TaskDialog> {
             const SizedBox(height: 16),
 
             DropdownButtonFormField<TaskPriority>(
-              value: selectedPriority,
+              initialValue: selectedPriority,
               decoration: const InputDecoration(
                 labelText: "Priority",
                 border: OutlineInputBorder(),
@@ -123,7 +138,26 @@ class _TaskDialogState extends State<TaskDialog> {
               },
             ),
 
+            const SizedBox(height: 16),
 
+            DropdownButtonFormField<TaskStatus>(
+              initialValue: selectedStatus,
+              decoration: const InputDecoration(
+                labelText: "Status",
+                border: OutlineInputBorder(),
+              ),
+              items: TaskStatus.values.map((status) {
+                return DropdownMenuItem(
+                  value: status,
+                  child: Text(status.name),
+                );
+               }).toList(),
+               onChanged: (value) {
+                 setState(() {
+                   selectedStatus = value!;
+                 });
+                },
+              ),
             const SizedBox(height: 16),
             ListTile(
               contentPadding: EdgeInsets.zero,
@@ -155,6 +189,7 @@ class _TaskDialogState extends State<TaskDialog> {
               descriptionController.text.trim(),
               dueDate,
               selectedPriority.name,
+              selectedStatus.name,
             );
 
             Navigator.pop(context);
