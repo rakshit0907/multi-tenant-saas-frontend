@@ -1,13 +1,12 @@
 class Task {
   final String id;
   final String title;
-  final bool completed;
+ final bool completed;
 
   final String? description;
   final DateTime? dueDate;
-
-  final String priority;
-  final String status;
+ final String priority;
+ final String status;
 
   Task({
     required this.id,
@@ -24,15 +23,12 @@ class Task {
       id: json['id'],
       title: json['title'],
       completed: json['completed'],
-
       description: json['description'],
-
       dueDate: json['dueDate'] != null
           ? DateTime.parse(json['dueDate'])
           : null,
-
       priority: json['priority'] ?? 'MEDIUM',
       status: json['status'] ?? 'PENDING',
     );
   }
-}
+}  

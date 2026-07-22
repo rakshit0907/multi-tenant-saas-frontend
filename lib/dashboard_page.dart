@@ -3,8 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'models/project.dart';
 import 'services/api_service.dart';
-import 'pages/tasks_page.dart';
-
+import 'pages/kanban_page.dart';
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
 
@@ -188,7 +187,7 @@ class _DashboardPageState extends State<DashboardPage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => TasksPage(
+                                builder: (_) => KanbanPage(
                                   projectId: project.id,
                                   projectName: project.name,
                                 ),

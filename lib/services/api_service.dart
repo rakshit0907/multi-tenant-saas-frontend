@@ -201,8 +201,31 @@ class ApiService {
     }),
   );
 
-  if (response.statusCode != 200) {
+  if (response.statusCode !=200) {
     throw Exception('Failed to update task');
   }
-} 
+}
+
+  static Future<void> updateTaskStatus(
+    String taskId,
+    String status,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    final response = await http.patch(
+      Uri.parse('$baseUrl/tasks/$taskId/status'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'status': status,
+      }),
+    );
+ 
+  if (response.statusCode != 200) {
+    throw Exception('Failed to update task status');
+  }
+  }
 }
