@@ -4,7 +4,6 @@ import 'dashboard_page.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'splash_page.dart';
-import 'pages/kanban_page.dart';
 void main() {
   runApp(const MyApp());
 }
