@@ -79,153 +79,126 @@ class _KanbanPageState extends State<KanbanPage> {
 }
 
   @override
-  Widget build(BuildContext context) {
-    final pendingTasks =
-        tasks.where((t) => t.status == "PENDING").toList();
+Widget build(BuildContext context) {
+  final pendingTasks =
+      tasks.where((t) => t.status == "PENDING").toList();
 
-    final inProgressTasks =
-        tasks.where((t) => t.status == "IN_PROGRESS").toList();
+  final inProgressTasks =
+      tasks.where((t) => t.status == "IN_PROGRESS").toList();
 
-    final completedTasks =
-        tasks.where((t) => t.status == "COMPLETED").toList();
+  final completedTasks =
+      tasks.where((t) => t.status == "COMPLETED").toList();
 
-    return Scaffold(
+  return DefaultTabController(
+    length: 3,
+    child: Scaffold(
       appBar: AppBar(
         title: Text(widget.projectName),
+        bottom: const TabBar(
+          tabs: [
+            Tab(text: "Pending"),
+            Tab(text: "In Progress"),
+            Tab(text: "Completed"),
+          ],
+        ),
       ),
       body: loading
           ? const Center(
               child: CircularProgressIndicator(),
             )
-          : Row(
+          : TabBarView(
               children: [
-                Expanded(
-                  child: KanbanColumn(
-                    title: "Pending",
-                    color: Colors.orange,
-                    tasks: pendingTasks,
-                    onDrop: moveTask,
-                  ),
+                KanbanColumn(
+                  tasks: pendingTasks,
+                  onMove: moveTask,
                 ),
-                Expanded(
-                  child: KanbanColumn(
-                    title: "In Progress",
-                    color: Colors.blue,
-                    tasks: inProgressTasks,
-                    onDrop: moveTask,
-                  ),
+                KanbanColumn(
+                  tasks: inProgressTasks,
+                  onMove: moveTask,
                 ),
-                Expanded(
-                  child: KanbanColumn(
-                    title: "Completed",
-                    color: Colors.green,
-                    tasks: completedTasks,
-                    onDrop: moveTask,
-                  ),
+                KanbanColumn(
+                  tasks: completedTasks,
+                  onMove: moveTask,
                 ),
               ],
             ),
-    );
-  }
+    ),
+  );
+}
 }
 
 class KanbanColumn extends StatelessWidget {
-  final String title;
-  final Color color;
   final List<Task> tasks;
-  final Function(Task task, String newStatus) onDrop;
+  final Function(Task, String) onMove;
 
   const KanbanColumn({
     super.key,
-    required this.title,
-    required this.color,
     required this.tasks,
-    required this.onDrop,
+    required this.onMove,
   });
 
   @override
   Widget build(BuildContext context) {
-    return DragTarget<Task>(
-      onAcceptWithDetails: (details) {
-        onDrop(details.data, title);
-      },
-
-      builder: (context, candidateData, rejectedData) {
-        return Container(
-
-           
-      margin: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(12),
-              ),
-            ),
-            child: Text(
-              title,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
-            ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(8),
-              itemCount: tasks.length,
-              itemBuilder: (context, index) {
-                final task = tasks[index];
-
-                return Draggable<Task>(
-                  data: task,
-
-                  feedback: Material(
-                    elevation: 8,
-                    child: Card(
-                      child: Padding(
-                       padding: const EdgeInsets.all(12),
-                       child: Text(task.title),
-                      ),
-                    ),
-                  ),
-
-                  childWhenDragging: Opacity(
-                    opacity: 0.3,
-                    child: Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Text(task.title),
-                      ),
-                     ),
-                    ),
-
-                    child: Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Text(task.title),
-                      ),
-                     ),
-                  );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
+    if (tasks.isEmpty) {
+      return const Center(
+        child: Text("No Tasks"),
+      );
     }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(12),
+      itemCount: tasks.length,
+      itemBuilder: (context, index) {
+        final task = tasks[index];
+
+        return Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          child: ListTile(
+            title: Text(
+              task.title,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            subtitle: Column(
+               crossAxisAlignment: CrossAxisAlignment.start,
+               children: [
+                 Text(task.priority),
+                 if (task.dueDate != null)
+                   Text(
+                    "${task.dueDate!.day}/${task.dueDate!.month}/${task.dueDate!.year}",
+                    style: const TextStyle(fontSize: 12),
+                   ),
+                 ],
+               ),
+            trailing: PopupMenuButton<String>(
+                        icon: const Icon(Icons.more_vert),
+                        onSelected: (value) {
+                          onMove(task, value);
+                        },
+                        itemBuilder: (_) => [
+                         if (task.status != "PENDING")
+                           const PopupMenuItem(
+                              value: "Pending",
+                              child: Text("Move to Pending"),
+                            ),
+
+                           if (task.status != "IN_PROGRESS")
+                             const PopupMenuItem(
+                               value: "In Progress",
+                               child: Text("Move to In Progress"),
+                              ),
+
+                           if (task.status != "COMPLETED")
+                             const PopupMenuItem(
+                               value: "Completed",
+                               child: Text("Move to Completed"),
+                              ),
+                            ],
+                          ),
+          ),
+        );
+      },
     );
-  
   }
 }
