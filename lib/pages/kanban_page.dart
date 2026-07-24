@@ -93,11 +93,22 @@ Widget build(BuildContext context) {
     length: 3,
     child: Scaffold(
       appBar: AppBar(
-        title: Text(widget.projectName),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(widget.projectName),
+            Text(
+              "${tasks.length} Tasks",
+              style: const TextStyle(
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
         bottom: TabBar(
           tabs: [
             Tab(text: "Pending (${pendingTasks.length})"),
-            Tab(text: "In Progress (${inProgressTasks.length})" ),
+            Tab(text: "In Progress (${inProgressTasks.length})"),
             Tab(text: "Completed (${completedTasks.length})"),
           ],
         ),
