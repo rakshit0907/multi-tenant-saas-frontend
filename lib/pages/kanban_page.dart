@@ -212,8 +212,18 @@ class KanbanColumn extends StatelessWidget {
                     "${task.dueDate!.day.toString().padLeft(2,'0')}/"
                     "${task.dueDate!.month.toString().padLeft(2,'0')}/"
                     "${task.dueDate!.year}",
-                    style: const TextStyle(fontSize: 12),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: task.dueDate!.isBefore(DateTime.now()) &&
+                              task.status != "COMPLETED"
+                           ? Colors.red
+                           : Colors.grey,
+                      fontWeight: task.dueDate!.isBefore(DateTime.now()) &&
+                            task.status != "COMPLETED"
+                         ? FontWeight.bold
+                         : FontWeight.normal,   
                    ),
+                   ), 
 
                    const SizedBox(height: 6),
 
