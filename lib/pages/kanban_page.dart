@@ -163,13 +163,87 @@ class KanbanColumn extends StatelessWidget {
             subtitle: Column(
                crossAxisAlignment: CrossAxisAlignment.start,
                children: [
-                 Text(task.priority),
+                if (task.description != null &&
+                    task.description!.isNotEmpty)
+                   Padding(
+                     padding: const EdgeInsets.only(bottom: 6),
+                     child: Text(
+                       task.description!,
+                       maxLines: 2,
+                       overflow: TextOverflow.ellipsis,
+                       style: TextStyle(
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                    ),
+                   Align(
+                     alignment: Alignment.centerLeft,
+                     child: Container(
+                       margin: const EdgeInsets.only(top: 4),
+                       padding: const EdgeInsets.symmetric(
+                         horizontal: 8,
+                         vertical: 3,
+                       ),
+                       decoration: BoxDecoration(
+                       color: task.priority == "HIGH"
+                           ? Colors.red.shade100
+                           : task.priority == "MEDIUM"
+                               ? Colors.orange.shade100
+                               : Colors.green.shade100,
+                       borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        task.priority,
+                         style: TextStyle(
+                           fontSize: 11,
+                           fontWeight: FontWeight.bold,
+                           color: task.priority == "HIGH"
+                               ? Colors.red
+                               : task.priority == "MEDIUM"
+                                   ? Colors.orange
+                                   : Colors.green,
+                           ),
+                          ),
+                        ),
+                      ),
+                 const SizedBox(height: 6),
                  if (task.dueDate != null)
                    Text(
-                    "${task.dueDate!.day}/${task.dueDate!.month}/${task.dueDate!.year}",
+                    "${task.dueDate!.day.toString().padLeft(2,'0')}/"
+                    "${task.dueDate!.month.toString().padLeft(2,'0')}/"
+                    "${task.dueDate!.year}",
                     style: const TextStyle(fontSize: 12),
                    ),
-                 ],
+
+                   const SizedBox(height: 6),
+
+                   Container(
+                     padding: const EdgeInsets.symmetric(
+                       horizontal: 8,
+                       vertical: 3,
+                     ),
+                     decoration: BoxDecoration(
+                       color: task.status == "PENDING"
+                           ? Colors.orange.shade100
+                           : task.status == "IN_PROGRESS"
+                               ? Colors.blue.shade100
+                               : Colors.green.shade100,
+                       borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        task.status.replaceAll("_", " "),
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: task.status == "PENDING"
+                              ? Colors.orange
+                              : task.status == "IN_PROGRESS"
+                                  ? Colors.blue
+                                  : Colors.green,
+                          ),
+                         ),
+                        ),
+                    ],
                ),
             trailing: PopupMenuButton<String>(
                         icon: const Icon(Icons.more_vert),
