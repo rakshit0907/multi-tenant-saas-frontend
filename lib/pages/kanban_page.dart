@@ -94,11 +94,11 @@ Widget build(BuildContext context) {
     child: Scaffold(
       appBar: AppBar(
         title: Text(widget.projectName),
-        bottom: const TabBar(
+        bottom: TabBar(
           tabs: [
-            Tab(text: "Pending"),
-            Tab(text: "In Progress"),
-            Tab(text: "Completed"),
+            Tab(text: "Pending (${pendingTasks.length})"),
+            Tab(text: "In Progress (${inProgressTasks.length})" ),
+            Tab(text: "Completed (${completedTasks.length})"),
           ],
         ),
       ),
