@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/task.dart';
 import '../services/api_service.dart';
-
+import '../widgets/task_dialog.dart';
 class KanbanPage extends StatefulWidget {
   final String projectId;
   final String projectName;
@@ -112,6 +112,38 @@ Widget build(BuildContext context) {
             Tab(text: "Completed (${completedTasks.length})"),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (_) => TaskDialog(
+                  title: "Create Task",
+                  buttonText: "Create",
+                  onSave: (
+                    title,
+                    description,
+                    dueDate,
+                    priority,
+                    status,
+                  ) async {
+                    await ApiService.createTask(
+                      widget.projectId,
+                      title,
+                      description,
+                      dueDate,
+                      priority,
+                      status,
+                    );
+
+                     await loadTasks();
+                   },
+                  ),
+                );
+              },
+          ),
+        ],
       ),
       body: loading
           ? const Center(
