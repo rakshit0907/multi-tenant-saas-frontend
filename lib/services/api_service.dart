@@ -120,6 +120,26 @@ class ApiService {
     throw Exception('Failed to load projects');
   }
 
+  static Future<List<dynamic>> getProjectMembers(
+    String projectId,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/projects/$projectId/members'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }  
+
+    throw Exception('Failed to load members');
+  }
+
   static Future<List<dynamic>> getTasks(
     String projectId,
   ) async {
