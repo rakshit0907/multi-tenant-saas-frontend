@@ -4,6 +4,7 @@ import 'package:jwt_decoder/jwt_decoder.dart';
 import 'models/project.dart';
 import 'services/api_service.dart';
 import 'pages/kanban_page.dart';
+import 'pages/members_page.dart';
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
 
@@ -182,14 +183,46 @@ class _DashboardPageState extends State<DashboardPage> {
                         child: ListTile(
                           title: Text(project.name),
                           subtitle: Text(project.id),
+                          
 
                           onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => KanbanPage(
-                                  projectId: project.id,
-                                  projectName: project.name,
+                            showModalBottomSheet(
+                              context: context,
+                              builder: (_) => SafeArea(
+                                child: Wrap(
+                                  children: [
+                                    ListTile(
+                                      leading: const Icon(Icons.view_kanban),
+                                      title: const Text("Open Kanban"),
+                                      onTap: () {
+                                        Navigator.pop(context);
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => KanbanPage(
+                                              projectId: project.id,
+                                              projectName: project.name,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                    ListTile(
+                                      leading: const Icon(Icons.group),
+                                      title: const Text("View Members"),
+                                      onTap: () {
+                                        Navigator.pop(context);
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => MembersPage(
+                                              projectId: project.id,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ],
                                 ),
                               ),
                             );
