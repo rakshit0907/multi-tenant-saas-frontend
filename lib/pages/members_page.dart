@@ -72,66 +72,83 @@ class _MembersPageState extends State<MembersPage> {
           ? const Center(
               child: CircularProgressIndicator(),
             )
-          : ListView.builder(
-              itemCount: members.length,
-              itemBuilder: (context, index) {
-                final member = members[index];
-
-                return ListTile(
-                  leading: const CircleAvatar(
-                    child: Icon(Icons.person),
-                  ),
-                  title: Text(
-                    member["user"]["name"],
-                  ),
-                  subtitle: Text(
-                    member["user"]["email"],
-                  ),
-                  trailing: Row(
+          : members.isEmpty
+              ? const Center(
+                  child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(member["role"]),
+                      Icon(
+                       Icons.group_off,
+                       size: 60,
+                       color: Colors.grey,
+                      ),
+                      SizedBox(height: 12),
+                      Text(
+                        "No members added yet",
+                        style: TextStyle(fontSize: 18),
+                      ),
+                    ],
+                  ),
+                )
+             : ListView.builder(
+                 itemCount: members.length,
+                 itemBuilder: (context, index) {
+                   final member = members[index];
 
-                      IconButton(
-                        icon: const Icon(
-                          Icons.delete,
-                          color: Colors.red,
-                        ),
-                        onPressed: () async {
-                          final confirm = await showDialog<bool>(
-                            context: context,
-                            builder: (_) => AlertDialog(
-                              title: const Text("Remove Member"),
-                              content: Text(
-                                "Remove ${member["user"]["name"]} from this project?",
-                              ),
-                              actions: [
-                               TextButton(
-                                 onPressed: () =>
-                                     Navigator.pop(context, false),
-                                 child: const Text("Cancel"),
-                               ),
-                               ElevatedButton(
-                                 onPressed: () =>
-                                    Navigator.pop(context, true),
-                                 child: const Text("Remove"),
-                               ),
-                              ],
+                   return ListTile(
+                     leading: const CircleAvatar(
+                       child: Icon(Icons.person),
+                     ),
+                     title: Text(
+                       member["user"]["name"],
+                     ),
+                     subtitle: Text(
+                       member["user"]["email"],
+                     ),
+                     trailing: Row(
+                       mainAxisSize: MainAxisSize.min,
+                       children: [
+                         Text(member["role"]),
+                         IconButton(
+                           icon: const Icon(
+                             Icons.delete,
+                             color: Colors.red,
+                           ),
+                           onPressed: () async {
+                             final confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (_) => AlertDialog(
+                                title: const Text("Remove Member"),
+                                content: Text(
+                                  "Remove ${member["user"]["name"]} from this project?",
+                                ),
+                                actions: [
+                                 TextButton(
+                                   onPressed: () =>
+                                       Navigator.pop(context, false),
+                                   child: const Text("Cancel"),
+                                 ),
+                                 ElevatedButton(
+                                   onPressed: () =>
+                                       Navigator.pop(context, true),
+                                   child: const Text("Remove"),
+                                 ),
+                               ],
                              ),
-                            );
+                           );
 
-                            if (confirm == true) {
-                              await removeMember(
-                                member["user"]["id"],
+                           if (confirm == true) {
+                             await removeMember(
+                               member["user"]["id"],
                               );
                              }
                            },
                          ),
-                        ],
-                       ),
-                );
-              },
-            ),
-    );
-  }
-}
+                       ],
+                     ),
+                   );
+                 },
+               ),
+             );
+            }
+          }
