@@ -26,10 +26,15 @@ class _MembersPageState extends State<MembersPage> {
 
   Future<void> loadMembers() async {
     try {
+
+      debugPrint("Project ID: ${widget.projectId}");
+
       final data =
           await ApiService.getProjectMembers(
         widget.projectId,
       );
+      debugPrint("Members  API Response: $data");
+      debugPrint("Count: ${data.length}");
 
       setState(() {
         members = data;
@@ -41,6 +46,19 @@ class _MembersPageState extends State<MembersPage> {
       setState(() {
         loading = false;
       });
+    }
+  }
+
+  Future<void> removeMember(String userId) async {
+    try {
+      await ApiService.removeProjectMember(
+        widget.projectId,
+        userId,
+      );
+
+      await loadMembers();
+    } catch (e) {
+      debugPrint(e.toString());
     }
   }
 
@@ -69,9 +87,48 @@ class _MembersPageState extends State<MembersPage> {
                   subtitle: Text(
                     member["user"]["email"],
                   ),
-                  trailing: Text(
-                    member["role"],
-                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(member["role"]),
+
+                      IconButton(
+                        icon: const Icon(
+                          Icons.delete,
+                          color: Colors.red,
+                        ),
+                        onPressed: () async {
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (_) => AlertDialog(
+                              title: const Text("Remove Member"),
+                              content: Text(
+                                "Remove ${member["user"]["name"]} from this project?",
+                              ),
+                              actions: [
+                               TextButton(
+                                 onPressed: () =>
+                                     Navigator.pop(context, false),
+                                 child: const Text("Cancel"),
+                               ),
+                               ElevatedButton(
+                                 onPressed: () =>
+                                    Navigator.pop(context, true),
+                                 child: const Text("Remove"),
+                               ),
+                              ],
+                             ),
+                            );
+
+                            if (confirm == true) {
+                              await removeMember(
+                                member["user"]["id"],
+                              );
+                             }
+                           },
+                         ),
+                        ],
+                       ),
                 );
               },
             ),

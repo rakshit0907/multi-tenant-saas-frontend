@@ -133,12 +133,39 @@ class ApiService {
       },
     );
 
+    print("STATUS: ${response.statusCode}");
+    print("BODY: ${response.body}");
+
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     }  
 
     throw Exception('Failed to load members');
   }
+
+  static Future<void> removeProjectMember(
+    String projectId,
+    String userId,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    final response = await http.delete(
+      Uri.parse(
+        '$baseUrl/projects/$projectId/members/$userId',
+      ),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode != 200 &&
+       response.statusCode != 204) {
+        throw Exception(
+          'Failed to remove member',
+        );
+     }
+  } 
 
   static Future<List<dynamic>> getTasks(
     String projectId,
