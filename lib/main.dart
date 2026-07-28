@@ -27,9 +27,18 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class LoginPage extends StatelessWidget {
-  const LoginPage({super.key});
-  Future<void> login(BuildContext context) async {
+class LoginPage extends StatefulWidget {
+ const LoginPage({super.key});
+
+@override
+State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+
+  Future<void> login() async {
   try {
     debugPrint("LOGIN BUTTON CLICKED");
 
@@ -41,8 +50,8 @@ class LoginPage extends StatelessWidget {
       url,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        "email": "rakshit2@test.com",
-        "password": "123456"
+        "email": emailController.text.trim(),
+        "password": passwordController.text,
       }),
     );
 
@@ -63,7 +72,7 @@ class LoginPage extends StatelessWidget {
         data['token'],
       );
 
-      if (!context.mounted) return;
+      if (!mounted) return;
 
       Navigator.pushReplacementNamed(
         context,
@@ -80,12 +89,37 @@ class LoginPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Login')),
-      body: Center(
-        child: ElevatedButton(
-          onPressed: () => login(context),
-          child: const Text('Login'),
-        ),
-      ),
+      body: Padding(
+             padding: const EdgeInsets.all(20),
+             child: Column(
+               mainAxisAlignment: MainAxisAlignment.center,
+               children: [
+                 TextField(
+                  controller: emailController,
+                  decoration: const InputDecoration(
+                    labelText: "Email",
+                  ),
+               ),
+
+               const SizedBox(height: 16),
+
+               TextField(
+                 controller: passwordController,
+                 obscureText: true,
+                 decoration: const InputDecoration(
+                   labelText: "Password",
+                  ),
+                ),
+
+               const SizedBox(height: 24),
+
+               ElevatedButton(
+                 onPressed: login,
+                 child: const Text("Login"),
+               ),
+             ],
+           ),
+         )
     );
   }
 }
