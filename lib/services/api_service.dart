@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:flutter/foundation.dart';
 class ApiService {
   static const String baseUrl = 'http://10.0.2.2:3000';
   static Future<void> toggleTask(String taskId) async {
@@ -19,6 +19,28 @@ class ApiService {
     throw Exception('Failed to toggle task');
   }
 }
+
+ static Future<String> getMyProjectRole(
+  String projectId,
+ ) async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('token');
+  final response = await http.get(
+    Uri.parse(
+      '$baseUrl/projects/$projectId/my-role',
+    ),
+    headers: {
+      'Authorization': 'Bearer $token',
+    },
+  );
+
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body);
+    return data["role"];
+  }
+
+  throw Exception("Failed to load role");
+ }
   static Future<void> createProject(
   String name,
 ) async {
@@ -133,8 +155,8 @@ class ApiService {
       },
     );
 
-    print("STATUS: ${response.statusCode}");
-    print("BODY: ${response.body}");
+    debugPrint("STATUS: ${response.statusCode}");
+    debugPrint("BODY: ${response.body}");
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);

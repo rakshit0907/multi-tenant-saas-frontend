@@ -13,15 +13,17 @@ class MembersPage extends StatefulWidget {
   @override
   State<MembersPage> createState() => _MembersPageState();
 }
-
 class _MembersPageState extends State<MembersPage> {
   List members = [];
   bool loading = true;
+
+  String myRole = "";
 
   @override
   void initState() {
     super.initState();
     loadMembers();
+    loadMyRole();
   }
 
   Future<void> loadMembers() async {
@@ -46,6 +48,18 @@ class _MembersPageState extends State<MembersPage> {
       setState(() {
         loading = false;
       });
+    }
+  }
+  
+  Future<void> loadMyRole() async {
+    try {
+      myRole = await ApiService.getMyProjectRole(
+        widget.projectId,
+      );
+
+      setState(() {});
+    } catch (e) {
+      debugPrint(e.toString());
     }
   }
 
@@ -105,7 +119,8 @@ class _MembersPageState extends State<MembersPage> {
                      subtitle: Text(
                        member["user"]["email"],
                      ),
-                     trailing: Row(
+                     trailing: myRole == "Owner"
+                       ? Row(
                        mainAxisSize: MainAxisSize.min,
                        children: [
                          Text(member["role"]),
@@ -145,7 +160,8 @@ class _MembersPageState extends State<MembersPage> {
                            },
                          ),
                        ],
-                     ),
+                     )
+                     : Text(member["role"]),
                    );
                  },
                ),
