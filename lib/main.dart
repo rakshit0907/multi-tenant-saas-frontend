@@ -4,6 +4,7 @@ import 'dashboard_page.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'splash_page.dart';
+import 'pages/signup_page.dart';
 void main() {
   runApp(const MyApp());
 }
@@ -21,6 +22,7 @@ class MyApp extends StatelessWidget {
 
       routes: {
         '/login': (context) => const LoginPage(),
+        '/signup': (context) => const SignupPage(),
         '/dashboard': (context) => const DashboardPage(),
       },
     );
@@ -116,6 +118,18 @@ class _LoginPageState extends State<LoginPage> {
                ElevatedButton(
                  onPressed: login,
                  child: const Text("Login"),
+               ),
+               const SizedBox(height: 16),
+               TextButton(
+                onPressed: () {
+                  Navigator.pushNamed(
+                    context,
+                    '/signup',
+                  );
+                },
+                child: const Text(
+                  "Create a new account",
+                ),
                ),
              ],
            ),
