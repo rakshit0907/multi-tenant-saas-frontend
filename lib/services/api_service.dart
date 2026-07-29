@@ -119,6 +119,10 @@ class ApiService {
         'Authorization': 'Bearer $token',
       },
     );
+
+    debugPrint("DELETE STATUS: ${response.statusCode}");
+    debugPrint("DELETE BODY: ${response.body}");
+
     if (response.statusCode != 200 &&
         response.statusCode != 204) {
       throw Exception('Failed to delete project');
@@ -188,6 +192,34 @@ class ApiService {
         );
      }
   } 
+
+  static Future<void> addMember(
+    String projectId,
+    String email,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/projects/$projectId/members'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'email': email,
+      }),
+     );
+
+     if (response.statusCode != 200 &&
+         response.statusCode != 201) {
+
+       debugPrint("ADD MEMBER STATUS: ${response.statusCode}");
+       debugPrint("ADD MEMBER BODY: ${response.body}");
+
+       throw Exception('Failed to add member');
+}
+    }
 
   static Future<List<dynamic>> getTasks(
     String projectId,
@@ -297,4 +329,6 @@ class ApiService {
     throw Exception('Failed to update task status');
   }
   }
+
+
 }

@@ -17,7 +17,8 @@ class _MembersPageState extends State<MembersPage> {
   List members = [];
   bool loading = true;
 
-  String myRole = "";
+  String? myRole;
+  final emailController = TextEditingController();
 
   @override
   void initState() {
@@ -31,14 +32,19 @@ class _MembersPageState extends State<MembersPage> {
 
       debugPrint("Project ID: ${widget.projectId}");
 
-      final data =
-          await ApiService.getProjectMembers(
+      final role =
+          await ApiService.getMyProjectRole(
+        widget.projectId,
+      );
+
+      final data = await ApiService.getProjectMembers(
         widget.projectId,
       );
       debugPrint("Members  API Response: $data");
       debugPrint("Count: ${data.length}");
 
       setState(() {
+        myRole = role;
         members = data;
         loading = false;
       });
@@ -75,12 +81,60 @@ class _MembersPageState extends State<MembersPage> {
       debugPrint(e.toString());
     }
   }
+  
+  Future<void> showAddMemberDialog() async {
+    emailController.clear();
 
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Add Member"),
+        content: TextField(
+          controller: emailController,
+          decoration: const InputDecoration(
+            hintText: "Enter member email",
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              try {
+                await ApiService.addMember(
+                  widget.projectId,
+                  emailController.text.trim(),
+                );
+
+                if (!mounted) return;
+
+                Navigator.pop(context);
+
+                await loadMembers();
+              } catch (e) {
+                debugPrint(e.toString());
+             }
+            },
+            child: const Text("Add"),
+          ),
+        ],
+      ),
+    );
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Project Members"),
+        actions: [
+          if (myRole == "OWNER")
+            IconButton(
+              icon: const Icon(Icons.person_add),
+              onPressed: showAddMemberDialog,
+            ),
+        ],
       ),
       body: loading
           ? const Center(
@@ -119,11 +173,12 @@ class _MembersPageState extends State<MembersPage> {
                      subtitle: Text(
                        member["user"]["email"],
                      ),
-                     trailing: myRole == "Owner"
-                       ? Row(
+                     trailing: Row(
                        mainAxisSize: MainAxisSize.min,
                        children: [
                          Text(member["role"]),
+
+                         if (myRole == "OWNER")
                          IconButton(
                            icon: const Icon(
                              Icons.delete,
@@ -161,7 +216,6 @@ class _MembersPageState extends State<MembersPage> {
                          ),
                        ],
                      )
-                     : Text(member["role"]),
                    );
                  },
                ),
