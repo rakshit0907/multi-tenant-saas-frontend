@@ -249,6 +249,7 @@ class ApiService {
   DateTime? dueDate,
   String priority,
   String status,
+  String? assigneeId,
 ) async {
   final prefs = await SharedPreferences.getInstance();
   final token = prefs.getString('token');
@@ -267,6 +268,7 @@ class ApiService {
       'dueDate': dueDate?.toIso8601String(),
       'priority': priority,
       'status': status,
+      'assigneeId': assigneeId,
     }),
   );
 
@@ -283,6 +285,7 @@ class ApiService {
   DateTime? dueDate,
   String priority,
   String status,
+  String? assigneeId,
 ) async {
   final prefs = await SharedPreferences.getInstance();
   final token = prefs.getString('token');
@@ -299,6 +302,7 @@ class ApiService {
       'dueDate': dueDate?.toIso8601String(),
       'priority': priority,
       'status': status,
+      'assigneeId': assigneeId,
     }),
   );
 

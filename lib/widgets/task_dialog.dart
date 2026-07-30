@@ -9,6 +9,8 @@ enum TaskStatus {
   COMPLETED,
 }
 class TaskDialog extends StatefulWidget {
+  final List members;
+  final String? initialAssigneeId;
   final String title;
   final String initialTitle;
   final String initialDescription;
@@ -23,6 +25,7 @@ class TaskDialog extends StatefulWidget {
     DateTime? dueDate,
     String priority,
     String status,
+    String? assigneeId,
   ) onSave;
 
   const TaskDialog({
@@ -35,6 +38,8 @@ class TaskDialog extends StatefulWidget {
     this.initialDueDate,
     this.initialPriority = "MEDIUM",
     this.initialStatus = "PENDING",
+    this.members = const [],
+    this.initialAssigneeId,
   });
 
   @override
@@ -48,6 +53,7 @@ class _TaskDialogState extends State<TaskDialog> {
   DateTime? dueDate;
   late TaskPriority selectedPriority;
   late TaskStatus selectedStatus;
+  String? selectedAssigneeId;
 
   @override
   void initState() {
@@ -155,6 +161,28 @@ class _TaskDialogState extends State<TaskDialog> {
                onChanged: (value) {
                  setState(() {
                    selectedStatus = value!;
+                   selectedAssigneeId = widget.initialAssigneeId;
+                 });
+                },
+              ),
+
+              const SizedBox(height: 16),
+
+              DropdownButtonFormField<String>(
+                value: selectedAssigneeId,
+                decoration: const InputDecoration(
+                  labelText: "Assign To",
+                  border: OutlineInputBorder(),
+                ),
+                items: widget.members.map<DropdownMenuItem<String>>((member) {
+                 return DropdownMenuItem<String>(
+                  value: member["user"]["id"],
+                  child: Text(member["user"]["name"]),
+                 );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                   selectedAssigneeId = value;
                  });
                 },
               ),
@@ -190,6 +218,7 @@ class _TaskDialogState extends State<TaskDialog> {
               dueDate,
               selectedPriority.name,
               selectedStatus.name,
+              selectedAssigneeId,
             );
 
             Navigator.pop(context);

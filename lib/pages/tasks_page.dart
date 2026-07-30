@@ -266,6 +266,7 @@ final matchesSearch =
                       dueDate,
                       priority,
                       status,
+                      assigneeId,
                     ) async {
                       await ApiService.updateTask(
                         task.id,
@@ -274,6 +275,7 @@ final matchesSearch =
                         dueDate,
                         priority,
                         status,
+                        assigneeId,
                       );
 
                       await loadTasks();
@@ -302,6 +304,7 @@ final matchesSearch =
           dueDate,
           priority,
           status,
+          assigneeId,
         ) async {
           await ApiService.createTask(
             widget.projectId,
@@ -310,6 +313,7 @@ final matchesSearch =
             dueDate,
             priority,
             status,
+            assigneeId,
           );
 
           await loadTasks();

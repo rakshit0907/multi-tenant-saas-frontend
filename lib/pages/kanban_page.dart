@@ -127,6 +127,7 @@ Widget build(BuildContext context) {
                     dueDate,
                     priority,
                     status,
+                    assigneeId,
                   ) async {
                     await ApiService.createTask(
                       widget.projectId,
@@ -135,6 +136,7 @@ Widget build(BuildContext context) {
                       dueDate,
                       priority,
                       status,
+                      assigneeId,
                     );
 
                      await loadTasks();
