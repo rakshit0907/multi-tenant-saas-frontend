@@ -18,6 +18,7 @@ class KanbanPage extends StatefulWidget {
 
 class _KanbanPageState extends State<KanbanPage> {
   List<Task> tasks = [];
+  List members = [];
   bool loading = true;
 
   @override
@@ -28,9 +29,11 @@ class _KanbanPageState extends State<KanbanPage> {
 
   Future<void> loadTasks() async {
     try {
+      final membersData = await ApiService.getProjectMembers(widget.projectId);
       final data = await ApiService.getTasks(widget.projectId);
 
       setState(() {
+        members = membersData;
         tasks = data.map<Task>((e) => Task.fromJson(e)).toList();
         loading = false;
       });
@@ -121,6 +124,7 @@ Widget build(BuildContext context) {
                 builder: (_) => TaskDialog(
                   title: "Create Task",
                   buttonText: "Create",
+                  members: members,
                   onSave: (
                     title,
                     description,
