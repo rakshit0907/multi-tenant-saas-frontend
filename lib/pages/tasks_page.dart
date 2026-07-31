@@ -25,6 +25,7 @@ class TasksPage extends StatefulWidget {
 class _TasksPageState extends State<TasksPage> {
   List<Task> tasks = [];
   TaskStats? stats;
+  List members = [];
   
   final TextEditingController searchController =
     TextEditingController();
@@ -46,7 +47,22 @@ class _TasksPageState extends State<TasksPage> {
   void initState() {
     super.initState();
     loadTasks();
+    loadMembers();
   }
+
+  Future<void> loadMembers() async {
+  try {
+    members = await ApiService.getProjectMembers(
+      widget.projectId,
+    );
+
+    debugPrint("$members");
+
+    setState(() {});
+  } catch (e) {
+    debugPrint(e.toString());
+  }
+}
 
   Future<void> toggleTask(String taskId) async {
     try {
@@ -256,10 +272,12 @@ final matchesSearch =
                   builder: (_) => TaskDialog(
                     title: "Edit Task",
                     buttonText: "Save",
+                    members: members,
                     initialTitle: task.title,
                     initialDescription: task.description ?? '',
                     initialDueDate: task.dueDate,
                     initialPriority: task.priority,
+                    initialStatus: task.status,
                     onSave: (
                       title,
                       description,
@@ -291,14 +309,17 @@ final matchesSearch =
     ), 
         
       floatingActionButton: FloatingActionButton(
-  child: const Icon(Icons.add),
-  onPressed: () {
-    showDialog(
-      context: context,
-      builder: (_) => TaskDialog(
-        title: "Create Task",
-        buttonText: "Create",
-        onSave: (
+        child: const Icon(Icons.add),
+        onPressed: () {
+          debugPrint("Project ID: ${widget.projectId}");
+          debugPrint("Members before dialog: $members");
+          showDialog(
+            context: context,
+            builder: (_) => TaskDialog(
+              title: "Create Task",
+              buttonText: "Create",
+              members: members,
+                onSave: (
           title,
           description,
           dueDate,
