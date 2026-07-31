@@ -77,6 +77,7 @@ class _TaskDialogState extends State<TaskDialog> {
       (priority) => priority.name == widget.initialStatus,
       orElse: () => TaskStatus.PENDING,
     );
+    selectedAssigneeId = widget.initialAssigneeId;
   }
 
   @override
@@ -103,6 +104,7 @@ class _TaskDialogState extends State<TaskDialog> {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint("Dialog members: ${widget.members}");
     return AlertDialog(
       title: Text(widget.title),
       content: SingleChildScrollView(
@@ -161,7 +163,6 @@ class _TaskDialogState extends State<TaskDialog> {
                onChanged: (value) {
                  setState(() {
                    selectedStatus = value!;
-                   selectedAssigneeId = widget.initialAssigneeId;
                  });
                 },
               ),
@@ -169,23 +170,32 @@ class _TaskDialogState extends State<TaskDialog> {
               const SizedBox(height: 16),
 
               DropdownButtonFormField<String>(
-                value: selectedAssigneeId,
+                initialValue: selectedAssigneeId,
                 decoration: const InputDecoration(
                   labelText: "Assign To",
                   border: OutlineInputBorder(),
                 ),
-                items: widget.members.map<DropdownMenuItem<String>>((member) {
-                 return DropdownMenuItem<String>(
-                  value: member["user"]["id"],
-                  child: Text(member["user"]["name"]),
-                 );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
+                items: [
+                 const DropdownMenuItem<String>(
+                   value: null,
+                   child: Text("Unassigned"),
+                 ),
+                 ...widget.members.map<DropdownMenuItem<String>>((member) {
+                   return DropdownMenuItem<String>(
+                     value: member["user"]["id"],
+                     child: Text(member["user"]["name"]),
+                   );
+                 }),
+               ],
+               onChanged: (value) {
+                 setState(() {
                    selectedAssigneeId = value;
                  });
                 },
-              ),
+               ),
+
+              const SizedBox(height: 16),
+
             const SizedBox(height: 16),
             ListTile(
               contentPadding: EdgeInsets.zero,
