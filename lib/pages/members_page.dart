@@ -178,13 +178,14 @@ class _MembersPageState extends State<MembersPage> {
                        children: [
                          Text(member["role"]),
 
-                         if (myRole == "OWNER")
-                         IconButton(
-                           icon: const Icon(
-                             Icons.delete,
-                             color: Colors.red,
-                           ),
-                           onPressed: () async {
+                         if (myRole == "OWNER" && member["role"] != "OWNER")
+                           const SizedBox(width: 8),
+                           IconButton(
+                             icon: const Icon(
+                               Icons.delete,
+                               color: Colors.red,
+                             ),
+                             onPressed: () async {
                              final confirm = await showDialog<bool>(
                               context: context,
                               builder: (_) => AlertDialog(

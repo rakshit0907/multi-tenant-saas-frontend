@@ -37,7 +37,15 @@ class _DashboardPageState extends State<DashboardPage> {
       });
       await loadProjects();
     } catch (e) {
-      debugPrint(e.toString());
+      if (!mounted) return;
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Only the project owner can delete this project.",
+          ),
+        ),
+      );
     }
   }
   Future<void> createProject() async {

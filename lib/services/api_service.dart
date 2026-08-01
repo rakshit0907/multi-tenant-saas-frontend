@@ -185,6 +185,9 @@ class ApiService {
       },
     );
 
+    debugPrint("REMOVE MEMBER STATUS: ${response.statusCode}");
+    debugPrint("REMOVE MEMBER BODY: ${response.body}");
+    
     if (response.statusCode != 200 &&
        response.statusCode != 204) {
         throw Exception(
