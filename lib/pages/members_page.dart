@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import '../models/user_model.dart';
 import '../services/api_service.dart';
 
 class MembersPage extends StatefulWidget {
@@ -15,6 +15,7 @@ class MembersPage extends StatefulWidget {
 }
 class _MembersPageState extends State<MembersPage> {
   List members = [];
+  List<UserModel> organizationUsers = [];
   bool loading = true;
 
   String? myRole;
@@ -25,6 +26,19 @@ class _MembersPageState extends State<MembersPage> {
     super.initState();
     loadMembers();
     loadMyRole();
+    loadOrganizationUsers();
+  }
+
+  Future<void> loadOrganizationUsers() async {
+    try {
+      final users = 
+          await ApiService.getOrganizationUsers();
+      setState(() {
+        organizationUsers = users;
+      });    
+    } catch (e) {
+      debugPrint(e.toString());
+    }
   }
 
   Future<void> loadMembers() async {

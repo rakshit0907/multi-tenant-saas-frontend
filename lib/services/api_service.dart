@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
+import '../models/user_model.dart';
 class ApiService {
   static const String baseUrl = 'http://10.0.2.2:3000';
   static Future<void> toggleTask(String taskId) async {
@@ -144,6 +145,28 @@ class ApiService {
     }
 
     throw Exception('Failed to load projects');
+  }
+
+  static Future<List<UserModel>> getOrganizationUsers() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/tenant/users'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final List data = jsonDecode(response.body);
+
+      return data
+          .map((e) => UserModel.fromJson(e))
+          .toList();
+    }
+
+    throw Exception("Failed to load organization users");
   }
 
   static Future<List<dynamic>> getProjectMembers(
