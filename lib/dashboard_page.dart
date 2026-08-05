@@ -5,6 +5,7 @@ import 'models/project.dart';
 import 'services/api_service.dart';
 import 'pages/kanban_page.dart';
 import 'pages/members_page.dart';
+import 'pages/project_dashboard_page.dart';
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
 
@@ -207,7 +208,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (_) => KanbanPage(
+                                            builder: (_) => ProjectDashboardPage(
                                               projectId: project.id,
                                               projectName: project.name,
                                             ),
