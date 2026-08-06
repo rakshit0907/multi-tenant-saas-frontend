@@ -3,7 +3,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'models/project.dart';
 import 'services/api_service.dart';
-import 'pages/kanban_page.dart';
 import 'pages/members_page.dart';
 import 'pages/project_dashboard_page.dart';
 class DashboardPage extends StatefulWidget {
