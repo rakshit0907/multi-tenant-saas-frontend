@@ -10,7 +10,10 @@ class KanbanPage extends StatefulWidget {
     super.key,
     required this.projectId,
     required this.projectName,
+    this.initialStatus,
   });
+
+  final String? initialStatus;
 
   @override
   State<KanbanPage> createState() => _KanbanPageState();
@@ -91,9 +94,25 @@ Widget build(BuildContext context) {
 
   final completedTasks =
       tasks.where((t) => t.status == "COMPLETED").toList();
+  
+  int initialTab = 0;
+
+  switch (widget.initialStatus) {
+    case "IN_PROGRESS":
+    initialTab = 1;
+    break;
+
+  case "COMPLETED":
+    initialTab = 2;
+    break;
+
+  default:
+    initialTab = 0;
+}
 
   return DefaultTabController(
     length: 3,
+    initialIndex: initialTab,
     child: Scaffold(
       appBar: AppBar(
         title: Column(
@@ -209,6 +228,7 @@ class KanbanColumn extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
+          
             subtitle: Column(
                crossAxisAlignment: CrossAxisAlignment.start,
                children: [
