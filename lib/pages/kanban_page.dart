@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/task.dart';
 import '../services/api_service.dart';
 import '../widgets/task_dialog.dart';
+import 'task_details_page.dart';
 class KanbanPage extends StatefulWidget {
   final String projectId;
   final String projectName;
@@ -222,6 +223,16 @@ class KanbanColumn extends StatelessWidget {
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
           child: ListTile(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => TaskDetailsPage(
+                    task: task,
+                  ),
+                ),
+                );
+            },
             title: Text(
               task.title,
               style: const TextStyle(
