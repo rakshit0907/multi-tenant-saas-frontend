@@ -18,12 +18,15 @@ class TaskDetailsPage extends StatefulWidget {
 }
 
 class _TaskDetailsPageState extends State<TaskDetailsPage> {
+  late Task currentTask;
+
   late TextEditingController titleController;
   late TextEditingController descriptionController;
 
-  late DateTime? selectedDueDate;
+  DateTime? selectedDueDate;
   late String selectedPriority;
   late String selectedStatus;
+
   String? selectedAssigneeId;
 
   bool saving = false;
@@ -32,17 +35,19 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
   void initState() {
     super.initState();
 
+    currentTask = widget.task;
+
     titleController = TextEditingController(
-      text: widget.task.title,
+      text: currentTask.title,
     );
 
     descriptionController = TextEditingController(
-      text: widget.task.description ?? '',
+      text: currentTask.description ?? '',
     );
 
-    selectedDueDate = widget.task.dueDate;
-    selectedPriority = widget.task.priority;
-    selectedStatus = widget.task.status;
+    selectedDueDate = currentTask.dueDate;
+    selectedPriority = currentTask.priority;
+    selectedStatus = currentTask.status;
     selectedAssigneeId = null;
   }
 
@@ -69,7 +74,7 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
 
     try {
       await ApiService.updateTask(
-        widget.task.id,
+        currentTask.id,
         titleController.text.trim(),
         descriptionController.text.trim(),
         selectedDueDate,
@@ -80,13 +85,23 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
 
       if (!mounted) return;
 
+      setState(() {
+        currentTask = Task(
+          id: currentTask.id,
+          title: titleController.text.trim(),
+          completed: currentTask.completed,
+          description: descriptionController.text.trim(),
+          dueDate: selectedDueDate,
+          priority: selectedPriority,
+          status: selectedStatus,
+        );
+      });
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Task updated successfully'),
         ),
       );
-
-      Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
 
@@ -104,23 +119,6 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
     }
   }
 
-  Future<void> pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: selectedDueDate ?? DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime(2100),
-    );
-
-    if (!mounted) return;
-
-    if (picked != null) {
-      setState(() {
-        selectedDueDate = picked;
-      });
-    }
-  }
-
   void openEditDialog() {
     showDialog(
       context: context,
@@ -128,11 +126,11 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
         title: 'Edit Task',
         buttonText: 'Save',
         members: widget.members,
-        initialTitle: titleController.text,
-        initialDescription: descriptionController.text,
-        initialDueDate: selectedDueDate,
-        initialPriority: selectedPriority,
-        initialStatus: selectedStatus,
+        initialTitle: currentTask.title,
+        initialDescription: currentTask.description ?? '',
+        initialDueDate: currentTask.dueDate,
+        initialPriority: currentTask.priority,
+        initialStatus: currentTask.status,
         initialAssigneeId: selectedAssigneeId,
         onSave: (
           title,
@@ -144,7 +142,7 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
         ) async {
           try {
             await ApiService.updateTask(
-              widget.task.id,
+              currentTask.id,
               title,
               description,
               dueDate,
@@ -155,7 +153,32 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
 
             if (!mounted) return;
 
-            Navigator.pop(context, true);
+            setState(() {
+              currentTask = Task(
+                id: currentTask.id,
+                title: title,
+                completed: currentTask.completed,
+                description: description,
+                dueDate: dueDate,
+                priority: priority,
+                status: status,
+              );
+
+              titleController.text = title;
+              descriptionController.text = description;
+              selectedDueDate = dueDate;
+              selectedPriority = priority;
+              selectedStatus = status;
+              selectedAssigneeId = assigneeId;
+            });
+
+            Navigator.pop(context);
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Task updated successfully'),
+              ),
+            );
           } catch (e) {
             if (!mounted) return;
 
@@ -211,8 +234,6 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final task = widget.task;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Task Details'),
@@ -229,7 +250,7 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              task.title,
+              currentTask.title,
               style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -238,8 +259,8 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
 
             const SizedBox(height: 20),
 
-            if (task.description != null &&
-                task.description!.isNotEmpty) ...[
+            if (currentTask.description != null &&
+                currentTask.description!.isNotEmpty) ...[
               const Text(
                 'Description',
                 style: TextStyle(
@@ -249,7 +270,7 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
               ),
               const SizedBox(height: 8),
               Text(
-                task.description!,
+                currentTask.description!,
                 style: TextStyle(
                   fontSize: 15,
                   color: Colors.grey.shade700,
@@ -261,30 +282,32 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
             buildInfoRow(
               Icons.flag,
               'Priority',
-              task.priority,
+              currentTask.priority,
             ),
 
             buildInfoRow(
               Icons.info_outline,
               'Status',
-              task.status.replaceAll('_', ' '),
+              currentTask.status.replaceAll('_', ' '),
             ),
 
-            if (task.dueDate != null)
+            if (currentTask.dueDate != null)
               buildInfoRow(
                 Icons.calendar_today,
                 'Due Date',
-                '${task.dueDate!.day.toString().padLeft(2, '0')}/'
-                    '${task.dueDate!.month.toString().padLeft(2, '0')}/'
-                    '${task.dueDate!.year}',
+                '${currentTask.dueDate!.day.toString().padLeft(2, '0')}/'
+                    '${currentTask.dueDate!.month.toString().padLeft(2, '0')}/'
+                    '${currentTask.dueDate!.year}',
               ),
 
             buildInfoRow(
-              task.completed
+              currentTask.completed
                   ? Icons.check_circle
                   : Icons.radio_button_unchecked,
               'Completion',
-              task.completed ? 'Completed' : 'Not Completed',
+              currentTask.completed
+                  ? 'Completed'
+                  : 'Not Completed',
             ),
 
             const SizedBox(height: 20),
@@ -313,3 +336,4 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
     );
   }
 }
+
