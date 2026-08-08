@@ -268,6 +268,27 @@ class ApiService {
 
     throw Exception('Failed to load tasks');
   }
+
+  static Future<Map<String, dynamic>> getTask(
+    String taskId,
+
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/tasks/$taskId'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+
+    throw Exception('Failed to load task');
+  }
   static Future<void> createTask(
   String projectId,
   String title,
