@@ -48,7 +48,7 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
     selectedDueDate = currentTask.dueDate;
     selectedPriority = currentTask.priority;
     selectedStatus = currentTask.status;
-    selectedAssigneeId = null;
+    selectedAssigneeId = widget.task.assigneeId;
   }
 
   @override
@@ -94,6 +94,8 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
           dueDate: selectedDueDate,
           priority: selectedPriority,
           status: selectedStatus,
+          assigneeId: selectedAssigneeId,
+          assigneeName: currentTask.assigneeName,
         );
       });
 
@@ -162,6 +164,8 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
                 dueDate: dueDate,
                 priority: priority,
                 status: status,
+                assigneeId: assigneeId,
+                assigneeName: currentTask.assigneeName,
               );
 
               titleController.text = title;
@@ -299,6 +303,14 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
                     '${currentTask.dueDate!.month.toString().padLeft(2, '0')}/'
                     '${currentTask.dueDate!.year}',
               ),
+
+            buildInfoRow(
+              Icons.person_outline,
+              'Assigned To',
+              currentTask.assigneeName ?? 'Uassigned',
+            ),  
+
+            
 
             buildInfoRow(
               currentTask.completed

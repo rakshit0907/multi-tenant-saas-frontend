@@ -1,12 +1,14 @@
 class Task {
   final String id;
   final String title;
- final bool completed;
+  final bool completed;
 
   final String? description;
   final DateTime? dueDate;
- final String priority;
- final String status;
+  final String priority;
+  final String status;
+  final String? assigneeId;
+  final String? assigneeName;
 
   Task({
     required this.id,
@@ -16,6 +18,8 @@ class Task {
     this.dueDate,
     required this.priority,
     required this.status,
+    this.assigneeId,
+    this.assigneeName,
   });
 
   factory Task.fromJson(Map<String, dynamic> json) {
@@ -29,6 +33,8 @@ class Task {
           : null,
       priority: json['priority'] ?? 'MEDIUM',
       status: json['status'] ?? 'PENDING',
+      assigneeId: json['assignee']?['id'],
+      assigneeName: json['assignee']?['name'],
     );
   }
 }  
