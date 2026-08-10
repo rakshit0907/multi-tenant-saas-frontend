@@ -77,7 +77,15 @@ class _TaskDialogState extends State<TaskDialog> {
       (priority) => priority.name == widget.initialStatus,
       orElse: () => TaskStatus.PENDING,
     );
-    selectedAssigneeId = widget.initialAssigneeId;
+
+    final memberIds = widget.members
+        .map((member) => member['user']?['id']?.toString())
+        .whereType<String>()
+        .toSet();
+
+    selectedAssigneeId = memberIds.contains(widget.initialAssigneeId)
+         ? widget.initialAssigneeId
+         : null;
   }
 
   @override
@@ -86,6 +94,48 @@ class _TaskDialogState extends State<TaskDialog> {
     descriptionController.dispose();
     super.dispose();
   }
+  
+  List<DropdownMenuItem<String>> buildAssigneeItems() {
+    final seenIds = <String>{};
+
+    final items = <DropdownMenuItem<String>>[
+      const DropdownMenuItem<String>(
+        value: null,
+        child: Text('Unassigned'),
+      ),
+    ];
+
+    for (final member in widget.members) {
+      final user = member['user'];
+
+      if (user == null) {
+        continue;
+      }
+
+      final id = user['id']?.toString();
+      final name = user['name']?.toString();
+
+    // Ignore members without a valid user ID
+      if (id == null || id.isEmpty) {
+        continue;
+     }
+
+    // Ignore duplicate users
+     if (!seenIds.add(id)) {
+       continue;
+     }
+
+     items.add(
+       DropdownMenuItem<String>(
+         value: id,
+         child: Text(name ?? 'Unknown User'),
+       ),
+     );
+   }
+
+   return items;
+  }
+
 
   Future<void> pickDate() async {
     final picked = await showDatePicker(
@@ -168,33 +218,22 @@ class _TaskDialogState extends State<TaskDialog> {
               ),
 
               const SizedBox(height: 16),
-
+              
               DropdownButtonFormField<String>(
                 initialValue: selectedAssigneeId,
                 decoration: const InputDecoration(
-                  labelText: "Assign To",
+                  labelText: 'Assign To',
                   border: OutlineInputBorder(),
                 ),
-                items: [
-                 const DropdownMenuItem<String>(
-                   value: null,
-                   child: Text("Unassigned"),
-                 ),
-                 ...widget.members.map<DropdownMenuItem<String>>((member) {
-                   return DropdownMenuItem<String>(
-                     value: member["user"]["id"],
-                     child: Text(member["user"]["name"]),
-                   );
-                 }),
-               ],
-               onChanged: (value) {
-                 setState(() {
-                   selectedAssigneeId = value;
-                 });
-                },
-               ),
+                items: buildAssigneeItems(),
+                onChanged: (value) {
+                  setState(() {
+                selectedAssigneeId = value;
+              });
+            },
+          ),
 
-              const SizedBox(height: 16),
+           const SizedBox(height: 16),
 
             const SizedBox(height: 16),
             ListTile(

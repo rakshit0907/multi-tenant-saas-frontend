@@ -31,6 +31,18 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
 
   bool saving = false;
 
+  String? _getAssigneeName(String? assigneeId) {
+    if (assigneeId == null) return null;
+
+    for (final member in widget.members) {
+      if (member['user']?['id'] == assigneeId) {
+        return member['user']?['name'];
+      }
+    }
+
+    return null;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -95,7 +107,7 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
           priority: selectedPriority,
           status: selectedStatus,
           assigneeId: selectedAssigneeId,
-          assigneeName: currentTask.assigneeName,
+          assigneeName: _getAssigneeName(selectedAssigneeId),
         );
       });
 
@@ -165,7 +177,7 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
                 priority: priority,
                 status: status,
                 assigneeId: assigneeId,
-                assigneeName: currentTask.assigneeName,
+                assigneeName: _getAssigneeName(assigneeId),
               );
 
               titleController.text = title;
