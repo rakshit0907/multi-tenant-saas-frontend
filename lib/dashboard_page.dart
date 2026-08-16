@@ -5,6 +5,7 @@ import 'models/project.dart';
 import 'services/api_service.dart';
 import 'pages/members_page.dart';
 import 'pages/project_dashboard_page.dart';
+import 'pages/notifications_page.dart';
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
 
@@ -163,6 +164,17 @@ class _DashboardPageState extends State<DashboardPage> {
         title: const Text('Projects'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.notifications_outlined),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const NotificationsPage(),
+                ),
+              );
+            },
+          ),
+          IconButton(  
             onPressed: logout,
             icon: const Icon(Icons.logout),
           ),

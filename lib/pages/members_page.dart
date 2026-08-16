@@ -19,13 +19,11 @@ class _MembersPageState extends State<MembersPage> {
   bool loading = true;
 
   String? myRole;
-  final emailController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     loadMembers();
-    loadMyRole();
     loadOrganizationUsers();
   }
 
@@ -33,6 +31,8 @@ class _MembersPageState extends State<MembersPage> {
     try {
       final users = 
           await ApiService.getOrganizationUsers();
+
+          debugPrint("ORGANIZATION USERS: $users");
       setState(() {
         organizationUsers = users;
       });    
@@ -97,45 +97,109 @@ class _MembersPageState extends State<MembersPage> {
   }
   
   Future<void> showAddMemberDialog() async {
-    emailController.clear();
+    String? selectedUserId;
 
-    showDialog(
+    await showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text("Add Member"),
-        content: TextField(
-          controller: emailController,
-          decoration: const InputDecoration(
-            hintText: "Enter member email",
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              try {
-                await ApiService.addMember(
-                  widget.projectId,
-                  emailController.text.trim(),
-                );
+      builder: (_) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final availableUsers = organizationUsers
+                .where(
+                  (user) => !members.any(
+                    (member) =>
+                        member["user"]["id"] == user.id,
+                  ),
+                )
+                .toList();
 
-                if (!mounted) return;
+            return AlertDialog(
+              title: const Text("Invite Member"),
 
-                Navigator.pop(context);
+              content: availableUsers.isEmpty
+                  ? const Text(
+                     "No users available to invite.",
+                    )
+                  : DropdownButtonFormField<String>(
+                      value: selectedUserId,
+                      decoration: const InputDecoration(
+                        labelText: "Select user",
+                        border: OutlineInputBorder(),
+                      ),
 
-                await loadMembers();
-              } catch (e) {
-                debugPrint(e.toString());
-             }
-            },
-            child: const Text("Add"),
-          ),
-        ],
-      ),
-    );
+                      items: availableUsers
+                          .map(
+                            (user) => DropdownMenuItem<String>(
+                              value: user.id,
+                              child: Text(
+                                "${user.name} (${user.email})",
+                              ),
+                            ),
+                          )
+                          .toList(),
+
+                      onChanged: (value) {
+                        setDialogState(() {
+                          selectedUserId = value;
+                        });
+                      },
+                    ),
+
+               actions: [
+                 TextButton(
+                   onPressed: () {
+                     Navigator.pop(context);
+                   },
+                   child: const Text("Cancel"),
+                 ),
+
+                 ElevatedButton(
+                   onPressed: selectedUserId == null
+                       ? null
+                       : () async {
+                           try {
+                             await ApiService.createInvitation(
+                               widget.projectId,
+                               selectedUserId!,
+                             );
+
+                             if (!context.mounted) return;
+
+                             Navigator.pop(context);
+
+                             ScaffoldMessenger.of(context)
+                                 .showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  "Invitation sent successfully",
+                                ),
+                              ),
+                            );
+                          } catch (e) {
+                            debugPrint(
+                              "INVITATION ERROR: $e",
+                            );
+
+                            if (!context.mounted) return;
+
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  "Failed to send invitation",
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                   child: const Text("Invite"),
+                 ),
+               ],
+             );
+           },
+         );
+       },
+     );
   }
   @override
   Widget build(BuildContext context) {
@@ -193,47 +257,53 @@ class _MembersPageState extends State<MembersPage> {
                          Text(member["role"]),
 
                          if (myRole == "OWNER" && member["role"] != "OWNER")
-                           const SizedBox(width: 8),
-                           IconButton(
-                             icon: const Icon(
-                               Icons.delete,
-                               color: Colors.red,
-                             ),
-                             onPressed: () async {
-                             final confirm = await showDialog<bool>(
-                              context: context,
-                              builder: (_) => AlertDialog(
-                                title: const Text("Remove Member"),
-                                content: Text(
-                                  "Remove ${member["user"]["name"]} from this project?",
-                                ),
-                                actions: [
-                                 TextButton(
-                                   onPressed: () =>
-                                       Navigator.pop(context, false),
-                                   child: const Text("Cancel"),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const SizedBox(width: 8),
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.delete,
+                                    color: Colors.red,
                                  ),
-                                 ElevatedButton(
-                                   onPressed: () =>
-                                       Navigator.pop(context, true),
-                                   child: const Text("Remove"),
-                                 ),
-                               ],
-                             ),
-                           );
+                                 onPressed: () async {
+                                   final confirm = await showDialog<bool>(
+                                     context: context,
+                                     builder: (_) => AlertDialog(
+                                       title: const Text("Remove Member"),
+                                       content: Text(
+                                         "Remove ${member["user"]["name"]} from this project?",
+                                       ),
+                                       actions: [
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context, false),
+                                          child: const Text("Cancel"),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context, true),
+                                          child: const Text("Remove"),
+                                       ),
+                                     ],
+                                   ),
+                                 );
 
-                           if (confirm == true) {
-                             await removeMember(
-                               member["user"]["id"],
-                              );
-                             }
-                           },
-                         ),
-                       ],
-                     )
-                   );
-                 },
-               ),
-             );
-            }
-          }
+                                 if (confirm == true) {
+                                   await removeMember(
+                                     member["user"]["id"],
+                                   );
+                                  }
+                                },
+                               ),
+                             ],
+                            ),
+                           ], 
+                     
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                }
+              }
