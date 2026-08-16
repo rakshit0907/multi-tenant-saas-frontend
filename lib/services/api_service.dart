@@ -240,8 +240,8 @@ class ApiService {
      if (response.statusCode != 200 &&
          response.statusCode != 201) {
 
-       debugPrint("ADD MEMBER STATUS: ${response.statusCode}");
-       debugPrint("ADD MEMBER BODY: ${response.body}");
+       debugPrint("Invite Member STATUS: ${response.statusCode}");
+       debugPrint("Invite Member BODY: ${response.body}");
 
        throw Exception('Failed to add member');
 }
@@ -381,5 +381,176 @@ class ApiService {
   }
   }
 
+  static Future<void> createInvitation(
+    String projectId,
+    String userId,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    final response = await http.post(
+      Uri.parse(
+        '$baseUrl/project-invitations/projects/$projectId',
+      ),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'userId': userId,
+      }),
+    );
+
+    debugPrint("CREATE INVITATION STATUS: ${response.statusCode}");
+    debugPrint("CREATE INVITATION BODY: ${response.body}");
+
+    if (response.statusCode != 200 &&
+        response.statusCode != 201) {
+      throw Exception('Failed to create invitation');
+    }
+  }
+
+ static Future<List<dynamic>> getMyInvitations() async {
+   final prefs = await SharedPreferences.getInstance();
+   final token = prefs.getString('token');
+
+   final response = await http.get(
+     Uri.parse('$baseUrl/project-invitations/mine'),
+     headers: {
+       'Authorization': 'Bearer $token',
+     },
+   );
+
+   debugPrint("MY INVITATIONS STATUS: ${response.statusCode}");
+   debugPrint("MY INVITATIONS BODY: ${response.body}");
+
+   if (response.statusCode == 200) {
+     return jsonDecode(response.body);
+   }
+
+   throw Exception('Failed to load invitations');
+ }
+
+ static Future<void> acceptInvitation(
+   String invitationId,
+ ) async {
+   final prefs = await SharedPreferences.getInstance();
+   final token = prefs.getString('token');
+
+   final response = await http.patch(
+     Uri.parse(
+       '$baseUrl/project-invitations/$invitationId/accept',
+     ),
+     headers: {
+      'Authorization': 'Bearer $token',
+     },
+   );
+
+   debugPrint("ACCEPT INVITATION STATUS: ${response.statusCode}");
+   debugPrint("ACCEPT INVITATION BODY: ${response.body}");
+
+   if (response.statusCode != 200) {
+     throw Exception('Failed to accept invitation');
+   }
+ }
+
+ static Future<void> rejectInvitation(
+   String invitationId,
+ ) async {
+   final prefs = await SharedPreferences.getInstance();
+   final token = prefs.getString('token');
+
+   final response = await http.patch(
+     Uri.parse(
+       '$baseUrl/project-invitations/$invitationId/reject',
+     ),
+     headers: {
+       'Authorization': 'Bearer $token',
+     },
+   );
+
+   debugPrint("REJECT INVITATION STATUS: ${response.statusCode}");
+   debugPrint("REJECT INVITATION BODY: ${response.body}");
+
+   if (response.statusCode != 200) {
+     throw Exception('Failed to reject invitation');
+   }
+  }
+  
+  static Future<List<dynamic>> getNotifications() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/notifications'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    debugPrint("NOTIFICATIONS STATUS: ${response.statusCode}");
+    debugPrint("NOTIFICATIONS BODY: ${response.body}");
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+
+    throw Exception('Failed to load notifications');
+  }
+
+  static Future<int> getUnreadNotificationCount() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/notifications/unread-count'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['count'] ?? 0;
+    }
+
+    throw Exception('Failed to load unread notification count');
+  }
+
+  static Future<void> markNotificationAsRead(
+    String notificationId,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    final response = await http.patch(
+      Uri.parse(
+        '$baseUrl/notifications/$notificationId/read',
+      ),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to mark notification as read');
+    }
+  }
+
+  static Future<void> markAllNotificationsAsRead() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    final response = await http.patch(
+      Uri.parse('$baseUrl/notifications/read-all'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to mark all notifications as read');
+    }
+  }
 
 }
