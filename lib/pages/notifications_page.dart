@@ -179,8 +179,72 @@ class _NotificationsPageState extends State<NotificationsPage> {
                                 size: 10,
                               ),
 
-                        onTap: () {
-                          markAsRead(notification);
+                        onTap: () async {
+                          await markAsRead(notification);
+                          if (!mounted) return;
+
+                          if (notification.type == 
+                               NotificationType.projectInvitation) {
+                            final invitationId = 
+                                notification.metadata?['invitationId'];
+
+                            if (invitationId == null) {
+                              debugPrint("❌ No invitationId in notification metadata");
+                              return;
+                            }    
+
+                            await showDialog(
+                              context: context,
+                              builder: (_) => AlertDialog(
+                                title: const Text("Project Invitation"),
+                                content: Text(notification.message),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () async {
+                                      try {
+                                        await ApiService.rejectInvitation(
+                                          invitationId.toString(),
+                                        );
+
+                                        if (!mounted) return;
+                                        Navigator.pop(context);
+                                        await loadNotifications();
+                                      } catch (e) {
+                                        debugPrint("REJECT ERROR: $e");
+                                      }  
+                                    },
+                                     child: const Text("Reject"),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () async {
+                                      try {
+                                        await ApiService.acceptInvitation(
+                                          invitationId.toString(),
+                                        );
+
+                                        if (!mounted) return;
+                                        Navigator.pop(context);
+
+                                        await loadNotifications();
+
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              "Invitation accepted. You are now a project member."
+                                            ),
+                                          ),
+                                        ); 
+                                      } catch (e) {
+                                        debugPrint("ACCEPT ERROR: $e");
+                                      }
+                                    },
+                                    child: const Text("ACCEPT"),
+                                  ),
+                                ],
+                              ),
+                            );
+                           }
+ 
                         },
                       );
                     },
