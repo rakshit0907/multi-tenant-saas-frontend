@@ -219,6 +219,39 @@ class ApiService {
      }
   } 
 
+  static Future<void> updateMemberRole(
+    String projectId,
+    String userId,
+    String role,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    final response = await http.patch(
+      Uri.parse(
+        '$baseUrl/projects/$projectId/members/$userId/role',
+      ),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'role': role,
+      }),
+     );
+
+    debugPrint(
+      "UPDATE ROLE STATUS: ${response.statusCode}",
+    );
+    debugPrint(
+      "UPDATE ROLE BODY: ${response.body}",
+    );
+
+    if (response.statusCode != 200) {
+       throw Exception('Failed to update member role');
+   }
+ }
+
   static Future<void> addMember(
     String projectId,
     String email,
@@ -476,6 +509,35 @@ class ApiService {
      throw Exception('Failed to reject invitation');
    }
   }
+
+  static Future<List<dynamic>> getProjectActivity(
+    String projectId,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    final response = await http.get(
+      Uri.parse(
+       '$baseUrl/activity/project/$projectId',
+    ),
+     headers: {
+       'Authorization': 'Bearer $token',
+     },
+   );
+
+   debugPrint(
+     "ACTIVITY STATUS: ${response.statusCode}",
+   );
+   debugPrint(
+      "ACTIVITY BODY: ${response.body}",
+   );
+
+   if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+   }
+
+   throw Exception('Failed to load project activity');
+ }
   
   static Future<List<dynamic>> getNotifications() async {
     final prefs = await SharedPreferences.getInstance();

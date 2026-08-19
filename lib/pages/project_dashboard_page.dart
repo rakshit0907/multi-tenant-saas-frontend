@@ -21,6 +21,7 @@ class ProjectDashboardPage extends StatefulWidget {
 class _ProjectDashboardPageState
     extends State<ProjectDashboardPage> {
   Map<String, dynamic>? stats;
+  List<dynamic> activities = [];
   bool loading = true;
 
   @override
@@ -34,8 +35,14 @@ class _ProjectDashboardPageState
       final data =
           await ApiService.getTaskStats(widget.projectId);
 
+       final activityData =
+          await ApiService.getProjectActivity(widget.projectId);
+
+       debugPrint("PROJECT ACTIVITY: $activityData");    
+
       setState(() {
         stats = data;
+        activities = activityData;
         loading = false;
       });
     } catch (e) {
@@ -268,6 +275,129 @@ class _ProjectDashboardPageState
                       },
                     ),
                   ),
+
+                  const SizedBox(height: 20),
+
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "Recent Activity",
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          if (activities.isEmpty)
+                            const Text(
+                              "No recent activity",
+                              style: TextStyle(
+                                color: Colors.grey,
+                            ),
+                          )
+                        else
+                         ...activities.map(
+                           (activity) {
+                              final user =
+                                   activity["user"]?["name"] ?? "Unknown user";
+
+                              final action =
+                                   activity["action"] ?? "UNKNOWN";
+
+                              final task =
+                                    activity["task"]?["title"];
+
+                              String message;
+
+                              switch (action) {
+                                case "MEMBER_ADDED":
+                               final name =
+                      activity["metadata"]?["addedUserName"] ??
+                          "a member";
+                  message =
+                      "$user added $name to the project";
+                  break;
+
+                case "MEMBER_REMOVED":
+                  final name =
+                      activity["metadata"]?["removedUserName"] ??
+                          "a member";
+                  message =
+                      "$user removed $name from the project";
+                  break;
+
+                case "MEMBER_ROLE_CHANGED":
+                  final name =
+                      activity["metadata"]?["targetUserName"] ??
+                          "a member";
+                  final newRole =
+                      activity["metadata"]?["newRole"] ??
+                          "a new role";
+                  message =
+                      "$user changed $name's role to $newRole";
+                  break;
+
+                case "TASK_CREATED":
+                  message =
+                      "$user created task ${task ?? ""}";
+                  break;
+
+                case "TASK_UPDATED":
+                  message =
+                      "$user updated task ${task ?? ""}";
+                  break;
+
+                case "TASK_DELETED":
+                  message =
+                      "$user deleted task ${task ?? ""}";
+                  break;
+
+                default:
+                  message =
+                      "$user performed $action";
+              }
+
+              return Padding(
+                padding:
+                    const EdgeInsets.only(bottom: 14),
+                child: Row(
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start,
+                  children: [
+                    const CircleAvatar(
+                      radius: 18,
+                      child: Icon(
+                        Icons.history,
+                        size: 18,
+                      ),
+                    ),
+
+                    const SizedBox(width: 12),
+
+                    Expanded(
+                      child: Text(
+                        message,
+                        style: const TextStyle(
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+      ],
+    ),
+  ),
+),    
+
                 ],
               ),
             ),
