@@ -53,6 +53,43 @@ class _ProjectDashboardPageState
       });
     }
   }
+  
+  String _formatActivityTime(dynamic createdAt) {
+    if (createdAt == null) {
+       return '';
+    }
+
+    final date = DateTime.tryParse(createdAt.toString());
+
+    if (date == null) {
+      return '';
+    }
+
+    final now = DateTime.now();
+    final difference = now.difference(date.toLocal());
+
+    if (difference.inSeconds < 60) {
+      return 'Just now';
+    }
+
+    if (difference.inMinutes < 60) {
+       return '${difference.inMinutes} minute${difference.inMinutes == 1 ? '' : 's'} ago';
+    }
+
+    if (difference.inHours < 24) {
+       return '${difference.inHours} hour${difference.inHours == 1 ? '' : 's'} ago';
+    }
+
+    if (difference.inDays == 1) {
+       return 'Yesterday';
+    }
+
+    if (difference.inDays < 7) {
+      return '${difference.inDays} days ago';
+    }
+
+     return '${date.day}/${date.month}/${date.year}';
+ }
 
   @override
   Widget build(BuildContext context) {
@@ -381,11 +418,26 @@ class _ProjectDashboardPageState
                     const SizedBox(width: 12),
 
                     Expanded(
-                      child: Text(
-                        message,
-                        style: const TextStyle(
-                          fontSize: 15,
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            message,
+                            style: const TextStyle(
+                              fontSize: 15,
+                            ),
+                          ),
+
+                          const SizedBox(height: 4),
+
+                          Text(
+                            _formatActivityTime(activity["createdAt"]),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
