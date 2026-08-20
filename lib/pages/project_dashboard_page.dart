@@ -91,6 +91,41 @@ class _ProjectDashboardPageState
      return '${date.day}/${date.month}/${date.year}';
  }
 
+ String _formatStatus(dynamic status) {
+   switch (status?.toString()) {
+     case "PENDING":
+       return "Pending";
+
+       case "IN_PROGRESS":
+         return "In Progress";
+
+       case "COMPLETED":
+         return "Completed";
+
+       default:
+         return status?.toString() ?? "Unknown";
+     }
+  }
+
+  String _formatPriority(dynamic priority) {
+    switch (priority?.toString()) {
+      case "LOW":
+        return "Low";
+
+      case "MEDIUM":
+        return "Medium";
+
+      case "HIGH":
+        return "High";
+
+      case "URGENT":
+        return "Urgent";
+
+      default:
+        return priority?.toString() ?? "Unknown";
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -354,51 +389,61 @@ class _ProjectDashboardPageState
 
                               switch (action) {
                                 case "MEMBER_ADDED":
-                               final name =
-                      activity["metadata"]?["addedUserName"] ??
-                          "a member";
-                  message =
-                      "$user added $name to the project";
-                  break;
+                                  final name = activity["metadata"]?["addedUserName"] ?? "a member";
+                                   message = "$user added $name to the project";
+                                   break;
 
-                case "MEMBER_REMOVED":
-                  final name =
-                      activity["metadata"]?["removedUserName"] ??
-                          "a member";
-                  message =
-                      "$user removed $name from the project";
-                  break;
+                                 case "MEMBER_REMOVED":
+                                   final name = activity["metadata"]?["removedUserName"] ?? "a member";
+                                   message = "$user removed $name from the project";
+                                   break;
 
-                case "MEMBER_ROLE_CHANGED":
-                  final name =
-                      activity["metadata"]?["targetUserName"] ??
-                          "a member";
-                  final newRole =
-                      activity["metadata"]?["newRole"] ??
-                          "a new role";
-                  message =
-                      "$user changed $name's role to $newRole";
-                  break;
+                                 case "MEMBER_ROLE_CHANGED":
+                                   final name = activity["metadata"]?["targetUserName"] ?? "a member";
+                                   final newRole = activity["metadata"]?["newRole"] ?? "a new role";
+                                   message = "$user changed $name's role to $newRole";
+                                   break;
 
-                case "TASK_CREATED":
-                  message =
-                      "$user created task ${task ?? ""}";
-                  break;
+                                 case "TASK_CREATED":
+                                   message = "$user created task ${task ?? ""}";
+                                   break;
 
-                case "TASK_UPDATED":
-                  message =
-                      "$user updated task ${task ?? ""}";
-                  break;
+                                 case "TASK_UPDATED":
+                                    message = "$user updated task ${task ?? ""}";
+                                    break;
+                                  
+                                 case "TASK_STATUS_CHANGED":
+                                   final oldStatus = activity["metadata"]?["oldStatus"] ?? "Unknown";
 
-                case "TASK_DELETED":
-                  message =
-                      "$user deleted task ${task ?? ""}";
-                  break;
+                                   final newStatus = activity["metadata"]?["newStatus"] ?? "Unknown";
 
-                default:
-                  message =
-                      "$user performed $action";
-              }
+                                   final taskName = task ?? "a task";
+
+                                   message =
+                                       "$user changed \"$taskName\" status from "
+                                       "${_formatStatus(oldStatus)} to "
+                                       "${_formatStatus(newStatus)}";
+                                    break;
+
+                                 case "TASK_PRIORITY_CHANGED":
+                                  final oldPriority = activity["metadata"]?["oldPriority"] ?? "Unknown";
+
+                                  final newPriority = activity["metadata"]?["newPriority"] ?? "Unknown";
+
+                                  final taskName = task ?? "a task";
+
+                                  message =
+                                      "$user changed \"$taskName\" priority from "
+                                      "${_formatPriority(oldPriority)} to "
+                                      "${_formatPriority(newPriority)}";
+                                  break;    
+                                 case "TASK_DELETED":
+                                    message = "$user deleted task ${task ?? ""}";
+                                    break;
+
+                                 default:
+                                   message = "$user performed $action";
+                                }
 
               return Padding(
                 padding:
