@@ -46,21 +46,46 @@ class _TasksPageState extends State<TasksPage> {
   @override
   void initState() {
     super.initState();
-    loadTasks();
-    loadMembers();
+    loadPageData();
   }
+
+  Future<void> loadPageData() async {
+   try {
+     await Future.wait([
+       loadTasks(),
+       loadMembers(),
+     ]);
+
+     if (!mounted) return;
+
+     setState(() {
+       loading = false;
+     });
+     } catch (e) {
+       debugPrint("LOAD PAGE ERROR: $e");
+
+       if (!mounted) return;
+
+       setState(() {
+         loading = false;
+       });
+     }
+ }
 
   Future<void> loadMembers() async {
   try {
-    members = await ApiService.getProjectMembers(
+    final data = await ApiService.getProjectMembers(
       widget.projectId,
     );
 
-    debugPrint("$members");
+    if (!mounted) return;
+    setState(() {
+      members = data;
+    });
 
-    setState(() {});
+    debugPrint("MEMBERS STATE AFTER SET: ${members.length}");
   } catch (e) {
-    debugPrint(e.toString());
+    debugPrint("LOAD MEMBERS ERROR: $e");
   }
 }
 
@@ -132,19 +157,17 @@ class _TasksPageState extends State<TasksPage> {
           return a.dueDate!.compareTo(b.dueDate!);
         }); 
 
+        if (!mounted) return;
+
         setState(() {
           stats = TaskStats.fromJson(statsData);
           tasks = loadedTasks;
-          loading = false;
         });
         
       
-    } catch (e) {
-      debugPrint(e.toString());
-      setState(() {
-        loading = false;
-      });
-    }
+        } catch (e) {
+          debugPrint("LOAD TASKS ERROR: $e");
+        }
   }
 
   @override
@@ -278,6 +301,7 @@ final matchesSearch =
                     initialDueDate: task.dueDate,
                     initialPriority: task.priority,
                     initialStatus: task.status,
+                    initialAssigneeId: task.assigneeId,
                     onSave: (
                       title,
                       description,
@@ -312,7 +336,7 @@ final matchesSearch =
         child: const Icon(Icons.add),
         onPressed: () {
           debugPrint("Project ID: ${widget.projectId}");
-          debugPrint("Members before dialog: $members");
+            debugPrint("MEMBERS BEFORE CREATE DIALOG: $members");
           showDialog(
             context: context,
             builder: (_) => TaskDialog(

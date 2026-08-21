@@ -178,14 +178,17 @@ Widget build(BuildContext context) {
           : TabBarView(
               children: [
                 KanbanColumn(
+                  projectId: widget.projectId,
                   tasks: pendingTasks,
                   onMove: moveTask,
                 ),
                 KanbanColumn(
+                  projectId: widget.projectId,
                   tasks: inProgressTasks,
                   onMove: moveTask,
                 ),
                 KanbanColumn(
+                  projectId: widget.projectId,
                   tasks: completedTasks,
                   onMove: moveTask,
                 ),
@@ -197,11 +200,13 @@ Widget build(BuildContext context) {
 }
 
 class KanbanColumn extends StatelessWidget {
+  final String projectId;
   final List<Task> tasks;
   final Function(Task, String) onMove;
 
   const KanbanColumn({
     super.key,
+    required this.projectId,
     required this.tasks,
     required this.onMove,
   });
@@ -229,6 +234,7 @@ class KanbanColumn extends StatelessWidget {
                 MaterialPageRoute(
                   builder: (_) => TaskDetailsPage(
                     task: task,
+                    projectId: projectId,
                   ),
                 ),
                 );
