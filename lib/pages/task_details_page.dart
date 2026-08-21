@@ -5,12 +5,12 @@ import '../widgets/task_dialog.dart';
 
 class TaskDetailsPage extends StatefulWidget {
   final Task task;
-  final List members;
+  final String projectId;
 
   const TaskDetailsPage({
     super.key,
     required this.task,
-    this.members = const [],
+    required this.projectId,
   });
 
   @override
@@ -18,6 +18,7 @@ class TaskDetailsPage extends StatefulWidget {
 }
 
 class _TaskDetailsPageState extends State<TaskDetailsPage> {
+  List<dynamic> members = [];
   late Task currentTask;
 
   late TextEditingController titleController;
@@ -34,7 +35,7 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
   String? _getAssigneeName(String? assigneeId) {
     if (assigneeId == null) return null;
 
-    for (final member in widget.members) {
+    for (final member in members) {
       if (member['user']?['id'] == assigneeId) {
         return member['user']?['name'];
       }
@@ -43,9 +44,25 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
     return null;
   }
 
+    Future<void> loadMembers() async {
+      try {
+        final result =
+           await ApiService.getProjectMembers(widget.projectId);
+
+        if (!mounted) return;
+
+        setState(() {
+          members = result;
+        });
+      } catch (e) {
+        debugPrint('Failed to load members: $e');
+      }
+   }
+
   @override
   void initState() {
     super.initState();
+    loadMembers();
 
     currentTask = widget.task;
 
@@ -139,7 +156,7 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
       builder: (_) => TaskDialog(
         title: 'Edit Task',
         buttonText: 'Save',
-        members: widget.members,
+        members: members,
         initialTitle: currentTask.title,
         initialDescription: currentTask.description ?? '',
         initialDueDate: currentTask.dueDate,
@@ -319,7 +336,7 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
             buildInfoRow(
               Icons.person_outline,
               'Assigned To',
-              currentTask.assigneeName ?? 'Uassigned',
+              currentTask.assigneeName ?? 'Unassigned',
             ),  
 
             
