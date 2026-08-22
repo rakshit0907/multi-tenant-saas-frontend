@@ -44,21 +44,21 @@ class _SignupPageState extends State<SignupPage> {
 
       if (response.statusCode == 200 ||
           response.statusCode == 201) {
-        final prefs =
-            await SharedPreferences.getInstance();
 
-        await prefs.setString(
-          "token",
-          data["token"],
-        );
+
+            final prefs = await SharedPreferences.getInstance();
+
+            await prefs.setString(
+              "token",
+              data["token"],
+            );
+
+            if (!mounted) return;
+
+            Navigator.pushReplacementNamed(context, "/dashboard");
+      } else {
 
         if (!mounted) return;
-
-        Navigator.pushReplacementNamed(
-          context,
-          "/dashboard",
-        );
-      } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -68,13 +68,14 @@ class _SignupPageState extends State<SignupPage> {
         );
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(e.toString()),
         ),
       );
     }
-
+    if (!mounted) return;
     setState(() {
       loading = false;
     });

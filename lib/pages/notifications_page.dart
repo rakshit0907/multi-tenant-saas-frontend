@@ -201,13 +201,14 @@ class _NotificationsPageState extends State<NotificationsPage> {
                                 actions: [
                                   TextButton(
                                     onPressed: () async {
+                                      final navigator = Navigator.of(context);
                                       try {
                                         await ApiService.rejectInvitation(
                                           invitationId.toString(),
                                         );
 
                                         if (!mounted) return;
-                                        Navigator.pop(context);
+                                        navigator.pop();
                                         await loadNotifications();
                                       } catch (e) {
                                         debugPrint("REJECT ERROR: $e");
@@ -217,23 +218,27 @@ class _NotificationsPageState extends State<NotificationsPage> {
                                   ),
                                   ElevatedButton(
                                     onPressed: () async {
+                                      final navigator = Navigator.of(context);
+                                      final messenger = ScaffoldMessenger.of(context);
                                       try {
                                         await ApiService.acceptInvitation(
                                           invitationId.toString(),
                                         );
 
                                         if (!mounted) return;
-                                        Navigator.pop(context);
+                                        navigator.pop();
 
                                         await loadNotifications();
 
-                                        ScaffoldMessenger.of(context).showSnackBar(
+                                        if (!mounted) return;
+
+                                        messenger.showSnackBar(
                                           const SnackBar(
                                             content: Text(
-                                              "Invitation accepted. You are now a project member."
+                                              "Invitation accepted. You are now a project member.",
                                             ),
                                           ),
-                                        ); 
+                                        );
                                       } catch (e) {
                                         debugPrint("ACCEPT ERROR: $e");
                                       }

@@ -121,7 +121,7 @@ class _MembersPageState extends State<MembersPage> {
                      "No users available to invite.",
                     )
                   : DropdownButtonFormField<String>(
-                      value: selectedUserId,
+                      initialValue: selectedUserId,
                       decoration: const InputDecoration(
                         labelText: "Select user",
                         border: OutlineInputBorder(),
