@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../models/notification_model.dart';
 import '../services/api_service.dart';
-
+import '../models/task.dart';
+import 'task_details_page.dart';
 class NotificationsPage extends StatefulWidget {
   const NotificationsPage({super.key});
 
@@ -95,6 +96,55 @@ class _NotificationsPageState extends State<NotificationsPage> {
     }
   }
 
+  Future<void> openTaskNotification(
+  NotificationModel notification,
+) async {
+  final taskId =
+      notification.metadata?['taskId']?.toString();
+
+  final projectId =
+      notification.metadata?['projectId']?.toString();
+
+  if (taskId == null || projectId == null) {
+    debugPrint(
+      'TASK NOTIFICATION ERROR: Missing taskId/projectId',
+    );
+    return;
+  }
+
+  try {
+    final data = await ApiService.getTask(taskId);
+
+    final task = Task.fromJson(data);
+
+    if (!mounted) return;
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => TaskDetailsPage(
+          task: task,
+          projectId: projectId,
+        ),
+      ),
+    );
+  } catch (e) {
+    debugPrint(
+      'OPEN TASK NOTIFICATION ERROR: $e',
+    );
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Unable to open this task',
+        ),
+      ),
+    );
+  }
+}
+
   @override
   Widget build(BuildContext context) {
     final unreadCount =
@@ -182,6 +232,18 @@ class _NotificationsPageState extends State<NotificationsPage> {
                         onTap: () async {
                           await markAsRead(notification);
                           if (!mounted) return;
+                          
+                          if (
+                            notification.type ==
+                                    NotificationType.taskAssigned ||
+                                notification.type ==
+                                    NotificationType.taskCompleted ||
+                                notification.type ==
+                                    NotificationType.taskStatusChanged
+                          ) {
+                           await openTaskNotification(notification);
+                           return;
+                          }
 
                           if (notification.type == 
                                NotificationType.projectInvitation) {
