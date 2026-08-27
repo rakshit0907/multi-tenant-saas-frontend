@@ -615,4 +615,75 @@ class ApiService {
     }
   }
 
+  static Future<List<dynamic>> getTaskComments(String taskId) async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('token');
+
+  final response = await http.get(
+    Uri.parse('$baseUrl/tasks/$taskId/comments'),
+    headers: {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json',
+    },
+  );
+
+  if (response.statusCode == 200) {
+    return jsonDecode(response.body);
+  }
+
+  throw Exception(
+    'Failed to load comments: ${response.body}',
+  );
+}
+
+static Future<dynamic> addTaskComment(
+  String taskId,
+  String content,
+) async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('token');
+
+  final response = await http.post(
+    Uri.parse('$baseUrl/tasks/$taskId/comments'),
+    headers: {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json',
+    },
+    body: jsonEncode({
+      'content': content,
+    }),
+  );
+
+  if (response.statusCode == 200 ||
+      response.statusCode == 201) {
+    return jsonDecode(response.body);
+  }
+
+  throw Exception(
+    'Failed to add comment: ${response.body}',
+  );
+}
+
+static Future<void> deleteTaskComment(
+  String commentId,
+) async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('token');
+
+  final response = await http.delete(
+    Uri.parse('$baseUrl/tasks/comments/$commentId'),
+    headers: {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json',
+    },
+  );
+
+  if (response.statusCode != 200 &&
+      response.statusCode != 204) {
+    throw Exception(
+      'Failed to delete comment: ${response.body}',
+    );
+  }
+}
+
 }
