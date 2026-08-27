@@ -686,4 +686,108 @@ static Future<void> deleteTaskComment(
   }
 }
 
+static Future<List<dynamic>> getTaskAttachments(
+  String taskId,
+) async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('token');
+
+  final response = await http.get(
+    Uri.parse('$baseUrl/tasks/$taskId/attachments'),
+    headers: {
+      'Authorization': 'Bearer $token',
+    },
+  );
+
+  debugPrint(
+    'ATTACHMENTS STATUS: ${response.statusCode}',
+  );
+  debugPrint(
+    'ATTACHMENTS BODY: ${response.body}',
+  );
+
+  if (response.statusCode == 200) {
+    return jsonDecode(response.body);
+  }
+
+  throw Exception(
+    'Failed to load attachments: ${response.body}',
+  );
+}
+
+static Future<dynamic> uploadTaskAttachment(
+  String taskId,
+  String filePath,
+) async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('token');
+
+  final request = http.MultipartRequest(
+    'POST',
+    Uri.parse(
+      '$baseUrl/tasks/$taskId/attachments',
+    ),
+  );
+
+  request.headers['Authorization'] = 'Bearer $token';
+
+  request.files.add(
+    await http.MultipartFile.fromPath(
+      'file',
+      filePath,
+    ),
+  );
+
+  final streamedResponse = await request.send();
+
+  final response =
+      await http.Response.fromStream(streamedResponse);
+
+  debugPrint(
+    'UPLOAD ATTACHMENT STATUS: ${response.statusCode}',
+  );
+  debugPrint(
+    'UPLOAD ATTACHMENT BODY: ${response.body}',
+  );
+
+  if (response.statusCode == 200 ||
+      response.statusCode == 201) {
+    return jsonDecode(response.body);
+  }
+
+  throw Exception(
+    'Failed to upload attachment: ${response.body}',
+  );
+}
+
+static Future<void> deleteTaskAttachment(
+  String attachmentId,
+) async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('token');
+
+  final response = await http.delete(
+    Uri.parse(
+      '$baseUrl/tasks/attachments/$attachmentId',
+    ),
+    headers: {
+      'Authorization': 'Bearer $token',
+    },
+  );
+
+  debugPrint(
+    'DELETE ATTACHMENT STATUS: ${response.statusCode}',
+  );
+  debugPrint(
+    'DELETE ATTACHMENT BODY: ${response.body}',
+  );
+
+  if (response.statusCode != 200 &&
+      response.statusCode != 204) {
+    throw Exception(
+      'Failed to delete attachment: ${response.body}',
+    );
+  }
+}
+
 }

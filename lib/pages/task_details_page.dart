@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/task.dart';
 import '../services/api_service.dart';
 import '../widgets/task_dialog.dart';
-
+import 'package:file_picker/file_picker.dart';
 class TaskDetailsPage extends StatefulWidget {
   final Task task;
   final String projectId;
@@ -20,6 +20,10 @@ class TaskDetailsPage extends StatefulWidget {
 class _TaskDetailsPageState extends State<TaskDetailsPage> {
   List<dynamic> comments = [];
   List<dynamic> members = [];
+  List<dynamic> attachments = [];
+
+  bool loadingAttachments = true;
+  bool uploadingAttachment = false;
 
   String? myRole;
 
@@ -93,6 +97,7 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
     loadMembers();
     loadComments();
     loadMyRole();
+    loadAttachments();
 
     titleController = TextEditingController(text: currentTask.title);
 
@@ -239,6 +244,129 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
       });
     }
   }
+
+  Future<void> loadAttachments() async {
+  try {
+    final data = await ApiService.getTaskAttachments(
+      currentTask.id,
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      attachments = data;
+      loadingAttachments = false;
+    });
+  } catch (e) {
+    debugPrint('LOAD ATTACHMENTS ERROR: $e');
+
+    if (!mounted) return;
+
+    setState(() {
+      loadingAttachments = false;
+    });
+  }
+}
+
+ Future<void> pickAndUploadAttachment() async {
+  try {
+    final file = await FilePicker.pickFile();
+
+    // User cancelled the picker
+    if (file == null) {
+      return;
+    }
+
+    final filePath = file.path;
+
+    if (filePath == null) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Unable to access selected file',
+          ),
+        ),
+      );
+
+      return;
+    }
+
+    setState(() {
+      uploadingAttachment = true;
+    });
+
+    await ApiService.uploadTaskAttachment(
+      currentTask.id,
+      filePath,
+    );
+
+    await loadAttachments();
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Attachment uploaded successfully',
+        ),
+      ),
+    );
+  } catch (e) {
+    debugPrint(
+      'UPLOAD ATTACHMENT ERROR: $e',
+    );
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Failed to upload attachment: $e',
+        ),
+      ),
+    );
+  } finally {
+    if (mounted) {
+      setState(() {
+        uploadingAttachment = false;
+      });
+    }
+  }
+}
+
+ Future<void> deleteAttachment(
+  String attachmentId,
+) async {
+  try {
+    await ApiService.deleteTaskAttachment(
+      attachmentId,
+    );
+
+    await loadAttachments();
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Attachment deleted'),
+      ),
+    );
+  } catch (e) {
+    debugPrint('DELETE ATTACHMENT ERROR: $e');
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Failed to delete attachment: $e',
+        ),
+      ),
+    );
+  }
+}
 
   void openEditDialog() {
     showDialog(
@@ -406,6 +534,116 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
             ),
 
             const SizedBox(height: 12),
+
+            const Divider(),
+const SizedBox(height: 16),
+
+Row(
+  children: [
+    const Expanded(
+      child: Text(
+        'Attachments',
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    ),
+
+    if (uploadingAttachment)
+      const SizedBox(
+        width: 22,
+        height: 22,
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+        ),
+      )
+    else
+      IconButton(
+        tooltip: 'Add attachment',
+        onPressed: pickAndUploadAttachment,
+        icon: const Icon(
+          Icons.attach_file,
+        ),
+      ),
+  ],
+),
+
+const SizedBox(height: 12),
+
+if (loadingAttachments)
+  const Center(
+    child: CircularProgressIndicator(),
+  )
+else if (attachments.isEmpty)
+  const Padding(
+    padding: EdgeInsets.symmetric(
+      vertical: 12,
+    ),
+    child: Text(
+      'No attachments yet',
+      style: TextStyle(
+        color: Colors.grey,
+      ),
+    ),
+  )
+else
+  ...attachments.map((attachment) {
+    final name =
+        attachment['originalName']?.toString() ??
+        'Attachment';
+
+    final mimeType =
+        attachment['mimeType']?.toString() ?? '';
+
+    final uploader =
+        attachment['uploadedBy']?['name']
+            ?.toString() ??
+        'Unknown';
+
+    final attachmentId =
+        attachment['id'].toString();
+
+    IconData icon;
+
+    if (mimeType.startsWith('image/')) {
+      icon = Icons.image_outlined;
+    } else if (mimeType == 'application/pdf') {
+      icon = Icons.picture_as_pdf_outlined;
+    } else {
+      icon = Icons.insert_drive_file_outlined;
+    }
+
+    return Card(
+      margin: const EdgeInsets.only(
+        bottom: 8,
+      ),
+      child: ListTile(
+        leading: Icon(icon),
+        title: Text(
+          name,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        subtitle: Text(
+          'Uploaded by $uploader',
+        ),
+        trailing: IconButton(
+          tooltip: 'Delete attachment',
+          icon: const Icon(
+            Icons.delete_outline,
+          ),
+          onPressed: () {
+            deleteAttachment(
+              attachmentId,
+            );
+          },
+        ),
+      ),
+    );
+  }),
+
+const SizedBox(height: 20),
 
             const Divider(),
 
