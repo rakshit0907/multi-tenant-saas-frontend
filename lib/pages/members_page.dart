@@ -73,15 +73,20 @@ class _MembersPageState extends State<MembersPage> {
   
   Future<void> loadMyRole() async {
     try {
-      myRole = await ApiService.getMyProjectRole(
-        widget.projectId,
+      final role =
+          await ApiService.getMyProjectRole(
+          widget.projectId,
       );
 
-      setState(() {});
+      if (!mounted) return;
+
+      setState(() {
+        myRole = role;
+      });
     } catch (e) {
-      debugPrint(e.toString());
-    }
-  }
+      debugPrint('LOAD ROLE ERROR: $e');
+   }
+ }
 
   Future<void> removeMember(String userId) async {
     try {
