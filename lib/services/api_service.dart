@@ -3,6 +3,9 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
 import '../models/user_model.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:open_filex/open_filex.dart';
 class ApiService {
   static const String baseUrl = 'http://10.0.2.2:3000';
   static Future<void> toggleTask(String taskId) async {
@@ -786,6 +789,61 @@ static Future<void> deleteTaskAttachment(
       response.statusCode != 204) {
     throw Exception(
       'Failed to delete attachment: ${response.body}',
+    );
+  }
+}
+
+static Future<void> downloadAndOpenTaskAttachment({
+  required String attachmentId,
+  required String fileName,
+}) async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('token');
+
+  if (token == null) {
+    throw Exception('Authentication token not found');
+  }
+
+  final response = await http.get(
+    Uri.parse(
+      '$baseUrl/tasks/attachments/$attachmentId/download',
+    ),
+    headers: {
+      'Authorization': 'Bearer $token',
+    },
+  );
+
+  debugPrint(
+    'DOWNLOAD ATTACHMENT STATUS: ${response.statusCode}',
+  );
+
+  if (response.statusCode != 200) {
+    throw Exception(
+      'Failed to download attachment: ${response.body}',
+    );
+  }
+
+  final directory = await getTemporaryDirectory();
+
+  final safeFileName = fileName.replaceAll(
+    RegExp(r'[\\/:*?"<>|]'),
+    '_',
+  );
+
+  final file = File(
+    '${directory.path}/$safeFileName',
+  );
+
+  await file.writeAsBytes(
+    response.bodyBytes,
+    flush: true,
+  );
+
+  final result = await OpenFilex.open(file.path);
+
+  if (result.type != ResultType.done) {
+    throw Exception(
+      'Could not open attachment: ${result.message}',
     );
   }
 }
