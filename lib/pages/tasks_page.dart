@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'dart:async';
 import '../models/task.dart';
 import '../models/task_stats.dart';
 
@@ -34,6 +34,12 @@ class _TasksPageState extends State<TasksPage> {
   bool loading = true;
   
   String selectedFilter = "All";
+
+  String sortBy = 'dueDate';
+  String sortOrder = 'ASC';
+
+  Timer? _searchDebounce;
+
 
   final List<String> filters = [
   "All",
@@ -114,105 +120,77 @@ class _TasksPageState extends State<TasksPage> {
   
   
   Future<void> loadTasks() async {
-    try {
-      final statsData =
-          await ApiService.getTaskStats(
+  try {
+    String? status;
+    String? priority;
+
+    switch (selectedFilter) {
+      case 'Pending':
+        status = 'PENDING';
+        break;
+
+      case 'Completed':
+        status = 'COMPLETED';
+        break;
+
+      case 'High':
+        priority = 'HIGH';
+        break;
+
+      case 'Medium':
+        priority = 'MEDIUM';
+        break;
+
+      case 'Low':
+        priority = 'LOW';
+        break;
+    }
+
+    final results = await Future.wait([
+      ApiService.getTaskStats(
         widget.projectId,
-      );
-
-      final tasksData =
-          await ApiService.getTasks(
+      ),
+      ApiService.getTasks(
         widget.projectId,
-      );
-      List<Task> loadedTasks = tasksData
-         .map<Task>((e) => Task.fromJson(e))
-         .toList();
+        search: searchQuery,
+        status: status,
+        priority: priority,
+        sortBy: sortBy,
+        sortOrder: sortOrder,
+      ),
+    ]);
 
-        loadedTasks.sort((a, b) {
-          const priorityOrder = {
-            'HIGH': 0,
-            'MEDIUM': 1,
-            'LOW': 2,
-          };
+    final statsData = results[0] as Map<String, dynamic>;
+    final tasksData = results[1] as List<dynamic>;
 
-          final priorityCompare =
-              (priorityOrder[a.priority] ?? 3)
-                  .compareTo(priorityOrder[b.priority] ?? 3);
-          if (priorityCompare !=0) {
-            return priorityCompare;
-          }
+    final loadedTasks = tasksData
+        .map<Task>(
+          (e) => Task.fromJson(e),
+        )
+        .toList();
 
-          if (a.dueDate == null && b.dueDate == null) {
-            return 0;
-          }        
+    if (!mounted) return;
 
-          if (a.dueDate == null) {
-            return 1;
-          }
-
-          if (b.dueDate == null) {
-            return -1;
-          }
-
-          return a.dueDate!.compareTo(b.dueDate!);
-        }); 
-
-        if (!mounted) return;
-
-        setState(() {
-          stats = TaskStats.fromJson(statsData);
-          tasks = loadedTasks;
-        });
-        
-      
-        } catch (e) {
-          debugPrint("LOAD TASKS ERROR: $e");
-        }
+    setState(() {
+      stats = TaskStats.fromJson(statsData);
+      tasks = loadedTasks;
+    });
+  } catch (e) {
+    debugPrint(
+      'LOAD TASKS ERROR: $e',
+    );
   }
+}
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     searchController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final filteredTasks = tasks.where((task) {
-      final query = searchQuery.toLowerCase();
-
-final matchesSearch =
-    task.title.toLowerCase().contains(query) ||
-    (task.description?.toLowerCase().contains(query) ?? false);
-
-  bool matchesFilter = true;
-
-  switch (selectedFilter) {
-  case "Pending":
-    matchesFilter = !task.completed;
-    break;
-
-  case "Completed":
-    matchesFilter = task.completed;
-    break;
-
-  case "High":
-    matchesFilter = task.priority == "HIGH";
-    break;
-
-  case "Medium":
-    matchesFilter = task.priority == "MEDIUM";
-    break;
-
-  case "Low":
-    matchesFilter = task.priority == "LOW";
-    break;
-
-  default:
-    matchesFilter = true;
-}
-  return matchesSearch && matchesFilter;
-}).toList();
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.projectName),
@@ -233,10 +211,17 @@ final matchesSearch =
       border: OutlineInputBorder(),
     ),
     onChanged: (value) {
-      setState(() {
-        searchQuery = value;
-      });
-    },
+      searchQuery = value;
+
+      _searchDebounce?.cancel();
+
+     _searchDebounce = Timer(
+       const Duration(milliseconds: 400),
+       () {
+         loadTasks();
+        },
+     );
+   },
   ),
 ),
 
@@ -258,6 +243,8 @@ final matchesSearch =
               setState(() {
                 selectedFilter = filter;
               });
+
+              loadTasks();
             },
           ),
         );
@@ -266,10 +253,89 @@ final matchesSearch =
   ),
 ),
 
+
+               Padding(
+  padding: const EdgeInsets.symmetric(
+    horizontal: 12,
+    vertical: 4,
+  ),
+  child: Row(
+    children: [
+      const Text(
+        'Sort:',
+        style: TextStyle(
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+
+      const SizedBox(width: 12),
+
+      Expanded(
+        child: DropdownButtonFormField<String>(
+          value: sortBy,
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+            isDense: true,
+          ),
+          items: const [
+            DropdownMenuItem(
+              value: 'dueDate',
+              child: Text('Due date'),
+            ),
+            DropdownMenuItem(
+              value: 'title',
+              child: Text('Title'),
+            ),
+            DropdownMenuItem(
+              value: 'priority',
+              child: Text('Priority'),
+            ),
+            DropdownMenuItem(
+              value: 'status',
+              child: Text('Status'),
+            ),
+          ],
+          onChanged: (value) {
+            if (value == null) return;
+
+            setState(() {
+              sortBy = value;
+            });
+
+            loadTasks();
+          },
+        ),
+      ),
+
+      const SizedBox(width: 8),
+
+      IconButton(
+        tooltip: sortOrder == 'ASC'
+            ? 'Ascending'
+            : 'Descending',
+        onPressed: () {
+          setState(() {
+            sortOrder =
+                sortOrder == 'ASC'
+                    ? 'DESC'
+                    : 'ASC';
+          });
+
+          loadTasks();
+        },
+        icon: Icon(
+          sortOrder == 'ASC'
+              ? Icons.arrow_upward
+              : Icons.arrow_downward,
+        ),
+      ),
+    ],
+  ),
+),
                 if (stats != null)
                   TaskStatsCard(stats: stats!),
                   Expanded(
-  child: filteredTasks.isEmpty
+  child: tasks.isEmpty
       ? Center(
           child: Text(
             searchQuery.isNotEmpty || selectedFilter != "All"
@@ -281,9 +347,9 @@ final matchesSearch =
           ),
         )
       : ListView.builder(
-          itemCount: filteredTasks.length,
+          itemCount: tasks.length,
           itemBuilder: (context, index) {
-            final task = filteredTasks[index];
+            final task = tasks[index];
 
             return TaskCard(
               task: task,

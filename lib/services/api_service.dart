@@ -283,28 +283,67 @@ class ApiService {
 }
     }
 
-  static Future<List<dynamic>> getTasks(
-    String projectId,
-  ) async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
+    static Future<List<dynamic>> getTasks(
+      String projectId, {
+      String? search,
+      String? status,
+      String? priority,
+      String? assigneeId,
+      String? sortBy,
+      String? sortOrder,
+    }) async {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
 
-    final response = await http.get(
-      Uri.parse(
+      final queryParameters = <String, String>{};
+
+      if (search != null && search.trim().isNotEmpty) {
+         queryParameters['search'] = search.trim();
+      }
+
+      if (status != null && status.isNotEmpty) {
+         queryParameters['status'] = status;
+      }
+
+      if (priority != null && priority.isNotEmpty) {
+         queryParameters['priority'] = priority;
+      }
+
+      if (assigneeId != null && assigneeId.isNotEmpty) {
+         queryParameters['assigneeId'] = assigneeId;
+      }
+
+      if (sortBy != null && sortBy.isNotEmpty) {
+         queryParameters['sortBy'] = sortBy;
+      }
+
+      if (sortOrder != null && sortOrder.isNotEmpty) {
+         queryParameters['sortOrder'] = sortOrder;
+      }
+
+      final uri = Uri.parse(
         '$baseUrl/tasks/project/$projectId',
-      ),
-      headers: {
-        'Authorization': 'Bearer $token',
+      ).replace(
+        queryParameters:
+            queryParameters.isEmpty ? null : queryParameters,
+      );
+
+      final response = await http.get(
+        uri,
+        headers: {
+          'Authorization': 'Bearer $token',
       },
     );
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+       return jsonDecode(response.body);
     }
 
-    throw Exception('Failed to load tasks');
+    throw Exception(
+      'Failed to load tasks: ${response.body}',
+    );
   }
-
+    
   static Future<Map<String, dynamic>> getTask(
     String taskId,
 
