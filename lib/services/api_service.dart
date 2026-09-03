@@ -6,141 +6,112 @@ import '../models/user_model.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_filex/open_filex.dart';
+import '../models/task_label.dart';
+
 class ApiService {
   static const String baseUrl = 'http://10.0.2.2:3000';
   static Future<void> toggleTask(String taskId) async {
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('token');
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
 
-  final response = await http.patch(
-    Uri.parse('$baseUrl/tasks/$taskId/toggle'),
-    headers: {
-      'Authorization': 'Bearer $token',
-    },
-  );
+    final response = await http.patch(
+      Uri.parse('$baseUrl/tasks/$taskId/toggle'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
 
-  if (response.statusCode != 200) {
-    throw Exception('Failed to toggle task');
-  }
-}
-
- static Future<String> getMyProjectRole(
-  String projectId,
- ) async {
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('token');
-  final response = await http.get(
-    Uri.parse(
-      '$baseUrl/projects/$projectId/my-role',
-    ),
-    headers: {
-      'Authorization': 'Bearer $token',
-    },
-  );
-
-  if (response.statusCode == 200) {
-    final data = jsonDecode(response.body);
-    return data["role"];
+    if (response.statusCode != 200) {
+      throw Exception('Failed to toggle task');
+    }
   }
 
-  throw Exception("Failed to load role");
- }
-  static Future<void> createProject(
-  String name,
-) async {
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('token');
+  static Future<String> getMyProjectRole(String projectId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    final response = await http.get(
+      Uri.parse('$baseUrl/projects/$projectId/my-role'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
 
-  final response = await http.post(
-    Uri.parse('$baseUrl/projects'),
-    headers: {
-      'Authorization': 'Bearer $token',
-      'Content-Type': 'application/json',
-    },
-    body: jsonEncode({
-      'name': name,
-    }),
-  );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data["role"];
+    }
 
-  if (response.statusCode != 201 &&
-      response.statusCode != 200) {
-    throw Exception('Failed to create project');
-  }
-}
-
-  static Future<Map<String, dynamic>>
-    getTaskStats(
-  String projectId,
-) async {
-  final prefs =
-      await SharedPreferences.getInstance();
-
-  final token = prefs.getString('token');
-
-  final response = await http.get(
-    Uri.parse(
-      '$baseUrl/tasks/project/$projectId/stats',
-    ),
-    headers: {
-      'Authorization': 'Bearer $token',
-    },
-  );
-
-  if (response.statusCode == 200) {
-    return jsonDecode(response.body);
+    throw Exception("Failed to load role");
   }
 
-  throw Exception(
-    'Failed to load stats',
-  );
-}
+  static Future<void> createProject(String name) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
 
+    final response = await http.post(
+      Uri.parse('$baseUrl/projects'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'name': name}),
+    );
+
+    if (response.statusCode != 201 && response.statusCode != 200) {
+      throw Exception('Failed to create project');
+    }
+  }
+
+  static Future<Map<String, dynamic>> getTaskStats(String projectId) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final token = prefs.getString('token');
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/tasks/project/$projectId/stats'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+
+    throw Exception('Failed to load stats');
+  }
 
   static Future<void> deleteTask(String taskId) async {
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('token');
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
 
-  final response = await http.delete(
-    Uri.parse('$baseUrl/tasks/$taskId'),
-    headers: {
-      'Authorization': 'Bearer $token',
-    },
-  );
+    final response = await http.delete(
+      Uri.parse('$baseUrl/tasks/$taskId'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
 
-  if (response.statusCode != 200 &&
-      response.statusCode != 204) {
-    throw Exception('Failed to delete task');
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Failed to delete task');
+    }
   }
-}
-  static Future<void> deleteProject(
-    String projectId,
-  ) async {
+
+  static Future<void> deleteProject(String projectId) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
     final response = await http.delete(
       Uri.parse('$baseUrl/projects/$projectId'),
-      headers: {
-        'Authorization': 'Bearer $token',
-      },
+      headers: {'Authorization': 'Bearer $token'},
     );
 
     debugPrint("DELETE STATUS: ${response.statusCode}");
     debugPrint("DELETE BODY: ${response.body}");
 
-    if (response.statusCode != 200 &&
-        response.statusCode != 204) {
+    if (response.statusCode != 200 && response.statusCode != 204) {
       throw Exception('Failed to delete project');
     }
   }
+
   static Future<List<dynamic>> getProjects() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
 
     final response = await http.get(
       Uri.parse('$baseUrl/projects'),
-      headers: {
-        'Authorization': 'Bearer $token',
-      },
+      headers: {'Authorization': 'Bearer $token'},
     );
 
     if (response.statusCode == 200) {
@@ -156,33 +127,25 @@ class ApiService {
 
     final response = await http.get(
       Uri.parse('$baseUrl/tenant/users'),
-      headers: {
-        'Authorization': 'Bearer $token',
-      },
+      headers: {'Authorization': 'Bearer $token'},
     );
 
     if (response.statusCode == 200) {
       final List data = jsonDecode(response.body);
 
-      return data
-          .map((e) => UserModel.fromJson(e))
-          .toList();
+      return data.map((e) => UserModel.fromJson(e)).toList();
     }
 
     throw Exception("Failed to load organization users");
   }
 
-  static Future<List<dynamic>> getProjectMembers(
-    String projectId,
-  ) async {
+  static Future<List<dynamic>> getProjectMembers(String projectId) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
 
     final response = await http.get(
       Uri.parse('$baseUrl/projects/$projectId/members'),
-      headers: {
-        'Authorization': 'Bearer $token',
-      },
+      headers: {'Authorization': 'Bearer $token'},
     );
 
     debugPrint("STATUS: ${response.statusCode}");
@@ -190,7 +153,7 @@ class ApiService {
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
-    }  
+    }
 
     throw Exception('Failed to load members');
   }
@@ -203,24 +166,17 @@ class ApiService {
     final token = prefs.getString('token');
 
     final response = await http.delete(
-      Uri.parse(
-        '$baseUrl/projects/$projectId/members/$userId',
-      ),
-      headers: {
-        'Authorization': 'Bearer $token',
-      },
+      Uri.parse('$baseUrl/projects/$projectId/members/$userId'),
+      headers: {'Authorization': 'Bearer $token'},
     );
 
     debugPrint("REMOVE MEMBER STATUS: ${response.statusCode}");
     debugPrint("REMOVE MEMBER BODY: ${response.body}");
-    
-    if (response.statusCode != 200 &&
-       response.statusCode != 204) {
-        throw Exception(
-          'Failed to remove member',
-        );
-     }
-  } 
+
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Failed to remove member');
+    }
+  }
 
   static Future<void> updateMemberRole(
     String projectId,
@@ -231,34 +187,23 @@ class ApiService {
     final token = prefs.getString('token');
 
     final response = await http.patch(
-      Uri.parse(
-        '$baseUrl/projects/$projectId/members/$userId/role',
-      ),
+      Uri.parse('$baseUrl/projects/$projectId/members/$userId/role'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
       },
-      body: jsonEncode({
-        'role': role,
-      }),
-     );
+      body: jsonEncode({'role': role}),
+    );
 
-    debugPrint(
-      "UPDATE ROLE STATUS: ${response.statusCode}",
-    );
-    debugPrint(
-      "UPDATE ROLE BODY: ${response.body}",
-    );
+    debugPrint("UPDATE ROLE STATUS: ${response.statusCode}");
+    debugPrint("UPDATE ROLE BODY: ${response.body}");
 
     if (response.statusCode != 200) {
-       throw Exception('Failed to update member role');
-   }
- }
+      throw Exception('Failed to update member role');
+    }
+  }
 
-  static Future<void> addMember(
-    String projectId,
-    String email,
-  ) async {
+  static Future<void> addMember(String projectId, String email) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
 
@@ -268,94 +213,83 @@ class ApiService {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
       },
-      body: jsonEncode({
-        'email': email,
-      }),
-     );
+      body: jsonEncode({'email': email}),
+    );
 
-     if (response.statusCode != 200 &&
-         response.statusCode != 201) {
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      debugPrint("Invite Member STATUS: ${response.statusCode}");
+      debugPrint("Invite Member BODY: ${response.body}");
 
-       debugPrint("Invite Member STATUS: ${response.statusCode}");
-       debugPrint("Invite Member BODY: ${response.body}");
+      throw Exception('Failed to add member');
+    }
+  }
 
-       throw Exception('Failed to add member');
-}
+  static Future<List<dynamic>> getTasks(
+    String projectId, {
+    String? search,
+    String? status,
+    String? priority,
+    String? assigneeId,
+    String? labelId,
+    String? sortBy,
+    String? sortOrder,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    final queryParameters = <String, String>{};
+
+    if (search != null && search.trim().isNotEmpty) {
+      queryParameters['search'] = search.trim();
     }
 
-    static Future<List<dynamic>> getTasks(
-      String projectId, {
-      String? search,
-      String? status,
-      String? priority,
-      String? assigneeId,
-      String? sortBy,
-      String? sortOrder,
-    }) async {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
+    if (status != null && status.isNotEmpty) {
+      queryParameters['status'] = status;
+    }
 
-      final queryParameters = <String, String>{};
+    if (priority != null && priority.isNotEmpty) {
+      queryParameters['priority'] = priority;
+    }
 
-      if (search != null && search.trim().isNotEmpty) {
-         queryParameters['search'] = search.trim();
-      }
+    if (assigneeId != null && assigneeId.isNotEmpty) {
+      queryParameters['assigneeId'] = assigneeId;
+    }
 
-      if (status != null && status.isNotEmpty) {
-         queryParameters['status'] = status;
-      }
+    if (labelId != null && labelId.isNotEmpty) {
+      queryParameters['labelId'] = labelId;
+    }
 
-      if (priority != null && priority.isNotEmpty) {
-         queryParameters['priority'] = priority;
-      }
+    if (sortBy != null && sortBy.isNotEmpty) {
+      queryParameters['sortBy'] = sortBy;
+    }
 
-      if (assigneeId != null && assigneeId.isNotEmpty) {
-         queryParameters['assigneeId'] = assigneeId;
-      }
+    if (sortOrder != null && sortOrder.isNotEmpty) {
+      queryParameters['sortOrder'] = sortOrder;
+    }
 
-      if (sortBy != null && sortBy.isNotEmpty) {
-         queryParameters['sortBy'] = sortBy;
-      }
+    final uri = Uri.parse('$baseUrl/tasks/project/$projectId').replace(
+      queryParameters: queryParameters.isEmpty ? null : queryParameters,
+    );
 
-      if (sortOrder != null && sortOrder.isNotEmpty) {
-         queryParameters['sortOrder'] = sortOrder;
-      }
-
-      final uri = Uri.parse(
-        '$baseUrl/tasks/project/$projectId',
-      ).replace(
-        queryParameters:
-            queryParameters.isEmpty ? null : queryParameters,
-      );
-
-      final response = await http.get(
-        uri,
-        headers: {
-          'Authorization': 'Bearer $token',
-      },
+    final response = await http.get(
+      uri,
+      headers: {'Authorization': 'Bearer $token'},
     );
 
     if (response.statusCode == 200) {
-       return jsonDecode(response.body);
+      return jsonDecode(response.body);
     }
 
-    throw Exception(
-      'Failed to load tasks: ${response.body}',
-    );
+    throw Exception('Failed to load tasks: ${response.body}');
   }
-    
-  static Future<Map<String, dynamic>> getTask(
-    String taskId,
 
-  ) async {
+  static Future<Map<String, dynamic>> getTask(String taskId) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
 
     final response = await http.get(
       Uri.parse('$baseUrl/tasks/$taskId'),
-      headers: {
-        'Authorization': 'Bearer $token',
-      },
+      headers: {'Authorization': 'Bearer $token'},
     );
 
     if (response.statusCode == 200) {
@@ -364,79 +298,89 @@ class ApiService {
 
     throw Exception('Failed to load task');
   }
+
   static Future<void> createTask(
-  String projectId,
-  String title,
-  String description,
-  DateTime? dueDate,
-  String priority,
-  String status,
-  String? assigneeId,
-) async {
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('token');
-
-  final response = await http.post(
-    Uri.parse(
-      '$baseUrl/tasks/project/$projectId',
-    ),
-    headers: {
-      'Authorization': 'Bearer $token',
-      'Content-Type': 'application/json',
-    },
-    body: jsonEncode({
-      'title': title,
-      'description': description,
-      'dueDate': dueDate?.toIso8601String(),
-      'priority': priority,
-      'status': status,
-      'assigneeId': assigneeId,
-    }),
-  );
-
-  if (response.statusCode != 201 &&
-      response.statusCode != 200) {
-    throw Exception('Failed to create task');
-  }
-}
-
- static Future<void> updateTask(
-  String taskId,
-  String title,
-  String description,
-  DateTime? dueDate,
-  String priority,
-  String status,
-  String? assigneeId,
-) async {
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('token');
-
-  final response = await http.patch(
-    Uri.parse('$baseUrl/tasks/$taskId'),
-    headers: {
-      'Authorization': 'Bearer $token',
-      'Content-Type': 'application/json',
-    },
-    body: jsonEncode({
-      'title': title,
-      'description': description,
-      'dueDate': dueDate?.toIso8601String(),
-      'priority': priority,
-      'status': status,
-      'assigneeId': assigneeId,
-    }),
-  );
-
-  if (response.statusCode !=200) {
-    throw Exception('Failed to update task');
-  }
-}
-
-  static Future<void> updateTaskStatus(
-    String taskId,
+    String projectId,
+    String title,
+    String description,
+    DateTime? dueDate,
+    String priority,
     String status,
-  ) async {
+    String? assigneeId, {
+    List<String>? labelIds,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    final body = <String, dynamic>{
+      'title': title,
+      'description': description,
+      'dueDate': dueDate?.toIso8601String(),
+      'priority': priority,
+      'status': status,
+      'assigneeId': assigneeId,
+    };
+
+    if (labelIds != null) {
+      body['labelIds'] = labelIds;
+    }
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/tasks/project/$projectId'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode != 201 && response.statusCode != 200) {
+      throw Exception('Failed to create task: ${response.body}');
+    }
+  
+  }
+
+  static Future<void> updateTask(
+    String taskId,
+    String title,
+    String description,
+    DateTime? dueDate,
+    String priority,
+    String status,
+    String? assigneeId, {
+    List<String>? labelIds,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    final body = <String, dynamic>{
+      'title': title,
+      'description': description,
+      'dueDate': dueDate?.toIso8601String(),
+      'priority': priority,
+      'status': status,
+      'assigneeId': assigneeId,
+    };
+
+    if (labelIds != null) {
+      body['labelIds'] = labelIds;
+    }
+
+    final response = await http.patch(
+      Uri.parse('$baseUrl/tasks/$taskId'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update task: ${response.body}');
+    }
+  }
+
+  static Future<void> updateTaskStatus(String taskId, String status) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
 
@@ -446,150 +390,114 @@ class ApiService {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
       },
-      body: jsonEncode({
-        'status': status,
-      }),
+      body: jsonEncode({'status': status}),
     );
- 
-  if (response.statusCode != 200) {
-    throw Exception('Failed to update task status');
-  }
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update task status');
+    }
   }
 
-  static Future<void> createInvitation(
-    String projectId,
-    String userId,
-  ) async {
+  static Future<void> createInvitation(String projectId, String userId) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
 
     final response = await http.post(
-      Uri.parse(
-        '$baseUrl/project-invitations/projects/$projectId',
-      ),
+      Uri.parse('$baseUrl/project-invitations/projects/$projectId'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
       },
-      body: jsonEncode({
-        'userId': userId,
-      }),
+      body: jsonEncode({'userId': userId}),
     );
 
     debugPrint("CREATE INVITATION STATUS: ${response.statusCode}");
     debugPrint("CREATE INVITATION BODY: ${response.body}");
 
-    if (response.statusCode != 200 &&
-        response.statusCode != 201) {
+    if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception('Failed to create invitation');
     }
   }
 
- static Future<List<dynamic>> getMyInvitations() async {
-   final prefs = await SharedPreferences.getInstance();
-   final token = prefs.getString('token');
-
-   final response = await http.get(
-     Uri.parse('$baseUrl/project-invitations/mine'),
-     headers: {
-       'Authorization': 'Bearer $token',
-     },
-   );
-
-   debugPrint("MY INVITATIONS STATUS: ${response.statusCode}");
-   debugPrint("MY INVITATIONS BODY: ${response.body}");
-
-   if (response.statusCode == 200) {
-     return jsonDecode(response.body);
-   }
-
-   throw Exception('Failed to load invitations');
- }
-
- static Future<void> acceptInvitation(
-   String invitationId,
- ) async {
-   final prefs = await SharedPreferences.getInstance();
-   final token = prefs.getString('token');
-
-   final response = await http.patch(
-     Uri.parse(
-       '$baseUrl/project-invitations/$invitationId/accept',
-     ),
-     headers: {
-      'Authorization': 'Bearer $token',
-     },
-   );
-
-   debugPrint("ACCEPT INVITATION STATUS: ${response.statusCode}");
-   debugPrint("ACCEPT INVITATION BODY: ${response.body}");
-
-   if (response.statusCode != 200) {
-     throw Exception('Failed to accept invitation');
-   }
- }
-
- static Future<void> rejectInvitation(
-   String invitationId,
- ) async {
-   final prefs = await SharedPreferences.getInstance();
-   final token = prefs.getString('token');
-
-   final response = await http.patch(
-     Uri.parse(
-       '$baseUrl/project-invitations/$invitationId/reject',
-     ),
-     headers: {
-       'Authorization': 'Bearer $token',
-     },
-   );
-
-   debugPrint("REJECT INVITATION STATUS: ${response.statusCode}");
-   debugPrint("REJECT INVITATION BODY: ${response.body}");
-
-   if (response.statusCode != 200) {
-     throw Exception('Failed to reject invitation');
-   }
-  }
-
-  static Future<List<dynamic>> getProjectActivity(
-    String projectId,
-  ) async {
+  static Future<List<dynamic>> getMyInvitations() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
 
     final response = await http.get(
-      Uri.parse(
-       '$baseUrl/activity/project/$projectId',
-    ),
-     headers: {
-       'Authorization': 'Bearer $token',
-     },
-   );
+      Uri.parse('$baseUrl/project-invitations/mine'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
 
-   debugPrint(
-     "ACTIVITY STATUS: ${response.statusCode}",
-   );
-   debugPrint(
-      "ACTIVITY BODY: ${response.body}",
-   );
+    debugPrint("MY INVITATIONS STATUS: ${response.statusCode}");
+    debugPrint("MY INVITATIONS BODY: ${response.body}");
 
-   if (response.statusCode == 200) {
+    if (response.statusCode == 200) {
       return jsonDecode(response.body);
-   }
+    }
 
-   throw Exception('Failed to load project activity');
- }
-  
+    throw Exception('Failed to load invitations');
+  }
+
+  static Future<void> acceptInvitation(String invitationId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    final response = await http.patch(
+      Uri.parse('$baseUrl/project-invitations/$invitationId/accept'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    debugPrint("ACCEPT INVITATION STATUS: ${response.statusCode}");
+    debugPrint("ACCEPT INVITATION BODY: ${response.body}");
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to accept invitation');
+    }
+  }
+
+  static Future<void> rejectInvitation(String invitationId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    final response = await http.patch(
+      Uri.parse('$baseUrl/project-invitations/$invitationId/reject'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    debugPrint("REJECT INVITATION STATUS: ${response.statusCode}");
+    debugPrint("REJECT INVITATION BODY: ${response.body}");
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to reject invitation');
+    }
+  }
+
+  static Future<List<dynamic>> getProjectActivity(String projectId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/activity/project/$projectId'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    debugPrint("ACTIVITY STATUS: ${response.statusCode}");
+    debugPrint("ACTIVITY BODY: ${response.body}");
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+
+    throw Exception('Failed to load project activity');
+  }
+
   static Future<List<dynamic>> getNotifications() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
 
     final response = await http.get(
       Uri.parse('$baseUrl/notifications'),
-      headers: {
-        'Authorization': 'Bearer $token',
-      },
+      headers: {'Authorization': 'Bearer $token'},
     );
 
     debugPrint("NOTIFICATIONS STATUS: ${response.statusCode}");
@@ -608,9 +516,7 @@ class ApiService {
 
     final response = await http.get(
       Uri.parse('$baseUrl/notifications/unread-count'),
-      headers: {
-        'Authorization': 'Bearer $token',
-      },
+      headers: {'Authorization': 'Bearer $token'},
     );
 
     if (response.statusCode == 200) {
@@ -621,19 +527,13 @@ class ApiService {
     throw Exception('Failed to load unread notification count');
   }
 
-  static Future<void> markNotificationAsRead(
-    String notificationId,
-  ) async {
+  static Future<void> markNotificationAsRead(String notificationId) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
 
     final response = await http.patch(
-      Uri.parse(
-        '$baseUrl/notifications/$notificationId/read',
-      ),
-      headers: {
-        'Authorization': 'Bearer $token',
-      },
+      Uri.parse('$baseUrl/notifications/$notificationId/read'),
+      headers: {'Authorization': 'Bearer $token'},
     );
 
     if (response.statusCode != 200) {
@@ -647,9 +547,7 @@ class ApiService {
 
     final response = await http.patch(
       Uri.parse('$baseUrl/notifications/read-all'),
-      headers: {
-        'Authorization': 'Bearer $token',
-      },
+      headers: {'Authorization': 'Bearer $token'},
     );
 
     if (response.statusCode != 200) {
@@ -658,233 +556,264 @@ class ApiService {
   }
 
   static Future<List<dynamic>> getTaskComments(String taskId) async {
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('token');
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
 
-  final response = await http.get(
-    Uri.parse('$baseUrl/tasks/$taskId/comments'),
-    headers: {
-      'Authorization': 'Bearer $token',
-      'Content-Type': 'application/json',
-    },
-  );
-
-  if (response.statusCode == 200) {
-    return jsonDecode(response.body);
-  }
-
-  throw Exception(
-    'Failed to load comments: ${response.body}',
-  );
-}
-
-static Future<dynamic> addTaskComment(
-  String taskId,
-  String content,
-) async {
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('token');
-
-  final response = await http.post(
-    Uri.parse('$baseUrl/tasks/$taskId/comments'),
-    headers: {
-      'Authorization': 'Bearer $token',
-      'Content-Type': 'application/json',
-    },
-    body: jsonEncode({
-      'content': content,
-    }),
-  );
-
-  if (response.statusCode == 200 ||
-      response.statusCode == 201) {
-    return jsonDecode(response.body);
-  }
-
-  throw Exception(
-    'Failed to add comment: ${response.body}',
-  );
-}
-
-static Future<void> deleteTaskComment(
-  String commentId,
-) async {
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('token');
-
-  final response = await http.delete(
-    Uri.parse('$baseUrl/tasks/comments/$commentId'),
-    headers: {
-      'Authorization': 'Bearer $token',
-      'Content-Type': 'application/json',
-    },
-  );
-
-  if (response.statusCode != 200 &&
-      response.statusCode != 204) {
-    throw Exception(
-      'Failed to delete comment: ${response.body}',
+    final response = await http.get(
+      Uri.parse('$baseUrl/tasks/$taskId/comments'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
     );
-  }
-}
 
-static Future<List<dynamic>> getTaskAttachments(
-  String taskId,
-) async {
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('token');
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
 
-  final response = await http.get(
-    Uri.parse('$baseUrl/tasks/$taskId/attachments'),
-    headers: {
-      'Authorization': 'Bearer $token',
-    },
-  );
-
-  debugPrint(
-    'ATTACHMENTS STATUS: ${response.statusCode}',
-  );
-  debugPrint(
-    'ATTACHMENTS BODY: ${response.body}',
-  );
-
-  if (response.statusCode == 200) {
-    return jsonDecode(response.body);
+    throw Exception('Failed to load comments: ${response.body}');
   }
 
-  throw Exception(
-    'Failed to load attachments: ${response.body}',
-  );
-}
+  static Future<dynamic> addTaskComment(String taskId, String content) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
 
-static Future<dynamic> uploadTaskAttachment(
-  String taskId,
-  String filePath,
-) async {
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('token');
-
-  final request = http.MultipartRequest(
-    'POST',
-    Uri.parse(
-      '$baseUrl/tasks/$taskId/attachments',
-    ),
-  );
-
-  request.headers['Authorization'] = 'Bearer $token';
-
-  request.files.add(
-    await http.MultipartFile.fromPath(
-      'file',
-      filePath,
-    ),
-  );
-
-  final streamedResponse = await request.send();
-
-  final response =
-      await http.Response.fromStream(streamedResponse);
-
-  debugPrint(
-    'UPLOAD ATTACHMENT STATUS: ${response.statusCode}',
-  );
-  debugPrint(
-    'UPLOAD ATTACHMENT BODY: ${response.body}',
-  );
-
-  if (response.statusCode == 200 ||
-      response.statusCode == 201) {
-    return jsonDecode(response.body);
-  }
-
-  throw Exception(
-    'Failed to upload attachment: ${response.body}',
-  );
-}
-
-static Future<void> deleteTaskAttachment(
-  String attachmentId,
-) async {
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('token');
-
-  final response = await http.delete(
-    Uri.parse(
-      '$baseUrl/tasks/attachments/$attachmentId',
-    ),
-    headers: {
-      'Authorization': 'Bearer $token',
-    },
-  );
-
-  debugPrint(
-    'DELETE ATTACHMENT STATUS: ${response.statusCode}',
-  );
-  debugPrint(
-    'DELETE ATTACHMENT BODY: ${response.body}',
-  );
-
-  if (response.statusCode != 200 &&
-      response.statusCode != 204) {
-    throw Exception(
-      'Failed to delete attachment: ${response.body}',
+    final response = await http.post(
+      Uri.parse('$baseUrl/tasks/$taskId/comments'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'content': content}),
     );
-  }
-}
 
-static Future<void> downloadAndOpenTaskAttachment({
-  required String attachmentId,
-  required String fileName,
-}) async {
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('token');
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return jsonDecode(response.body);
+    }
 
-  if (token == null) {
-    throw Exception('Authentication token not found');
+    throw Exception('Failed to add comment: ${response.body}');
   }
 
-  final response = await http.get(
-    Uri.parse(
-      '$baseUrl/tasks/attachments/$attachmentId/download',
-    ),
-    headers: {
-      'Authorization': 'Bearer $token',
-    },
-  );
+  static Future<void> deleteTaskComment(String commentId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
 
-  debugPrint(
-    'DOWNLOAD ATTACHMENT STATUS: ${response.statusCode}',
-  );
-
-  if (response.statusCode != 200) {
-    throw Exception(
-      'Failed to download attachment: ${response.body}',
+    final response = await http.delete(
+      Uri.parse('$baseUrl/tasks/comments/$commentId'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
     );
+
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Failed to delete comment: ${response.body}');
+    }
   }
 
-  final directory = await getTemporaryDirectory();
+  static Future<List<dynamic>> getTaskAttachments(String taskId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
 
-  final safeFileName = fileName.replaceAll(
-    RegExp(r'[\\/:*?"<>|]'),
-    '_',
-  );
-
-  final file = File(
-    '${directory.path}/$safeFileName',
-  );
-
-  await file.writeAsBytes(
-    response.bodyBytes,
-    flush: true,
-  );
-
-  final result = await OpenFilex.open(file.path);
-
-  if (result.type != ResultType.done) {
-    throw Exception(
-      'Could not open attachment: ${result.message}',
+    final response = await http.get(
+      Uri.parse('$baseUrl/tasks/$taskId/attachments'),
+      headers: {'Authorization': 'Bearer $token'},
     );
-  }
-}
 
+    debugPrint('ATTACHMENTS STATUS: ${response.statusCode}');
+    debugPrint('ATTACHMENTS BODY: ${response.body}');
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+
+    throw Exception('Failed to load attachments: ${response.body}');
+  }
+
+  static Future<dynamic> uploadTaskAttachment(
+    String taskId,
+    String filePath,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$baseUrl/tasks/$taskId/attachments'),
+    );
+
+    request.headers['Authorization'] = 'Bearer $token';
+
+    request.files.add(await http.MultipartFile.fromPath('file', filePath));
+
+    final streamedResponse = await request.send();
+
+    final response = await http.Response.fromStream(streamedResponse);
+
+    debugPrint('UPLOAD ATTACHMENT STATUS: ${response.statusCode}');
+    debugPrint('UPLOAD ATTACHMENT BODY: ${response.body}');
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return jsonDecode(response.body);
+    }
+
+    throw Exception('Failed to upload attachment: ${response.body}');
+  }
+
+  static Future<void> deleteTaskAttachment(String attachmentId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    final response = await http.delete(
+      Uri.parse('$baseUrl/tasks/attachments/$attachmentId'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    debugPrint('DELETE ATTACHMENT STATUS: ${response.statusCode}');
+    debugPrint('DELETE ATTACHMENT BODY: ${response.body}');
+
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Failed to delete attachment: ${response.body}');
+    }
+  }
+
+  static Future<void> downloadAndOpenTaskAttachment({
+    required String attachmentId,
+    required String fileName,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    if (token == null) {
+      throw Exception('Authentication token not found');
+    }
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/tasks/attachments/$attachmentId/download'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    debugPrint('DOWNLOAD ATTACHMENT STATUS: ${response.statusCode}');
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to download attachment: ${response.body}');
+    }
+
+    final directory = await getTemporaryDirectory();
+
+    final safeFileName = fileName.replaceAll(RegExp(r'[\\/:*?"<>|]'), '_');
+
+    final file = File('${directory.path}/$safeFileName');
+
+    await file.writeAsBytes(response.bodyBytes, flush: true);
+
+    final result = await OpenFilex.open(file.path);
+
+    if (result.type != ResultType.done) {
+      throw Exception('Could not open attachment: ${result.message}');
+    }
+  }
+
+  static Future<TaskLabel> createLabel(
+    String projectId,
+    String name, {
+    String? color,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    final body = <String, dynamic>{'name': name};
+
+    if (color != null) {
+      body['color'] = color;
+    }
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/tasks/project/$projectId/labels'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return TaskLabel.fromJson(
+        jsonDecode(response.body) as Map<String, dynamic>,
+      );
+    }
+
+    throw Exception('Failed to create label: ${response.body}');
+  }
+
+  static Future<List<TaskLabel>> getLabels(String projectId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/tasks/project/$projectId/labels'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+
+      return data
+          .map((json) => TaskLabel.fromJson(json as Map<String, dynamic>))
+          .toList();
+    }
+
+    throw Exception('Failed to load labels: ${response.body}');
+  }
+
+  static Future<TaskLabel> updateLabel(
+    String projectId,
+    String labelId, {
+    String? name,
+    String? color,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    final body = <String, dynamic>{};
+
+    if (name != null) {
+      body['name'] = name;
+    }
+
+    if (color != null) {
+      body['color'] = color;
+    }
+
+    final response = await http.patch(
+      Uri.parse('$baseUrl/tasks/project/$projectId/labels/$labelId'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode == 200) {
+      return TaskLabel.fromJson(
+        jsonDecode(response.body) as Map<String, dynamic>,
+      );
+    }
+
+    throw Exception('Failed to update label: ${response.body}');
+  }
+
+  static Future<void> deleteLabel(String projectId, String labelId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    final response = await http.delete(
+      Uri.parse('$baseUrl/tasks/project/$projectId/labels/$labelId'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Failed to delete label: ${response.body}');
+    }
+  }
 }
