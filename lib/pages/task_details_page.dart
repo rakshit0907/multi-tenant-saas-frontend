@@ -3,6 +3,8 @@ import '../models/task.dart';
 import '../services/api_service.dart';
 import '../widgets/task_dialog.dart';
 import 'package:file_picker/file_picker.dart';
+import '../models/task_label.dart';
+
 class TaskDetailsPage extends StatefulWidget {
   final Task task;
   final String projectId;
@@ -20,6 +22,7 @@ class TaskDetailsPage extends StatefulWidget {
 class _TaskDetailsPageState extends State<TaskDetailsPage> {
   List<dynamic> comments = [];
   List<dynamic> members = [];
+  List<TaskLabel> labels = [];
   List<dynamic> attachments = [];
 
   bool loadingAttachments = true;
@@ -42,6 +45,7 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
   late String selectedStatus;
 
   String? selectedAssigneeId;
+  late Set<String> selectedLabelIds;
 
   bool saving = false;
 
@@ -58,35 +62,50 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
   }
 
   Future<void> loadMembers() async {
-  try {
-    final result =
-        await ApiService.getProjectMembers(widget.projectId);
+    try {
+      final result = await ApiService.getProjectMembers(widget.projectId);
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    setState(() {
-      members = result;
-    });
-  } catch (e) {
-    debugPrint('Failed to load members: $e');
+      setState(() {
+        members = result;
+      });
+    } catch (e) {
+      debugPrint('Failed to load members: $e');
+    }
   }
-}
+
+  Future<void> loadLabels() async {
+    try {
+      final data = await ApiService.getLabels(widget.projectId);
+
+      if (!mounted) return;
+
+      setState(() {
+        labels = data;
+
+        selectedLabelIds = selectedLabelIds
+            .where((id) => labels.any((label) => label.id == id))
+            .toSet();
+      });
+    } catch (e) {
+      debugPrint('LOAD LABELS ERROR: $e');
+    }
+  }
 
   Future<void> loadMyRole() async {
-  try {
-    final role = await ApiService.getMyProjectRole(
-      widget.projectId,
-    );
+    try {
+      final role = await ApiService.getMyProjectRole(widget.projectId);
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    setState(() {
-      myRole = role;
-    });
-  } catch (e) {
-    debugPrint('LOAD ROLE ERROR: $e');
+      setState(() {
+        myRole = role;
+      });
+    } catch (e) {
+      debugPrint('LOAD ROLE ERROR: $e');
+    }
   }
-}
 
   @override
   void initState() {
@@ -109,6 +128,9 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
     selectedPriority = currentTask.priority;
     selectedStatus = currentTask.status;
     selectedAssigneeId = widget.task.assigneeId;
+    selectedLabelIds = currentTask.labels.map((label) => label.id).toSet();
+
+    loadLabels();
   }
 
   @override
@@ -188,6 +210,7 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
         selectedPriority,
         selectedStatus,
         selectedAssigneeId,
+        labelIds: selectedLabelIds.toList(),
       );
 
       if (!mounted) return;
@@ -203,6 +226,9 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
           status: selectedStatus,
           assigneeId: selectedAssigneeId,
           assigneeName: _getAssigneeName(selectedAssigneeId),
+          labels: labels
+              .where((label) => selectedLabelIds.contains(label.id))
+              .toList(),
         );
       });
 
@@ -246,127 +272,98 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
   }
 
   Future<void> loadAttachments() async {
-  try {
-    final data = await ApiService.getTaskAttachments(
-      currentTask.id,
-    );
+    try {
+      final data = await ApiService.getTaskAttachments(currentTask.id);
 
-    if (!mounted) return;
-
-    setState(() {
-      attachments = data;
-      loadingAttachments = false;
-    });
-  } catch (e) {
-    debugPrint('LOAD ATTACHMENTS ERROR: $e');
-
-    if (!mounted) return;
-
-    setState(() {
-      loadingAttachments = false;
-    });
-  }
-}
-
- Future<void> pickAndUploadAttachment() async {
-  try {
-    final file = await FilePicker.pickFile();
-
-    // User cancelled the picker
-    if (file == null) {
-      return;
-    }
-
-    final filePath = file.path;
-
-    if (filePath == null) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Unable to access selected file',
-          ),
-        ),
-      );
-
-      return;
-    }
-
-    setState(() {
-      uploadingAttachment = true;
-    });
-
-    await ApiService.uploadTaskAttachment(
-      currentTask.id,
-      filePath,
-    );
-
-    await loadAttachments();
-
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Attachment uploaded successfully',
-        ),
-      ),
-    );
-  } catch (e) {
-    debugPrint(
-      'UPLOAD ATTACHMENT ERROR: $e',
-    );
-
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Failed to upload attachment: $e',
-        ),
-      ),
-    );
-  } finally {
-    if (mounted) {
       setState(() {
-        uploadingAttachment = false;
+        attachments = data;
+        loadingAttachments = false;
+      });
+    } catch (e) {
+      debugPrint('LOAD ATTACHMENTS ERROR: $e');
+
+      if (!mounted) return;
+
+      setState(() {
+        loadingAttachments = false;
       });
     }
   }
-}
 
- Future<void> deleteAttachment(
-  String attachmentId,
-) async {
-  try {
-    await ApiService.deleteTaskAttachment(
-      attachmentId,
-    );
+  Future<void> pickAndUploadAttachment() async {
+    try {
+      final file = await FilePicker.pickFile();
 
-    await loadAttachments();
+      // User cancelled the picker
+      if (file == null) {
+        return;
+      }
 
-    if (!mounted) return;
+      final filePath = file.path;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Attachment deleted'),
-      ),
-    );
-  } catch (e) {
-    debugPrint('DELETE ATTACHMENT ERROR: $e');
+      if (filePath == null) {
+        if (!mounted) return;
 
-    if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Unable to access selected file')),
+        );
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Failed to delete attachment: $e',
-        ),
-      ),
-    );
+        return;
+      }
+
+      setState(() {
+        uploadingAttachment = true;
+      });
+
+      await ApiService.uploadTaskAttachment(currentTask.id, filePath);
+
+      await loadAttachments();
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Attachment uploaded successfully')),
+      );
+    } catch (e) {
+      debugPrint('UPLOAD ATTACHMENT ERROR: $e');
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to upload attachment: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          uploadingAttachment = false;
+        });
+      }
+    }
   }
-}
+
+  Future<void> deleteAttachment(String attachmentId) async {
+    try {
+      await ApiService.deleteTaskAttachment(attachmentId);
+
+      await loadAttachments();
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Attachment deleted')));
+    } catch (e) {
+      debugPrint('DELETE ATTACHMENT ERROR: $e');
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete attachment: $e')),
+      );
+    }
+  }
 
   void openEditDialog() {
     showDialog(
@@ -381,8 +378,17 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
         initialPriority: currentTask.priority,
         initialStatus: currentTask.status,
         initialAssigneeId: selectedAssigneeId,
+        initialLabelIds: currentTask.labels.map((label) => label.id).toList(),
         onSave:
-            (title, description, dueDate, priority, status, assigneeId) async {
+            (
+              title,
+              description,
+              dueDate,
+              priority,
+              status,
+              assigneeId,
+              labelIds,
+            ) async {
               try {
                 await ApiService.updateTask(
                   currentTask.id,
@@ -392,11 +398,17 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
                   priority,
                   status,
                   assigneeId,
+                  labelIds: labelIds,
                 );
 
                 if (!mounted) return;
 
                 setState(() {
+                  selectedLabelIds = labelIds.toSet();
+
+                  final selectedLabels = labels
+                      .where((label) => selectedLabelIds.contains(label.id))
+                      .toList();
                   currentTask = Task(
                     id: currentTask.id,
                     title: title,
@@ -407,6 +419,7 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
                     status: status,
                     assigneeId: assigneeId,
                     assigneeName: _getAssigneeName(assigneeId),
+                    labels: selectedLabels,
                   );
 
                   titleController.text = title;
@@ -525,6 +538,25 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
               currentTask.assigneeName ?? 'Unassigned',
             ),
 
+            if (currentTask.labels.isNotEmpty) ...[
+              const Text(
+                'Labels',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: currentTask.labels.map((label) {
+                  return Chip(
+                    label: Text(label.name),
+                    visualDensity: VisualDensity.compact,
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 16),
+            ],
+
             buildInfoRow(
               currentTask.completed
                   ? Icons.check_circle
@@ -536,114 +568,88 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
             const SizedBox(height: 12),
 
             const Divider(),
-const SizedBox(height: 16),
+            const SizedBox(height: 16),
 
-Row(
-  children: [
-    const Expanded(
-      child: Text(
-        'Attachments',
-        style: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    ),
+            Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Attachments',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ),
 
-    if (uploadingAttachment)
-      const SizedBox(
-        width: 22,
-        height: 22,
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-        ),
-      )
-    else
-      IconButton(
-        tooltip: 'Add attachment',
-        onPressed: pickAndUploadAttachment,
-        icon: const Icon(
-          Icons.attach_file,
-        ),
-      ),
-  ],
-),
+                if (uploadingAttachment)
+                  const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                else
+                  IconButton(
+                    tooltip: 'Add attachment',
+                    onPressed: pickAndUploadAttachment,
+                    icon: const Icon(Icons.attach_file),
+                  ),
+              ],
+            ),
 
-const SizedBox(height: 12),
+            const SizedBox(height: 12),
 
-if (loadingAttachments)
-  const Center(
-    child: CircularProgressIndicator(),
-  )
-else if (attachments.isEmpty)
-  const Padding(
-    padding: EdgeInsets.symmetric(
-      vertical: 12,
-    ),
-    child: Text(
-      'No attachments yet',
-      style: TextStyle(
-        color: Colors.grey,
-      ),
-    ),
-  )
-else
-  ...attachments.map((attachment) {
-    final name =
-        attachment['originalName']?.toString() ??
-        'Attachment';
+            if (loadingAttachments)
+              const Center(child: CircularProgressIndicator())
+            else if (attachments.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 12),
+                child: Text(
+                  'No attachments yet',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              )
+            else
+              ...attachments.map((attachment) {
+                final name =
+                    attachment['originalName']?.toString() ?? 'Attachment';
 
-    final mimeType =
-        attachment['mimeType']?.toString() ?? '';
+                final mimeType = attachment['mimeType']?.toString() ?? '';
 
-    final uploader =
-        attachment['uploadedBy']?['name']
-            ?.toString() ??
-        'Unknown';
+                final uploader =
+                    attachment['uploadedBy']?['name']?.toString() ?? 'Unknown';
 
-    final attachmentId =
-        attachment['id'].toString();
+                final attachmentId = attachment['id'].toString();
 
-    IconData icon;
+                IconData icon;
 
-    if (mimeType.startsWith('image/')) {
-      icon = Icons.image_outlined;
-    } else if (mimeType == 'application/pdf') {
-      icon = Icons.picture_as_pdf_outlined;
-    } else {
-      icon = Icons.insert_drive_file_outlined;
-    }
+                if (mimeType.startsWith('image/')) {
+                  icon = Icons.image_outlined;
+                } else if (mimeType == 'application/pdf') {
+                  icon = Icons.picture_as_pdf_outlined;
+                } else {
+                  icon = Icons.insert_drive_file_outlined;
+                }
 
-    return Card(
-      margin: const EdgeInsets.only(
-        bottom: 8,
-      ),
-      child: ListTile(
-        leading: Icon(icon),
-        title: Text(
-          name,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        subtitle: Text(
-          'Uploaded by $uploader',
-        ),
-        trailing: IconButton(
-          tooltip: 'Delete attachment',
-          icon: const Icon(
-            Icons.delete_outline,
-          ),
-          onPressed: () {
-            deleteAttachment(
-              attachmentId,
-            );
-          },
-        ),
-      ),
-    );
-  }),
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: ListTile(
+                    leading: Icon(icon),
+                    title: Text(
+                      name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: Text('Uploaded by $uploader'),
+                    trailing: IconButton(
+                      tooltip: 'Delete attachment',
+                      icon: const Icon(Icons.delete_outline),
+                      onPressed: () {
+                        deleteAttachment(attachmentId);
+                      },
+                    ),
+                  ),
+                );
+              }),
 
-const SizedBox(height: 20),
+            const SizedBox(height: 20),
 
             const Divider(),
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../models/task_label.dart';
 enum TaskPriority {
   LOW, MEDIUM, HIGH,
 }
@@ -11,6 +12,8 @@ enum TaskStatus {
 class TaskDialog extends StatefulWidget {
   final List members;
   final String? initialAssigneeId;
+  final List<TaskLabel> labels;
+  final List<String> initialLabelIds;
   final String title;
   final String initialTitle;
   final String initialDescription;
@@ -26,6 +29,7 @@ class TaskDialog extends StatefulWidget {
     String priority,
     String status,
     String? assigneeId,
+    List<String> labelIds,
   ) onSave;
 
   const TaskDialog({
@@ -40,6 +44,9 @@ class TaskDialog extends StatefulWidget {
     this.initialStatus = "PENDING",
     this.members = const [],
     this.initialAssigneeId,
+    this.labels = const [],
+    this.initialLabelIds = const [],
+
   });
 
   @override
@@ -54,7 +61,7 @@ class _TaskDialogState extends State<TaskDialog> {
   late TaskPriority selectedPriority;
   late TaskStatus selectedStatus;
   String? selectedAssigneeId;
-
+  late Set<String> selectedLabelIds;
   @override
   void initState() {
     super.initState();
@@ -268,6 +275,7 @@ class _TaskDialogState extends State<TaskDialog> {
               selectedPriority.name,
               selectedStatus.name,
               selectedAssigneeId,
+              selectedLabelIds.toList(),
             );
 
             Navigator.pop(context);

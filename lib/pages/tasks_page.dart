@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import '../models/task.dart';
 import '../models/task_stats.dart';
-
+import '../models/task_label.dart';
 import '../services/api_service.dart';
 
 import '../widgets/task_card.dart';
@@ -26,6 +26,7 @@ class _TasksPageState extends State<TasksPage> {
   List<Task> tasks = [];
   TaskStats? stats;
   List members = [];
+  List<TaskLabel> labels = [];
   
   final TextEditingController searchController =
     TextEditingController();
@@ -34,7 +35,7 @@ class _TasksPageState extends State<TasksPage> {
   bool loading = true;
   
   String selectedFilter = "All";
-
+  String? selectedLabelId;
   String sortBy = 'dueDate';
   String sortOrder = 'ASC';
 
@@ -60,6 +61,7 @@ class _TasksPageState extends State<TasksPage> {
      await Future.wait([
        loadTasks(),
        loadMembers(),
+       loadLabels(),
      ]);
 
      if (!mounted) return;
@@ -92,6 +94,24 @@ class _TasksPageState extends State<TasksPage> {
     debugPrint("MEMBERS STATE AFTER SET: ${members.length}");
   } catch (e) {
     debugPrint("LOAD MEMBERS ERROR: $e");
+  }
+}
+
+ Future<void> loadLabels() async {
+  try {
+    final data = await ApiService.getLabels(
+      widget.projectId,
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      labels = data;
+    });
+  } catch (e) {
+    debugPrint(
+      'LOAD LABELS ERROR: $e',
+    );
   }
 }
 
@@ -272,7 +292,7 @@ class _TasksPageState extends State<TasksPage> {
 
       Expanded(
         child: DropdownButtonFormField<String>(
-          value: sortBy,
+          initialValue: sortBy,
           decoration: const InputDecoration(
             border: OutlineInputBorder(),
             isDense: true,
@@ -338,7 +358,7 @@ class _TasksPageState extends State<TasksPage> {
   child: tasks.isEmpty
       ? Center(
           child: Text(
-            searchQuery.isNotEmpty || selectedFilter != "All"
+            searchQuery.isNotEmpty || selectedFilter != "All" || selectedLabelId != null
                 ? "No matching tasks"
                 : "No tasks yet",
             style: const TextStyle(
@@ -362,12 +382,15 @@ class _TasksPageState extends State<TasksPage> {
                     title: "Edit Task",
                     buttonText: "Save",
                     members: members,
+                    labels: labels,
                     initialTitle: task.title,
                     initialDescription: task.description ?? '',
                     initialDueDate: task.dueDate,
                     initialPriority: task.priority,
                     initialStatus: task.status,
                     initialAssigneeId: task.assigneeId,
+                    initialLabelIds:
+                          task.labels.map((label) => label.id).toList(),
                     onSave: (
                       title,
                       description,
@@ -375,6 +398,7 @@ class _TasksPageState extends State<TasksPage> {
                       priority,
                       status,
                       assigneeId,
+                      labelIds,
                     ) async {
                       await ApiService.updateTask(
                         task.id,
@@ -384,6 +408,7 @@ class _TasksPageState extends State<TasksPage> {
                         priority,
                         status,
                         assigneeId,
+                        labelIds: labelIds,
                       );
 
                       await loadTasks();
@@ -416,6 +441,7 @@ class _TasksPageState extends State<TasksPage> {
           priority,
           status,
           assigneeId,
+          labelIds,
         ) async {
           await ApiService.createTask(
             widget.projectId,

@@ -3,6 +3,7 @@ import '../models/task.dart';
 import '../services/api_service.dart';
 import '../widgets/task_dialog.dart';
 import 'task_details_page.dart';
+import '../models/task_label.dart';
 class KanbanPage extends StatefulWidget {
   final String projectId;
   final String projectName;
@@ -23,6 +24,7 @@ class KanbanPage extends StatefulWidget {
 class _KanbanPageState extends State<KanbanPage> {
   List<Task> tasks = [];
   List members = [];
+  List<TaskLabel> labels = [];
   bool loading = true;
 
   @override
@@ -33,22 +35,38 @@ class _KanbanPageState extends State<KanbanPage> {
 
   Future<void> loadTasks() async {
     try {
-      final membersData = await ApiService.getProjectMembers(widget.projectId);
-      final data = await ApiService.getTasks(widget.projectId);
+      final results = await Future.wait([
+        ApiService.getProjectMembers(widget.projectId),
+        ApiService.getTasks(widget.projectId),
+        ApiService.getLabels(widget.projectId),
+      ]);
+
+      if (!mounted) return;
+
+      final membersData = results[0];
+      final tasksData = results[1];
+      final labelsData = results[2] as List<TaskLabel>;
 
       setState(() {
         members = membersData;
-        tasks = data.map<Task>((e) => Task.fromJson(e)).toList();
+        tasks = tasksData
+            .map<Task>((e) => Task.fromJson(e))
+            .toList();
+        labels = labelsData;
         loading = false;
       });
     } catch (e) {
-      debugPrint(e.toString());
+      debugPrint('LOAD KANBAN ERROR: $e');
+
+      if (!mounted) return;
 
       setState(() {
         loading = false;
       });
     }
   }
+
+
   Future<void> moveTask(
   Task task,
   String newColumn,
@@ -152,6 +170,8 @@ Widget build(BuildContext context) {
                     priority,
                     status,
                     assigneeId,
+                    labelIds,
+
                   ) async {
                     await ApiService.createTask(
                       widget.projectId,
@@ -262,6 +282,27 @@ class KanbanColumn extends StatelessWidget {
                         ),
                       ),
                     ),
+
+                    if (task.labels.isNotEmpty) ...[
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: task.labels.map((label) {
+                          return Chip(
+                            label: Text(
+                              label.name,
+                              style: const TextStyle(
+                                fontSize: 11,
+                             ),
+                   ),
+                   visualDensity: VisualDensity.compact,
+                   materialTapTargetSize:
+                      MaterialTapTargetSize.shrinkWrap,
+                  );
+                }).toList(),
+               ),
+               const SizedBox(height: 6),
+               ],
                    Align(
                      alignment: Alignment.centerLeft,
                      child: Container(
