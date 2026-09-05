@@ -29,6 +29,22 @@ class TaskCard extends StatelessWidget {
     }
   }
 
+  Color getLabelColor(String hex) {
+  try {
+    final cleaned = hex.replaceFirst('#', '');
+
+    if (cleaned.length != 6) {
+      return Colors.grey;
+    }
+
+    return Color(
+      int.parse('FF$cleaned', radix: 16),
+    );
+  } catch (_) {
+    return Colors.grey;
+  }
+}
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -96,6 +112,38 @@ class TaskCard extends StatelessWidget {
               ),
 
             if (task.dueDate != null)
+
+            if (task.labels.isNotEmpty)
+  Padding(
+    padding: const EdgeInsets.only(top: 8),
+    child: Wrap(
+      spacing: 6,
+      runSpacing: 4,
+      children: task.labels.map((label) {
+        final color = getLabelColor(label.color);
+
+        return Chip(
+          label: Text(
+            label.name,
+            style: TextStyle(
+              color: color,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          backgroundColor: color.withValues(
+            alpha: 0.12,
+          ),
+          side: BorderSide(
+            color: color.withValues(alpha: 0.4),
+          ),
+          visualDensity: VisualDensity.compact,
+          materialTapTargetSize:
+              MaterialTapTargetSize.shrinkWrap,
+        );
+      }).toList(),
+    ),
+  ),
               Padding(
                 padding: const EdgeInsets.only(top: 6),
                 child: Row(
