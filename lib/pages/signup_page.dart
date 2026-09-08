@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -45,17 +44,13 @@ class _SignupPageState extends State<SignupPage> {
       if (response.statusCode == 200 ||
           response.statusCode == 201) {
 
+        if (!mounted) return;
 
-            final prefs = await SharedPreferences.getInstance();
-
-            await prefs.setString(
-              "token",
-              data["token"],
-            );
-
-            if (!mounted) return;
-
-            Navigator.pushReplacementNamed(context, "/dashboard");
+        Navigator.pushReplacementNamed(
+          context,
+          '/verify-email-pending',
+          arguments: emailController.text.trim(),
+        );      
       } else {
 
         if (!mounted) return;

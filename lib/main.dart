@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'splash_page.dart';
 import 'pages/signup_page.dart';
+import 'pages/verify_email_pending_page.dart';
 void main() {
   runApp(const MyApp());
 }
@@ -24,6 +25,7 @@ class MyApp extends StatelessWidget {
         '/login': (context) => const LoginPage(),
         '/signup': (context) => const SignupPage(),
         '/dashboard': (context) => const DashboardPage(),
+         '/verify-email-pending': (context) => const VerifyEmailPendingPage(),
       },
     );
   }
