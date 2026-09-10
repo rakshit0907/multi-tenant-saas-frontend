@@ -42,33 +42,25 @@ class _LoginPageState extends State<LoginPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
-  Future<void> login() async {
+ Future<void> login() async {
   try {
-    debugPrint("LOGIN BUTTON CLICKED");
-
     final url = Uri.parse('http://10.0.2.2:3000/auth/login');
-
-    debugPrint("CALLING API...");
 
     final response = await http.post(
       url,
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+      },
       body: jsonEncode({
         "email": emailController.text.trim(),
         "password": passwordController.text,
       }),
     );
 
-    debugPrint("STATUS CODE: ${response.statusCode}");
-    debugPrint("BODY: ${response.body}");
-
     final data = jsonDecode(response.body);
 
     if (response.statusCode == 200 ||
         response.statusCode == 201) {
-
-      debugPrint("LOGIN SUCCESS");
-
       final prefs = await SharedPreferences.getInstance();
 
       await prefs.setString(
@@ -82,10 +74,28 @@ class _LoginPageState extends State<LoginPage> {
         context,
         '/dashboard',
       );
+    } else {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            data['message']?.toString() ??
+                'Login failed',
+          ),
+        ),
+      );
     }
   } catch (e) {
-    debugPrint("LOGIN ERROR:");
-    debugPrint(e.toString());
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Unable to connect to the server',
+        ),
+      ),
+    );
   }
 }
 
@@ -133,6 +143,29 @@ class _LoginPageState extends State<LoginPage> {
                   "Create a new account",
                 ),
                ),
+               TextButton(
+                 onPressed: () {
+                   final email = emailController.text.trim();
+
+                   if (email.isEmpty) {
+                     ScaffoldMessenger.of(context).showSnackBar(
+                       const SnackBar(
+                         content: Text('Enter your email first'),
+                  ),
+               ); 
+               return;
+              }
+
+              Navigator.pushNamed(
+                context,
+                '/verify-email-pending',
+                arguments: email,
+               );
+             },
+           child: const Text(
+             'Resend verification email',
+           ),
+         ),
              ],
            ),
          )
