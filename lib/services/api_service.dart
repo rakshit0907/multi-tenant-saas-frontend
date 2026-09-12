@@ -862,4 +862,28 @@ static Future<void> resendVerificationEmail(
       throw Exception('Failed to delete label: ${response.body}');
     }
   }
+
+  static Future<void> forgotPassword(
+  String email,
+) async {
+  final response = await http.post(
+    Uri.parse('$baseUrl/auth/forgot-password'),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: jsonEncode({
+      'email': email.trim(),
+    }),
+  );
+
+  if (response.statusCode != 200 &&
+      response.statusCode != 201) {
+    final data = jsonDecode(response.body);
+
+    throw Exception(
+      data['message']?.toString() ??
+          'Failed to request password reset',
+    );
+  }
+}
 }

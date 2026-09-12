@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'splash_page.dart';
 import 'pages/signup_page.dart';
 import 'pages/verify_email_pending_page.dart';
+import 'pages/forgot_password_page.dart';
 void main() {
   runApp(const MyApp());
 }
@@ -26,6 +27,7 @@ class MyApp extends StatelessWidget {
         '/signup': (context) => const SignupPage(),
         '/dashboard': (context) => const DashboardPage(),
          '/verify-email-pending': (context) => const VerifyEmailPendingPage(),
+         '/forgot-password': (context) => const ForgotPasswordPage(),
       },
     );
   }
@@ -124,6 +126,18 @@ class _LoginPageState extends State<LoginPage> {
                    labelText: "Password",
                   ),
                 ),
+
+                TextButton(
+                 onPressed: () {
+                   Navigator.pushNamed(
+                    context,
+                    '/forgot-password',
+                   );
+                 },
+                 child: const Text(
+                 'Forgot Password?',
+                 ),
+          ),
 
                const SizedBox(height: 24),
 
