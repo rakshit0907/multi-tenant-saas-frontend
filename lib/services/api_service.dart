@@ -886,4 +886,30 @@ static Future<void> resendVerificationEmail(
     );
   }
 }
+
+static Future<void> resetPassword(
+  String token,
+  String newPassword,
+) async {
+  final response = await http.post(
+    Uri.parse('$baseUrl/auth/reset-password'),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: jsonEncode({
+      'token': token,
+      'newPassword': newPassword,
+    }),
+  );
+
+  if (response.statusCode != 200 &&
+      response.statusCode != 201) {
+    final data = jsonDecode(response.body);
+
+    throw Exception(
+      data['message']?.toString() ??
+          'Password reset failed',
+    );
+  }
+}
 }

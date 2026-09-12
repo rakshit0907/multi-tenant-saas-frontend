@@ -7,6 +7,7 @@ import 'splash_page.dart';
 import 'pages/signup_page.dart';
 import 'pages/verify_email_pending_page.dart';
 import 'pages/forgot_password_page.dart';
+import 'pages/reset_password_page.dart';
 void main() {
   runApp(const MyApp());
 }
@@ -28,6 +29,7 @@ class MyApp extends StatelessWidget {
         '/dashboard': (context) => const DashboardPage(),
          '/verify-email-pending': (context) => const VerifyEmailPendingPage(),
          '/forgot-password': (context) => const ForgotPasswordPage(),
+         '/reset-password': (context) => const ResetPasswordPage(),
       },
     );
   }
