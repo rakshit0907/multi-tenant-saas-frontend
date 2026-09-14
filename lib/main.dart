@@ -8,16 +8,71 @@ import 'pages/signup_page.dart';
 import 'pages/verify_email_pending_page.dart';
 import 'pages/forgot_password_page.dart';
 import 'pages/reset_password_page.dart';
+import 'dart:async';
+import 'package:app_links/app_links.dart';
+
+final GlobalKey<NavigatorState> navigatorKey =
+    GlobalKey<NavigatorState>();
 void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  late final AppLinks _appLinks;
+  StreamSubscription<Uri>? _linkSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _appLinks = AppLinks();
+    _handleDeepLinks();
+  }
+
+  Future<void> _handleDeepLinks() async {
+    final initialLink = await _appLinks.getInitialLink();
+
+    if (initialLink != null) {
+      _processDeepLink(initialLink);
+    }
+
+    _linkSubscription =
+        _appLinks.uriLinkStream.listen((uri) {
+      _processDeepLink(uri);
+    });
+  }
+
+  void _processDeepLink(Uri uri) {
+    if (uri.scheme == 'multisaas' &&
+        uri.host == 'reset-password') {
+      final token = uri.queryParameters['token'];
+
+      if (token != null && token.isNotEmpty) {
+        navigatorKey.currentState?.pushNamed(
+          '/reset-password',
+          arguments: token,
+        );
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _linkSubscription?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
 
       // 🚀 Splash is entry point
@@ -27,14 +82,16 @@ class MyApp extends StatelessWidget {
         '/login': (context) => const LoginPage(),
         '/signup': (context) => const SignupPage(),
         '/dashboard': (context) => const DashboardPage(),
-         '/verify-email-pending': (context) => const VerifyEmailPendingPage(),
-         '/forgot-password': (context) => const ForgotPasswordPage(),
-         '/reset-password': (context) => const ResetPasswordPage(),
+        '/verify-email-pending': (context) =>
+            const VerifyEmailPendingPage(),
+        '/forgot-password': (context) =>
+            const ForgotPasswordPage(),
+        '/reset-password': (context) =>
+            const ResetPasswordPage(),
       },
     );
   }
 }
-
 class LoginPage extends StatefulWidget {
  const LoginPage({super.key});
 
@@ -45,7 +102,7 @@ State<LoginPage> createState() => _LoginPageState();
 class _LoginPageState extends State<LoginPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
-
+  
  Future<void> login() async {
   try {
     final url = Uri.parse('http://10.0.2.2:3000/auth/login');
