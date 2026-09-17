@@ -25,50 +25,36 @@ class ApiService {
   }
 
   static Future<void> verifyEmail(String token) async {
-  final response = await http.post(
-    Uri.parse('$baseUrl/auth/verify-email'),
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: jsonEncode({
-      'token': token,
-    }),
-  );
-
-  if (response.statusCode != 200 &&
-      response.statusCode != 201) {
-    final data = jsonDecode(response.body);
-
-    throw Exception(
-      data['message']?.toString() ??
-          'Email verification failed',
+    final response = await http.post(
+      Uri.parse('$baseUrl/auth/verify-email'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'token': token}),
     );
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      final data = jsonDecode(response.body);
+
+      throw Exception(
+        data['message']?.toString() ?? 'Email verification failed',
+      );
+    }
   }
-}
 
-static Future<void> resendVerificationEmail(
-  String email,
-) async {
-  final response = await http.post(
-    Uri.parse('$baseUrl/auth/resend-verification'),
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: jsonEncode({
-      'email': email.trim(),
-    }),
-  );
-
-  if (response.statusCode != 200 &&
-      response.statusCode != 201) {
-    final data = jsonDecode(response.body);
-
-    throw Exception(
-      data['message']?.toString() ??
-          'Failed to resend verification email',
+  static Future<void> resendVerificationEmail(String email) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/auth/resend-verification'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email.trim()}),
     );
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      final data = jsonDecode(response.body);
+
+      throw Exception(
+        data['message']?.toString() ?? 'Failed to resend verification email',
+      );
+    }
   }
-}
 
   static Future<String> getMyProjectRole(String projectId) async {
     final prefs = await SharedPreferences.getInstance();
@@ -119,6 +105,24 @@ static Future<void> resendVerificationEmail(
     }
 
     throw Exception('Failed to load stats');
+  }
+
+  static Future<Map<String, dynamic>> getProjectDashboard(
+    String projectId,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/projects/$projectId/dashboard'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      return Map<String, dynamic>.from(jsonDecode(response.body));
+    }
+
+    throw Exception('Failed to load project dashboard');
   }
 
   static Future<void> deleteTask(String taskId) async {
@@ -383,7 +387,6 @@ static Future<void> resendVerificationEmail(
     if (response.statusCode != 201 && response.statusCode != 200) {
       throw Exception('Failed to create task: ${response.body}');
     }
-  
   }
 
   static Future<void> updateTask(
@@ -863,53 +866,33 @@ static Future<void> resendVerificationEmail(
     }
   }
 
-  static Future<void> forgotPassword(
-  String email,
-) async {
-  final response = await http.post(
-    Uri.parse('$baseUrl/auth/forgot-password'),
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: jsonEncode({
-      'email': email.trim(),
-    }),
-  );
-
-  if (response.statusCode != 200 &&
-      response.statusCode != 201) {
-    final data = jsonDecode(response.body);
-
-    throw Exception(
-      data['message']?.toString() ??
-          'Failed to request password reset',
+  static Future<void> forgotPassword(String email) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/auth/forgot-password'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email.trim()}),
     );
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      final data = jsonDecode(response.body);
+
+      throw Exception(
+        data['message']?.toString() ?? 'Failed to request password reset',
+      );
+    }
   }
-}
 
-static Future<void> resetPassword(
-  String token,
-  String newPassword,
-) async {
-  final response = await http.post(
-    Uri.parse('$baseUrl/auth/reset-password'),
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: jsonEncode({
-      'token': token,
-      'newPassword': newPassword,
-    }),
-  );
-
-  if (response.statusCode != 200 &&
-      response.statusCode != 201) {
-    final data = jsonDecode(response.body);
-
-    throw Exception(
-      data['message']?.toString() ??
-          'Password reset failed',
+  static Future<void> resetPassword(String token, String newPassword) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/auth/reset-password'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'token': token, 'newPassword': newPassword}),
     );
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      final data = jsonDecode(response.body);
+
+      throw Exception(data['message']?.toString() ?? 'Password reset failed');
+    }
   }
-}
 }

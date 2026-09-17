@@ -14,14 +14,17 @@ class ProjectDashboardPage extends StatefulWidget {
   });
 
   @override
-  State<ProjectDashboardPage> createState() =>
-      _ProjectDashboardPageState();
+  State<ProjectDashboardPage> createState() => _ProjectDashboardPageState();
 }
 
-class _ProjectDashboardPageState
-    extends State<ProjectDashboardPage> {
+class _ProjectDashboardPageState extends State<ProjectDashboardPage> {
+  Map<String, dynamic>? dashboard;
   Map<String, dynamic>? stats;
+
   List<dynamic> activities = [];
+  List<dynamic> workload = [];
+  List<dynamic> upcomingDeadlines = [];
+
   bool loading = true;
 
   @override
@@ -32,31 +35,37 @@ class _ProjectDashboardPageState
 
   Future<void> loadStats() async {
     try {
-      final data =
-          await ApiService.getTaskStats(widget.projectId);
+      final data = await ApiService.getProjectDashboard(widget.projectId);
 
-       final activityData =
-          await ApiService.getProjectActivity(widget.projectId);
-
-       debugPrint("PROJECT ACTIVITY: $activityData");    
+      if (!mounted) return;
 
       setState(() {
-        stats = data;
-        activities = activityData;
+        dashboard = data;
+
+        stats = Map<String, dynamic>.from(data['tasks'] ?? {});
+
+        activities = List<dynamic>.from(data['recentActivity'] ?? []);
+
+        workload = List<dynamic>.from(data['workload'] ?? []);
+
+        upcomingDeadlines = List<dynamic>.from(data['upcomingDeadlines'] ?? []);
+
         loading = false;
       });
     } catch (e) {
-      debugPrint(e.toString());
+      debugPrint('Failed to load project dashboard: $e');
+
+      if (!mounted) return;
 
       setState(() {
         loading = false;
       });
     }
   }
-  
+
   String _formatActivityTime(dynamic createdAt) {
     if (createdAt == null) {
-       return '';
+      return '';
     }
 
     final date = DateTime.tryParse(createdAt.toString());
@@ -73,38 +82,38 @@ class _ProjectDashboardPageState
     }
 
     if (difference.inMinutes < 60) {
-       return '${difference.inMinutes} minute${difference.inMinutes == 1 ? '' : 's'} ago';
+      return '${difference.inMinutes} minute${difference.inMinutes == 1 ? '' : 's'} ago';
     }
 
     if (difference.inHours < 24) {
-       return '${difference.inHours} hour${difference.inHours == 1 ? '' : 's'} ago';
+      return '${difference.inHours} hour${difference.inHours == 1 ? '' : 's'} ago';
     }
 
     if (difference.inDays == 1) {
-       return 'Yesterday';
+      return 'Yesterday';
     }
 
     if (difference.inDays < 7) {
       return '${difference.inDays} days ago';
     }
 
-     return '${date.day}/${date.month}/${date.year}';
- }
+    return '${date.day}/${date.month}/${date.year}';
+  }
 
- String _formatStatus(dynamic status) {
-   switch (status?.toString()) {
-     case "PENDING":
-       return "Pending";
+  String _formatStatus(dynamic status) {
+    switch (status?.toString()) {
+      case "PENDING":
+        return "Pending";
 
-       case "IN_PROGRESS":
-         return "In Progress";
+      case "IN_PROGRESS":
+        return "In Progress";
 
-       case "COMPLETED":
-         return "Completed";
+      case "COMPLETED":
+        return "Completed";
 
-       default:
-         return status?.toString() ?? "Unknown";
-     }
+      default:
+        return status?.toString() ?? "Unknown";
+    }
   }
 
   String _formatPriority(dynamic priority) {
@@ -129,13 +138,9 @@ class _ProjectDashboardPageState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.projectName),
-      ),
+      appBar: AppBar(title: Text(widget.projectName)),
       body: loading
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
+          ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -144,15 +149,13 @@ class _ProjectDashboardPageState
                     child: Padding(
                       padding: const EdgeInsets.all(20),
                       child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
                             "Project Overview",
                             style: TextStyle(
                               fontSize: 20,
-                              fontWeight:
-                                  FontWeight.bold,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
 
@@ -172,20 +175,16 @@ class _ProjectDashboardPageState
                               Expanded(
                                 child: _statCard(
                                   "Done",
-                                  stats?["done"] ?? 0,
+                                  stats?["completed"] ?? 0,
                                   Colors.green,
                                   () {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (_) =>
-                                            KanbanPage(
-                                          projectId:
-                                              widget.projectId,
-                                          projectName:
-                                              widget.projectName,
-                                          initialStatus:
-                                              "COMPLETED",
+                                        builder: (_) => KanbanPage(
+                                          projectId: widget.projectId,
+                                          projectName: widget.projectName,
+                                          initialStatus: "COMPLETED",
                                         ),
                                       ),
                                     );
@@ -202,21 +201,16 @@ class _ProjectDashboardPageState
                               Expanded(
                                 child: _statCard(
                                   "In Progress",
-                                  stats?["inProgress"] ??
-                                      0,
+                                  stats?["inProgress"] ?? 0,
                                   Colors.orange,
                                   () {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (_) =>
-                                            KanbanPage(
-                                          projectId:
-                                              widget.projectId,
-                                          projectName:
-                                              widget.projectName,
-                                          initialStatus:
-                                              "IN_PROGRESS",
+                                        builder: (_) => KanbanPage(
+                                          projectId: widget.projectId,
+                                          projectName: widget.projectName,
+                                          initialStatus: "IN_PROGRESS",
                                         ),
                                       ),
                                     );
@@ -227,20 +221,16 @@ class _ProjectDashboardPageState
                               Expanded(
                                 child: _statCard(
                                   "To Do",
-                                  stats?["todo"] ?? 0,
+                                  stats?["pending"] ?? 0,
                                   Colors.red,
                                   () {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (_) =>
-                                            KanbanPage(
-                                          projectId:
-                                              widget.projectId,
-                                          projectName:
-                                              widget.projectName,
-                                          initialStatus:
-                                              "PENDING",
+                                        builder: (_) => KanbanPage(
+                                          projectId: widget.projectId,
+                                          projectName: widget.projectName,
+                                          initialStatus: "PENDING",
                                         ),
                                       ),
                                     );
@@ -257,8 +247,7 @@ class _ProjectDashboardPageState
                               Expanded(
                                 child: _statCard(
                                   "High Priority",
-                                  stats?["highPriority"] ??
-                                      0,
+                                  dashboard?["priority"]?["high"] ?? 0,
                                   Colors.purple,
                                   null,
                                 ),
@@ -278,10 +267,7 @@ class _ProjectDashboardPageState
                           const SizedBox(height: 20),
 
                           LinearProgressIndicator(
-                            value: (stats?[
-                                            "completionPercentage"] ??
-                                        0) /
-                                    100,
+                            value: (stats?["completionPercentage"] ?? 0) / 100,
                             minHeight: 10,
                           ),
 
@@ -289,11 +275,212 @@ class _ProjectDashboardPageState
 
                           Text(
                             "Completion: ${stats?["completionPercentage"] ?? 0}%",
-                            style: const TextStyle(
-                              fontWeight:
-                                  FontWeight.bold,
-                            ),
+                            style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Row(
+                            children: [
+                              Icon(Icons.groups_outlined),
+                              SizedBox(width: 8),
+                              Text(
+                                "Team Workload",
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          if (workload.isEmpty)
+                            const Text(
+                              "No project members",
+                              style: TextStyle(color: Colors.grey),
+                            )
+                          else
+                            ...workload.map((member) {
+                              final total = member["total"] ?? 0;
+                              final completed = member["completed"] ?? 0;
+                              final inProgress = member["inProgress"] ?? 0;
+                              final pending = member["pending"] ?? 0;
+
+                              final progress = total == 0
+                                  ? 0.0
+                                  : completed / total;
+
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 18),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        CircleAvatar(
+                                          child: Text(
+                                            (member["name"] ?? "?")
+                                                .toString()
+                                                .substring(0, 1)
+                                                .toUpperCase(),
+                                          ),
+                                        ),
+
+                                        const SizedBox(width: 12),
+
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                member["name"] ?? "Unknown",
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              Text(
+                                                "$total assigned • "
+                                                "$completed done • "
+                                                "$inProgress active • "
+                                                "$pending pending",
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                  color: Colors.grey,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+
+                                        Text(
+                                          total == 0
+                                              ? "0%"
+                                              : "${(progress * 100).round()}%",
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+
+                                    const SizedBox(height: 10),
+
+                                    LinearProgressIndicator(
+                                      value: progress,
+                                      minHeight: 6,
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Row(
+                            children: [
+                              Icon(Icons.event_outlined),
+                              SizedBox(width: 8),
+                              Text(
+                                "Upcoming Deadlines",
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          if (upcomingDeadlines.isEmpty)
+                            const Text(
+                              "No upcoming deadlines",
+                              style: TextStyle(color: Colors.grey),
+                            )
+                          else
+                            ...upcomingDeadlines.map((task) {
+                              final dueDate = DateTime.tryParse(
+                                task["dueDate"]?.toString() ?? "",
+                              );
+
+                              final assignee = task["assignee"];
+                              final priority = _formatPriority(
+                                task["priority"],
+                              );
+
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 14),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Icon(Icons.schedule, size: 20),
+
+                                    const SizedBox(width: 12),
+
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            task["title"] ?? "Untitled task",
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+
+                                          const SizedBox(height: 4),
+
+                                          Text(
+                                            dueDate == null
+                                                ? "No due date"
+                                                : "${dueDate.day}/${dueDate.month}/${dueDate.year}",
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey,
+                                            ),
+                                          ),
+
+                                          if (assignee != null)
+                                            Text(
+                                              "Assigned to ${assignee["name"]}",
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+
+                                    Chip(label: Text(priority)),
+                                  ],
+                                ),
+                              );
+                            }),
                         ],
                       ),
                     ),
@@ -304,19 +491,15 @@ class _ProjectDashboardPageState
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      icon: const Icon(
-                          Icons.view_kanban),
-                      label: const Text(
-                          "Open Kanban Board"),
+                      icon: const Icon(Icons.view_kanban),
+                      label: const Text("Open Kanban Board"),
                       onPressed: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (_) => KanbanPage(
-                              projectId:
-                                  widget.projectId,
-                              projectName:
-                                  widget.projectName,
+                              projectId: widget.projectId,
+                              projectName: widget.projectName,
                             ),
                           ),
                         );
@@ -329,19 +512,14 @@ class _ProjectDashboardPageState
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      icon:
-                          const Icon(Icons.group),
-                      label: const Text(
-                          "Project Members"),
+                      icon: const Icon(Icons.group),
+                      label: const Text("Project Members"),
                       onPressed: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (_) =>
-                                MembersPage(
-                              projectId:
-                                  widget.projectId,
-                            ),
+                                MembersPage(projectId: widget.projectId),
                           ),
                         );
                       },
@@ -369,66 +547,79 @@ class _ProjectDashboardPageState
                           if (activities.isEmpty)
                             const Text(
                               "No recent activity",
-                              style: TextStyle(
-                                color: Colors.grey,
-                            ),
-                          )
-                        else
-                         ...activities.map(
-                           (activity) {
+                              style: TextStyle(color: Colors.grey),
+                            )
+                          else
+                            ...activities.map((activity) {
                               final user =
-                                   activity["user"]?["name"] ?? "Unknown user";
+                                  activity["user"]?["name"] ?? "Unknown user";
 
-                              final action =
-                                   activity["action"] ?? "UNKNOWN";
+                              final action = activity["action"] ?? "UNKNOWN";
 
-                              final task =
-                                    activity["task"]?["title"];
+                              final task = activity["task"]?["title"];
 
                               String message;
 
                               switch (action) {
                                 case "MEMBER_ADDED":
-                                  final name = activity["metadata"]?["addedUserName"] ?? "a member";
-                                   message = "$user added $name to the project";
-                                   break;
+                                  final name =
+                                      activity["metadata"]?["addedUserName"] ??
+                                      "a member";
+                                  message = "$user added $name to the project";
+                                  break;
 
-                                 case "MEMBER_REMOVED":
-                                   final name = activity["metadata"]?["removedUserName"] ?? "a member";
-                                   message = "$user removed $name from the project";
-                                   break;
+                                case "MEMBER_REMOVED":
+                                  final name =
+                                      activity["metadata"]?["removedUserName"] ??
+                                      "a member";
+                                  message =
+                                      "$user removed $name from the project";
+                                  break;
 
-                                 case "MEMBER_ROLE_CHANGED":
-                                   final name = activity["metadata"]?["targetUserName"] ?? "a member";
-                                   final newRole = activity["metadata"]?["newRole"] ?? "a new role";
-                                   message = "$user changed $name's role to $newRole";
-                                   break;
+                                case "MEMBER_ROLE_CHANGED":
+                                  final name =
+                                      activity["metadata"]?["targetUserName"] ??
+                                      "a member";
+                                  final newRole =
+                                      activity["metadata"]?["newRole"] ??
+                                      "a new role";
+                                  message =
+                                      "$user changed $name's role to $newRole";
+                                  break;
 
-                                 case "TASK_CREATED":
-                                   message = "$user created task ${task ?? ""}";
-                                   break;
+                                case "TASK_CREATED":
+                                  message = "$user created task ${task ?? ""}";
+                                  break;
 
-                                 case "TASK_UPDATED":
-                                    message = "$user updated task ${task ?? ""}";
-                                    break;
-                                  
-                                 case "TASK_STATUS_CHANGED":
-                                   final oldStatus = activity["metadata"]?["oldStatus"] ?? "Unknown";
+                                case "TASK_UPDATED":
+                                  message = "$user updated task ${task ?? ""}";
+                                  break;
 
-                                   final newStatus = activity["metadata"]?["newStatus"] ?? "Unknown";
+                                case "TASK_STATUS_CHANGED":
+                                  final oldStatus =
+                                      activity["metadata"]?["oldStatus"] ??
+                                      "Unknown";
 
-                                   final taskName = task ?? "a task";
+                                  final newStatus =
+                                      activity["metadata"]?["newStatus"] ??
+                                      "Unknown";
 
-                                   message =
-                                       "$user changed \"$taskName\" status from "
-                                       "${_formatStatus(oldStatus)} to "
-                                       "${_formatStatus(newStatus)}";
-                                    break;
+                                  final taskName = task ?? "a task";
 
-                                 case "TASK_PRIORITY_CHANGED":
-                                  final oldPriority = activity["metadata"]?["oldPriority"] ?? "Unknown";
+                                  message =
+                                      "$user changed \"$taskName\" status from "
+                                      "${_formatStatus(oldStatus)} to "
+                                      "${_formatStatus(newStatus)}";
+                                  break;
 
-                                  final newPriority = activity["metadata"]?["newPriority"] ?? "Unknown";
+                                case "TASK_PRIORITY_CHANGED":
+                                  final oldPriority =
+                                      activity["metadata"]?["oldPriority"] ??
+                                      "Unknown";
+
+                                  final newPriority =
+                                      activity["metadata"]?["newPriority"] ??
+                                      "Unknown";
 
                                   final taskName = task ?? "a task";
 
@@ -436,77 +627,68 @@ class _ProjectDashboardPageState
                                       "$user changed \"$taskName\" priority from "
                                       "${_formatPriority(oldPriority)} to "
                                       "${_formatPriority(newPriority)}";
-                                  break;    
-                                 case "TASK_DELETED":
-                                    message = "$user deleted task ${task ?? ""}";
-                                    break;
+                                  break;
+                                case "TASK_DELETED":
+                                  message = "$user deleted task ${task ?? ""}";
+                                  break;
 
-                                 default:
-                                   message = "$user performed $action";
-                                }
+                                default:
+                                  message = "$user performed $action";
+                              }
 
-              return Padding(
-                padding:
-                    const EdgeInsets.only(bottom: 14),
-                child: Row(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
-                  children: [
-                    const CircleAvatar(
-                      radius: 18,
-                      child: Icon(
-                        Icons.history,
-                        size: 18,
-                      ),
-                    ),
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 14),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const CircleAvatar(
+                                      radius: 18,
+                                      child: Icon(Icons.history, size: 18),
+                                    ),
 
-                    const SizedBox(width: 12),
+                                    const SizedBox(width: 12),
 
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            message,
-                            style: const TextStyle(
-                              fontSize: 15,
-                            ),
-                          ),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            message,
+                                            style: const TextStyle(
+                                              fontSize: 15,
+                                            ),
+                                          ),
 
-                          const SizedBox(height: 4),
+                                          const SizedBox(height: 4),
 
-                          Text(
-                            _formatActivityTime(activity["createdAt"]),
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey,
-                            ),
-                          ),
+                                          Text(
+                                            _formatActivityTime(
+                                              activity["createdAt"],
+                                            ),
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }),
                         ],
                       ),
                     ),
-                  ],
-                ),
-              );
-            },
-          ),
-      ],
-    ),
-  ),
-),    
-
+                  ),
                 ],
               ),
             ),
     );
   }
 
-  Widget _statCard(
-    String title,
-    int value,
-    Color color,
-    VoidCallback? onTap,
-  ) {
+  Widget _statCard(String title, int value, Color color, VoidCallback? onTap) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
