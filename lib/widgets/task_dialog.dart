@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
 import '../models/task_label.dart';
-enum TaskPriority {
-  LOW, MEDIUM, HIGH,
-}
 
-enum TaskStatus {
-  PENDING,
-  IN_PROGRESS,
-  COMPLETED,
-}
+enum TaskPriority { LOW, MEDIUM, HIGH }
+
+enum TaskStatus { PENDING, IN_PROGRESS, COMPLETED }
+
 class TaskDialog extends StatefulWidget {
   final List members;
   final String? initialAssigneeId;
@@ -30,7 +26,8 @@ class TaskDialog extends StatefulWidget {
     String status,
     String? assigneeId,
     List<String> labelIds,
-  ) onSave;
+  )
+  onSave;
 
   const TaskDialog({
     super.key,
@@ -46,7 +43,6 @@ class TaskDialog extends StatefulWidget {
     this.initialAssigneeId,
     this.labels = const [],
     this.initialLabelIds = const [],
-
   });
 
   @override
@@ -66,9 +62,7 @@ class _TaskDialogState extends State<TaskDialog> {
   void initState() {
     super.initState();
 
-    titleController = TextEditingController(
-      text: widget.initialTitle,
-    );
+    titleController = TextEditingController(text: widget.initialTitle);
 
     descriptionController = TextEditingController(
       text: widget.initialDescription,
@@ -91,8 +85,9 @@ class _TaskDialogState extends State<TaskDialog> {
         .toSet();
 
     selectedAssigneeId = memberIds.contains(widget.initialAssigneeId)
-         ? widget.initialAssigneeId
-         : null;
+        ? widget.initialAssigneeId
+        : null;
+    selectedLabelIds = widget.initialLabelIds.toSet();
   }
 
   @override
@@ -101,15 +96,12 @@ class _TaskDialogState extends State<TaskDialog> {
     descriptionController.dispose();
     super.dispose();
   }
-  
+
   List<DropdownMenuItem<String>> buildAssigneeItems() {
     final seenIds = <String>{};
 
     final items = <DropdownMenuItem<String>>[
-      const DropdownMenuItem<String>(
-        value: null,
-        child: Text('Unassigned'),
-      ),
+      const DropdownMenuItem<String>(value: null, child: Text('Unassigned')),
     ];
 
     for (final member in widget.members) {
@@ -122,27 +114,26 @@ class _TaskDialogState extends State<TaskDialog> {
       final id = user['id']?.toString();
       final name = user['name']?.toString();
 
-    // Ignore members without a valid user ID
+      // Ignore members without a valid user ID
       if (id == null || id.isEmpty) {
         continue;
-     }
+      }
 
-    // Ignore duplicate users
-     if (!seenIds.add(id)) {
-       continue;
-     }
+      // Ignore duplicate users
+      if (!seenIds.add(id)) {
+        continue;
+      }
 
-     items.add(
-       DropdownMenuItem<String>(
-         value: id,
-         child: Text(name ?? 'Unknown User'),
-       ),
-     );
-   }
+      items.add(
+        DropdownMenuItem<String>(
+          value: id,
+          child: Text(name ?? 'Unknown User'),
+        ),
+      );
+    }
 
-   return items;
+    return items;
   }
-
 
   Future<void> pickDate() async {
     final picked = await showDatePicker(
@@ -170,17 +161,13 @@ class _TaskDialogState extends State<TaskDialog> {
           children: [
             TextField(
               controller: titleController,
-              decoration: const InputDecoration(
-                labelText: "Title",
-              ),
+              decoration: const InputDecoration(labelText: "Title"),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: descriptionController,
               maxLines: 4,
-              decoration: const InputDecoration(
-                labelText: "Description",
-              ),
+              decoration: const InputDecoration(labelText: "Description"),
             ),
             const SizedBox(height: 16),
 
@@ -216,31 +203,31 @@ class _TaskDialogState extends State<TaskDialog> {
                   value: status,
                   child: Text(status.name),
                 );
-               }).toList(),
-               onChanged: (value) {
-                 setState(() {
-                   selectedStatus = value!;
-                 });
-                },
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  selectedStatus = value!;
+                });
+              },
+            ),
+
+            const SizedBox(height: 16),
+
+            DropdownButtonFormField<String>(
+              initialValue: selectedAssigneeId,
+              decoration: const InputDecoration(
+                labelText: 'Assign To',
+                border: OutlineInputBorder(),
               ),
+              items: buildAssigneeItems(),
+              onChanged: (value) {
+                setState(() {
+                  selectedAssigneeId = value;
+                });
+              },
+            ),
 
-              const SizedBox(height: 16),
-              
-              DropdownButtonFormField<String>(
-                initialValue: selectedAssigneeId,
-                decoration: const InputDecoration(
-                  labelText: 'Assign To',
-                  border: OutlineInputBorder(),
-                ),
-                items: buildAssigneeItems(),
-                onChanged: (value) {
-                  setState(() {
-                selectedAssigneeId = value;
-              });
-            },
-          ),
-
-           const SizedBox(height: 16),
+            const SizedBox(height: 16),
 
             const SizedBox(height: 16),
             ListTile(
