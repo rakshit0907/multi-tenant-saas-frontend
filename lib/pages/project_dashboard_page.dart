@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import 'kanban_page.dart';
 import 'members_page.dart';
+import 'milestones_page.dart';
 
 class ProjectDashboardPage extends StatefulWidget {
   final String projectId;
@@ -520,6 +521,27 @@ class _ProjectDashboardPageState extends State<ProjectDashboardPage> {
                           MaterialPageRoute(
                             builder: (_) =>
                                 MembersPage(projectId: widget.projectId),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.flag_outlined),
+                      label: const Text('Project Milestones'),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => MilestonesPage(
+                              projectId: widget.projectId,
+                              projectName: widget.projectName,
+                            ),
                           ),
                         );
                       },

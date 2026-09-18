@@ -107,6 +107,114 @@ class ApiService {
     throw Exception('Failed to load stats');
   }
 
+  static Future<List<dynamic>> getMilestones(String projectId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/projects/$projectId/milestones'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      return List<dynamic>.from(jsonDecode(response.body));
+    }
+
+    throw Exception('Failed to load milestones: ${response.body}');
+  }
+
+  static Future<Map<String, dynamic>> createMilestone(
+    String projectId, {
+    required String name,
+    String? description,
+    DateTime? targetDate,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/projects/$projectId/milestones'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'name': name,
+        if (description != null && description.trim().isNotEmpty)
+          'description': description.trim(),
+        if (targetDate != null) 'targetDate': targetDate.toIso8601String(),
+      }),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return Map<String, dynamic>.from(jsonDecode(response.body));
+    }
+
+    throw Exception('Failed to create milestone: ${response.body}');
+  }
+
+  static Future<Map<String, dynamic>> updateMilestone(
+    String projectId,
+    String milestoneId, {
+    String? name,
+    String? description,
+    DateTime? targetDate,
+    String? status,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    final body = <String, dynamic>{};
+
+    if (name != null) {
+      body['name'] = name;
+    }
+
+    if (description != null) {
+      body['description'] = description;
+    }
+
+    if (targetDate != null) {
+      body['targetDate'] = targetDate.toIso8601String();
+    }
+
+    if (status != null) {
+      body['status'] = status;
+    }
+
+    final response = await http.patch(
+      Uri.parse('$baseUrl/projects/$projectId/milestones/$milestoneId'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode == 200) {
+      return Map<String, dynamic>.from(jsonDecode(response.body));
+    }
+
+    throw Exception('Failed to update milestone: ${response.body}');
+  }
+
+  static Future<void> deleteMilestone(
+    String projectId,
+    String milestoneId,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    final response = await http.delete(
+      Uri.parse('$baseUrl/projects/$projectId/milestones/$milestoneId'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Failed to delete milestone: ${response.body}');
+    }
+  }
+
   static Future<Map<String, dynamic>> getProjectDashboard(
     String projectId,
   ) async {
