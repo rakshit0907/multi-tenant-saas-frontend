@@ -6,6 +6,7 @@ import 'services/api_service.dart';
 import 'pages/members_page.dart';
 import 'pages/project_dashboard_page.dart';
 import 'pages/notifications_page.dart';
+
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
 
@@ -21,8 +22,7 @@ class _DashboardPageState extends State<DashboardPage> {
   List<Project> projects = [];
   bool loading = true;
 
-  final TextEditingController projectController =
-      TextEditingController();
+  final TextEditingController projectController = TextEditingController();
 
   @override
   void initState() {
@@ -30,6 +30,7 @@ class _DashboardPageState extends State<DashboardPage> {
     loadUserInfo();
     loadProjects();
   }
+
   Future<void> deleteProject(String projectId) async {
     try {
       await ApiService.deleteProject(projectId);
@@ -39,21 +40,18 @@ class _DashboardPageState extends State<DashboardPage> {
       await loadProjects();
     } catch (e) {
       if (!mounted) return;
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-            "Only the project owner can delete this project.",
-          ),
+          content: Text("Only the project owner can delete this project."),
         ),
       );
     }
   }
+
   Future<void> createProject() async {
     try {
-      await ApiService.createProject(
-        projectController.text,
-      );
+      await ApiService.createProject(projectController.text);
 
       projectController.clear();
 
@@ -92,9 +90,7 @@ class _DashboardPageState extends State<DashboardPage> {
       final data = await ApiService.getProjects();
 
       setState(() {
-        projects = data
-            .map<Project>((e) => Project.fromJson(e))
-            .toList();
+        projects = data.map<Project>((e) => Project.fromJson(e)).toList();
 
         loading = false;
       });
@@ -114,10 +110,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
     if (!mounted) return;
 
-    Navigator.pushReplacementNamed(
-      context,
-      '/login',
-    );
+    Navigator.pushReplacementNamed(context, '/login');
   }
 
   @override
@@ -129,29 +122,21 @@ class _DashboardPageState extends State<DashboardPage> {
             context: context,
             builder: (context) {
               return AlertDialog(
-                title: const Text(
-                  "Create Project",
-                ),
+                title: const Text("Create Project"),
                 content: TextField(
                   controller: projectController,
-                  decoration: const InputDecoration(
-                    hintText: "Project name",
-                  ),
+                  decoration: const InputDecoration(hintText: "Project name"),
                 ),
                 actions: [
                   TextButton(
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    child: const Text(
-                      "Cancel",
-                    ),
+                    child: const Text("Cancel"),
                   ),
                   ElevatedButton(
                     onPressed: createProject,
-                    child: const Text(
-                      "Create",
-                    ),
+                    child: const Text("Create"),
                   ),
                 ],
               );
@@ -168,22 +153,15 @@ class _DashboardPageState extends State<DashboardPage> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => const NotificationsPage(),
-                ),
+                MaterialPageRoute(builder: (_) => const NotificationsPage()),
               );
             },
           ),
-          IconButton(  
-            onPressed: logout,
-            icon: const Icon(Icons.logout),
-          ),
+          IconButton(onPressed: logout, icon: const Icon(Icons.logout)),
         ],
       ),
       body: loading
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
+          ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
                 const SizedBox(height: 20),
@@ -203,7 +181,6 @@ class _DashboardPageState extends State<DashboardPage> {
                         child: ListTile(
                           title: Text(project.name),
                           subtitle: Text(project.id),
-                          
 
                           onTap: () {
                             showModalBottomSheet(
@@ -219,10 +196,11 @@ class _DashboardPageState extends State<DashboardPage> {
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (_) => ProjectDashboardPage(
-                                              projectId: project.id,
-                                              projectName: project.name,
-                                            ),
+                                            builder: (_) =>
+                                                ProjectDashboardPage(
+                                                  projectId: project.id,
+                                                  projectName: project.name,
+                                                ),
                                           ),
                                         );
                                       },
@@ -249,44 +227,28 @@ class _DashboardPageState extends State<DashboardPage> {
                           },
 
                           trailing: IconButton(
-                            icon: const Icon(
-                              Icons.delete,
-                            ),
+                            icon: const Icon(Icons.delete),
                             onPressed: () {
                               showDialog(
                                 context: context,
                                 builder: (dialogContext) {
                                   return AlertDialog(
-                                    title: const Text(
-                                      "Delete Project",
-                                    ),
-                                    content: Text(
-                                      "Delete '${project.name}'?",
-                                    ),
+                                    title: const Text("Delete Project"),
+                                    content: Text("Delete '${project.name}'?"),
                                     actions: [
                                       TextButton(
                                         onPressed: () {
-                                          Navigator.pop(
-                                            dialogContext,
-                                          );
+                                          Navigator.pop(dialogContext);
                                         },
-                                        child: const Text(
-                                          "Cancel",
-                                        ),
+                                        child: const Text("Cancel"),
                                       ),
                                       ElevatedButton(
                                         onPressed: () async {
-                                          Navigator.pop(
-                                            dialogContext,
-                                          );
+                                          Navigator.pop(dialogContext);
 
-                                          await deleteProject(
-                                            project.id,
-                                          );
+                                          await deleteProject(project.id);
                                         },
-                                        child: const Text(
-                                          "Delete",
-                                        ),
+                                        child: const Text("Delete"),
                                       ),
                                     ],
                                   );

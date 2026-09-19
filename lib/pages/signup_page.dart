@@ -25,12 +25,8 @@ class _SignupPageState extends State<SignupPage> {
 
     try {
       final response = await http.post(
-        Uri.parse(
-          'http://10.0.2.2:3000/auth/signup',
-        ),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        Uri.parse('http://10.0.2.2:3000/auth/signup'),
+        headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "name": nameController.text.trim(),
           "email": emailController.text.trim(),
@@ -41,34 +37,25 @@ class _SignupPageState extends State<SignupPage> {
 
       final data = jsonDecode(response.body);
 
-      if (response.statusCode == 200 ||
-          response.statusCode == 201) {
-
+      if (response.statusCode == 200 || response.statusCode == 201) {
         if (!mounted) return;
 
         Navigator.pushReplacementNamed(
           context,
           '/verify-email-pending',
           arguments: emailController.text.trim(),
-        );      
-      } else {
-
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              data["message"].toString(),
-            ),
-          ),
         );
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(data["message"].toString())));
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString()),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
     }
     if (!mounted) return;
     setState(() {
@@ -79,27 +66,21 @@ class _SignupPageState extends State<SignupPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Sign Up"),
-      ),
+      appBar: AppBar(title: const Text("Sign Up")),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
             TextField(
               controller: nameController,
-              decoration: const InputDecoration(
-                labelText: "Name",
-              ),
+              decoration: const InputDecoration(labelText: "Name"),
             ),
 
             const SizedBox(height: 16),
 
             TextField(
               controller: emailController,
-              decoration: const InputDecoration(
-                labelText: "Email",
-              ),
+              decoration: const InputDecoration(labelText: "Email"),
             ),
 
             const SizedBox(height: 16),
@@ -107,18 +88,14 @@ class _SignupPageState extends State<SignupPage> {
             TextField(
               controller: passwordController,
               obscureText: true,
-              decoration: const InputDecoration(
-                labelText: "Password",
-              ),
+              decoration: const InputDecoration(labelText: "Password"),
             ),
 
             const SizedBox(height: 16),
 
             TextField(
               controller: tenantController,
-              decoration: const InputDecoration(
-                labelText: "Organization Name",
-              ),
+              decoration: const InputDecoration(labelText: "Organization Name"),
             ),
 
             const SizedBox(height: 24),
@@ -134,9 +111,7 @@ class _SignupPageState extends State<SignupPage> {
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: const Text(
-                "Already have an account? Login",
-              ),
+              child: const Text("Already have an account? Login"),
             ),
           ],
         ),

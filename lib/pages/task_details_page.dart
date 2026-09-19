@@ -23,6 +23,7 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
   List<dynamic> comments = [];
   List<dynamic> members = [];
   List<TaskLabel> labels = [];
+  List<dynamic> milestones = [];
   List<dynamic> attachments = [];
 
   bool loadingAttachments = true;
@@ -93,6 +94,20 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
     }
   }
 
+  Future<void> loadMilestones() async {
+    try {
+      final data = await ApiService.getMilestones(widget.projectId);
+
+      if (!mounted) return;
+
+      setState(() {
+        milestones = data;
+      });
+    } catch (e) {
+      debugPrint('Failed to load milestones: $e');
+    }
+  }
+
   Future<void> loadMyRole() async {
     try {
       final role = await ApiService.getMyProjectRole(widget.projectId);
@@ -117,6 +132,7 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
     loadComments();
     loadMyRole();
     loadAttachments();
+    loadMilestones();
 
     titleController = TextEditingController(text: currentTask.title);
 
@@ -372,6 +388,8 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
         title: 'Edit Task',
         buttonText: 'Save',
         members: members,
+        labels: labels,
+        milestones: milestones,
         initialTitle: currentTask.title,
         initialDescription: currentTask.description ?? '',
         initialDueDate: currentTask.dueDate,
@@ -379,6 +397,7 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
         initialStatus: currentTask.status,
         initialAssigneeId: selectedAssigneeId,
         initialLabelIds: currentTask.labels.map((label) => label.id).toList(),
+        initialMilestoneId: currentTask.milestoneId,
         onSave:
             (
               title,
@@ -388,6 +407,7 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
               status,
               assigneeId,
               labelIds,
+              milestoneId,
             ) async {
               try {
                 await ApiService.updateTask(
@@ -399,6 +419,7 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
                   status,
                   assigneeId,
                   labelIds: labelIds,
+                  milestoneId: milestoneId,
                 );
 
                 if (!mounted) return;
@@ -409,6 +430,17 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
                   final selectedLabels = labels
                       .where((label) => selectedLabelIds.contains(label.id))
                       .toList();
+
+                  String? milestoneName;
+
+                  if (milestoneId != null) {
+                    for (final milestone in milestones) {
+                      if (milestone['id']?.toString() == milestoneId) {
+                        milestoneName = milestone['name']?.toString();
+                        break;
+                      }
+                    }
+                  }
                   currentTask = Task(
                     id: currentTask.id,
                     title: title,
@@ -420,6 +452,8 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
                     assigneeId: assigneeId,
                     assigneeName: _getAssigneeName(assigneeId),
                     labels: selectedLabels,
+                    milestoneId: milestoneId,
+                    milestoneName: milestoneName,
                   );
 
                   titleController.text = title;
@@ -536,6 +570,12 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
               Icons.person_outline,
               'Assigned To',
               currentTask.assigneeName ?? 'Unassigned',
+            ),
+
+            buildInfoRow(
+              Icons.flag_outlined,
+              'Milestone',
+              currentTask.milestoneName ?? 'No Milestone',
             ),
 
             if (currentTask.labels.isNotEmpty) ...[

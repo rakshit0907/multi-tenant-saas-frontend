@@ -4,6 +4,7 @@ import '../services/api_service.dart';
 import '../widgets/task_dialog.dart';
 import 'task_details_page.dart';
 import '../models/task_label.dart';
+
 class KanbanPage extends StatefulWidget {
   final String projectId;
   final String projectName;
@@ -49,9 +50,7 @@ class _KanbanPageState extends State<KanbanPage> {
 
       setState(() {
         members = membersData;
-        tasks = tasksData
-            .map<Task>((e) => Task.fromJson(e))
-            .toList();
+        tasks = tasksData.map<Task>((e) => Task.fromJson(e)).toList();
         labels = labelsData;
         loading = false;
       });
@@ -66,157 +65,145 @@ class _KanbanPageState extends State<KanbanPage> {
     }
   }
 
+  Future<void> moveTask(Task task, String newColumn) async {
+    String status;
 
-  Future<void> moveTask(
-  Task task,
-  String newColumn,
-) async {
+    switch (newColumn) {
+      case "Pending":
+        status = "PENDING";
+        break;
 
-  String status;
+      case "In Progress":
+        status = "IN_PROGRESS";
+        break;
 
-  switch (newColumn) {
-    case "Pending":
-      status = "PENDING";
-      break;
+      case "Completed":
+        status = "COMPLETED";
+        break;
 
-    case "In Progress":
-      status = "IN_PROGRESS";
-      break;
+      default:
+        status = "PENDING";
+    }
 
-    case "Completed":
-      status = "COMPLETED";
-      break;
+    try {
+      await ApiService.updateTaskStatus(task.id, status);
 
-    default:
-      status = "PENDING";
+      await loadTasks();
+    } catch (e) {
+      debugPrint(e.toString());
+    }
   }
-
-  try {
-    await ApiService.updateTaskStatus(
-      task.id,
-      status,
-    );
-
-    await loadTasks();
-  } catch (e) {
-    debugPrint(e.toString());
-  }
-}
 
   @override
-Widget build(BuildContext context) {
-  final pendingTasks =
-      tasks.where((t) => t.status == "PENDING").toList();
+  Widget build(BuildContext context) {
+    final pendingTasks = tasks.where((t) => t.status == "PENDING").toList();
 
-  final inProgressTasks =
-      tasks.where((t) => t.status == "IN_PROGRESS").toList();
+    final inProgressTasks = tasks
+        .where((t) => t.status == "IN_PROGRESS")
+        .toList();
 
-  final completedTasks =
-      tasks.where((t) => t.status == "COMPLETED").toList();
-  
-  int initialTab = 0;
+    final completedTasks = tasks.where((t) => t.status == "COMPLETED").toList();
 
-  switch (widget.initialStatus) {
-    case "IN_PROGRESS":
-    initialTab = 1;
-    break;
+    int initialTab = 0;
 
-  case "COMPLETED":
-    initialTab = 2;
-    break;
+    switch (widget.initialStatus) {
+      case "IN_PROGRESS":
+        initialTab = 1;
+        break;
 
-  default:
-    initialTab = 0;
-}
+      case "COMPLETED":
+        initialTab = 2;
+        break;
 
-  return DefaultTabController(
-    length: 3,
-    initialIndex: initialTab,
-    child: Scaffold(
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(widget.projectName),
-            Text(
-              "${tasks.length} Tasks",
-              style: const TextStyle(
-                fontSize: 12,
+      default:
+        initialTab = 0;
+    }
+
+    return DefaultTabController(
+      length: 3,
+      initialIndex: initialTab,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(widget.projectName),
+              Text(
+                "${tasks.length} Tasks",
+                style: const TextStyle(fontSize: 12),
               ),
-            ),
-          ],
-        ),
-        bottom: TabBar(
-          tabs: [
-            Tab(text: "Pending (${pendingTasks.length})"),
-            Tab(text: "In Progress (${inProgressTasks.length})"),
-            Tab(text: "Completed (${completedTasks.length})"),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (_) => TaskDialog(
-                  title: "Create Task",
-                  buttonText: "Create",
-                  members: members,
-                  onSave: (
-                    title,
-                    description,
-                    dueDate,
-                    priority,
-                    status,
-                    assigneeId,
-                    labelIds,
+            ],
+          ),
+          bottom: TabBar(
+            tabs: [
+              Tab(text: "Pending (${pendingTasks.length})"),
+              Tab(text: "In Progress (${inProgressTasks.length})"),
+              Tab(text: "Completed (${completedTasks.length})"),
+            ],
+          ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.add),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (_) => TaskDialog(
+                    title: "Create Task",
+                    buttonText: "Create",
+                    members: members,
+                    onSave:
+                        (
+                          title,
+                          description,
+                          dueDate,
+                          priority,
+                          status,
+                          assigneeId,
+                          labelIds,
+                          milestoneId,
+                        ) async {
+                          await ApiService.createTask(
+                            widget.projectId,
+                            title,
+                            description,
+                            dueDate,
+                            priority,
+                            status,
+                            assigneeId,
+                          );
 
-                  ) async {
-                    await ApiService.createTask(
-                      widget.projectId,
-                      title,
-                      description,
-                      dueDate,
-                      priority,
-                      status,
-                      assigneeId,
-                    );
-
-                     await loadTasks();
-                   },
+                          await loadTasks();
+                        },
                   ),
                 );
               },
-          ),
-        ],
-      ),
-      body: loading
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
-          : TabBarView(
-              children: [
-                KanbanColumn(
-                  projectId: widget.projectId,
-                  tasks: pendingTasks,
-                  onMove: moveTask,
-                ),
-                KanbanColumn(
-                  projectId: widget.projectId,
-                  tasks: inProgressTasks,
-                  onMove: moveTask,
-                ),
-                KanbanColumn(
-                  projectId: widget.projectId,
-                  tasks: completedTasks,
-                  onMove: moveTask,
-                ),
-              ],
             ),
-    ),
-  );
-}
+          ],
+        ),
+        body: loading
+            ? const Center(child: CircularProgressIndicator())
+            : TabBarView(
+                children: [
+                  KanbanColumn(
+                    projectId: widget.projectId,
+                    tasks: pendingTasks,
+                    onMove: moveTask,
+                  ),
+                  KanbanColumn(
+                    projectId: widget.projectId,
+                    tasks: inProgressTasks,
+                    onMove: moveTask,
+                  ),
+                  KanbanColumn(
+                    projectId: widget.projectId,
+                    tasks: completedTasks,
+                    onMove: moveTask,
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
 }
 
 class KanbanColumn extends StatelessWidget {
@@ -234,9 +221,7 @@ class KanbanColumn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (tasks.isEmpty) {
-      return const Center(
-        child: Text("No Tasks"),
-      );
+      return const Center(child: Text("No Tasks"));
     }
 
     return ListView.builder(
@@ -252,161 +237,153 @@ class KanbanColumn extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => TaskDetailsPage(
-                    task: task,
-                    projectId: projectId,
-                  ),
+                  builder: (_) =>
+                      TaskDetailsPage(task: task, projectId: projectId),
                 ),
-                );
+              );
             },
             title: Text(
               task.title,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
-          
+
             subtitle: Column(
-               crossAxisAlignment: CrossAxisAlignment.start,
-               children: [
-                if (task.description != null &&
-                    task.description!.isNotEmpty)
-                   Padding(
-                     padding: const EdgeInsets.only(bottom: 6),
-                     child: Text(
-                       task.description!,
-                       maxLines: 2,
-                       overflow: TextOverflow.ellipsis,
-                       style: TextStyle(
-                          color: Colors.grey.shade700,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (task.description != null && task.description!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Text(
+                      task.description!,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: Colors.grey.shade700),
+                    ),
+                  ),
+
+                if (task.labels.isNotEmpty) ...[
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: task.labels.map((label) {
+                      return Chip(
+                        label: Text(
+                          label.name,
+                          style: const TextStyle(fontSize: 11),
                         ),
+                        visualDensity: VisualDensity.compact,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 6),
+                ],
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    margin: const EdgeInsets.only(top: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: task.priority == "HIGH"
+                          ? Colors.red.shade100
+                          : task.priority == "MEDIUM"
+                          ? Colors.orange.shade100
+                          : Colors.green.shade100,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      task.priority,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: task.priority == "HIGH"
+                            ? Colors.red
+                            : task.priority == "MEDIUM"
+                            ? Colors.orange
+                            : Colors.green,
                       ),
                     ),
-
-                    if (task.labels.isNotEmpty) ...[
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 4,
-                        children: task.labels.map((label) {
-                          return Chip(
-                            label: Text(
-                              label.name,
-                              style: const TextStyle(
-                                fontSize: 11,
-                             ),
-                   ),
-                   visualDensity: VisualDensity.compact,
-                   materialTapTargetSize:
-                      MaterialTapTargetSize.shrinkWrap,
-                  );
-                }).toList(),
-               ),
-               const SizedBox(height: 6),
-               ],
-                   Align(
-                     alignment: Alignment.centerLeft,
-                     child: Container(
-                       margin: const EdgeInsets.only(top: 4),
-                       padding: const EdgeInsets.symmetric(
-                         horizontal: 8,
-                         vertical: 3,
-                       ),
-                       decoration: BoxDecoration(
-                       color: task.priority == "HIGH"
-                           ? Colors.red.shade100
-                           : task.priority == "MEDIUM"
-                               ? Colors.orange.shade100
-                               : Colors.green.shade100,
-                       borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        task.priority,
-                         style: TextStyle(
-                           fontSize: 11,
-                           fontWeight: FontWeight.bold,
-                           color: task.priority == "HIGH"
-                               ? Colors.red
-                               : task.priority == "MEDIUM"
-                                   ? Colors.orange
-                                   : Colors.green,
-                           ),
-                          ),
-                        ),
-                      ),
-                 const SizedBox(height: 6),
-                 if (task.dueDate != null)
-                   Text(
-                    "${task.dueDate!.day.toString().padLeft(2,'0')}/"
-                    "${task.dueDate!.month.toString().padLeft(2,'0')}/"
+                  ),
+                ),
+                const SizedBox(height: 6),
+                if (task.dueDate != null)
+                  Text(
+                    "${task.dueDate!.day.toString().padLeft(2, '0')}/"
+                    "${task.dueDate!.month.toString().padLeft(2, '0')}/"
                     "${task.dueDate!.year}",
                     style: TextStyle(
                       fontSize: 12,
-                      color: task.dueDate!.isBefore(DateTime.now()) &&
+                      color:
+                          task.dueDate!.isBefore(DateTime.now()) &&
                               task.status != "COMPLETED"
-                           ? Colors.red
-                           : Colors.grey,
-                      fontWeight: task.dueDate!.isBefore(DateTime.now()) &&
-                            task.status != "COMPLETED"
-                         ? FontWeight.bold
-                         : FontWeight.normal,   
-                   ),
-                   ), 
+                          ? Colors.red
+                          : Colors.grey,
+                      fontWeight:
+                          task.dueDate!.isBefore(DateTime.now()) &&
+                              task.status != "COMPLETED"
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                    ),
+                  ),
 
-                   const SizedBox(height: 6),
+                const SizedBox(height: 6),
 
-                   Container(
-                     padding: const EdgeInsets.symmetric(
-                       horizontal: 8,
-                       vertical: 3,
-                     ),
-                     decoration: BoxDecoration(
-                       color: task.status == "PENDING"
-                           ? Colors.orange.shade100
-                           : task.status == "IN_PROGRESS"
-                               ? Colors.blue.shade100
-                               : Colors.green.shade100,
-                       borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        task.status.replaceAll("_", " "),
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: task.status == "PENDING"
-                              ? Colors.orange
-                              : task.status == "IN_PROGRESS"
-                                  ? Colors.blue
-                                  : Colors.green,
-                          ),
-                         ),
-                        ),
-                    ],
-               ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: task.status == "PENDING"
+                        ? Colors.orange.shade100
+                        : task.status == "IN_PROGRESS"
+                        ? Colors.blue.shade100
+                        : Colors.green.shade100,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    task.status.replaceAll("_", " "),
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: task.status == "PENDING"
+                          ? Colors.orange
+                          : task.status == "IN_PROGRESS"
+                          ? Colors.blue
+                          : Colors.green,
+                    ),
+                  ),
+                ),
+              ],
+            ),
             trailing: PopupMenuButton<String>(
-                        icon: const Icon(Icons.more_vert),
-                        onSelected: (value) {
-                          onMove(task, value);
-                        },
-                        itemBuilder: (_) => [
-                         if (task.status != "PENDING")
-                           const PopupMenuItem(
-                              value: "Pending",
-                              child: Text("Move to Pending"),
-                            ),
+              icon: const Icon(Icons.more_vert),
+              onSelected: (value) {
+                onMove(task, value);
+              },
+              itemBuilder: (_) => [
+                if (task.status != "PENDING")
+                  const PopupMenuItem(
+                    value: "Pending",
+                    child: Text("Move to Pending"),
+                  ),
 
-                           if (task.status != "IN_PROGRESS")
-                             const PopupMenuItem(
-                               value: "In Progress",
-                               child: Text("Move to In Progress"),
-                              ),
+                if (task.status != "IN_PROGRESS")
+                  const PopupMenuItem(
+                    value: "In Progress",
+                    child: Text("Move to In Progress"),
+                  ),
 
-                           if (task.status != "COMPLETED")
-                             const PopupMenuItem(
-                               value: "Completed",
-                               child: Text("Move to Completed"),
-                              ),
-                            ],
-                          ),
+                if (task.status != "COMPLETED")
+                  const PopupMenuItem(
+                    value: "Completed",
+                    child: Text("Move to Completed"),
+                  ),
+              ],
+            ),
           ),
         );
       },

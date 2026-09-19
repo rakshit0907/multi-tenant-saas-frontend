@@ -10,6 +10,8 @@ class TaskDialog extends StatefulWidget {
   final String? initialAssigneeId;
   final List<TaskLabel> labels;
   final List<String> initialLabelIds;
+  final List milestones;
+  final String? initialMilestoneId;
   final String title;
   final String initialTitle;
   final String initialDescription;
@@ -18,7 +20,7 @@ class TaskDialog extends StatefulWidget {
   final String initialStatus;
   final String buttonText;
 
-  final Function(
+  final Future<void> Function(
     String title,
     String description,
     DateTime? dueDate,
@@ -26,6 +28,7 @@ class TaskDialog extends StatefulWidget {
     String status,
     String? assigneeId,
     List<String> labelIds,
+    String? milestoneId,
   )
   onSave;
 
@@ -43,6 +46,8 @@ class TaskDialog extends StatefulWidget {
     this.initialAssigneeId,
     this.labels = const [],
     this.initialLabelIds = const [],
+    this.milestones = const [],
+    this.initialMilestoneId,
   });
 
   @override
@@ -58,6 +63,7 @@ class _TaskDialogState extends State<TaskDialog> {
   late TaskStatus selectedStatus;
   String? selectedAssigneeId;
   late Set<String> selectedLabelIds;
+  String? selectedMilestoneId;
   @override
   void initState() {
     super.initState();
@@ -88,6 +94,14 @@ class _TaskDialogState extends State<TaskDialog> {
         ? widget.initialAssigneeId
         : null;
     selectedLabelIds = widget.initialLabelIds.toSet();
+    final milestoneIds = widget.milestones
+        .map((milestone) => milestone['id']?.toString())
+        .whereType<String>()
+        .toSet();
+
+    selectedMilestoneId = milestoneIds.contains(widget.initialMilestoneId)
+        ? widget.initialMilestoneId
+        : null;
   }
 
   @override
@@ -169,6 +183,35 @@ class _TaskDialogState extends State<TaskDialog> {
               maxLines: 4,
               decoration: const InputDecoration(labelText: "Description"),
             ),
+            const SizedBox(height: 16),
+
+            DropdownButtonFormField<String>(
+              initialValue: selectedMilestoneId,
+              decoration: const InputDecoration(
+                labelText: 'Milestone',
+                border: OutlineInputBorder(),
+              ),
+              items: [
+                const DropdownMenuItem<String>(
+                  value: null,
+                  child: Text('No Milestone'),
+                ),
+                ...widget.milestones.map<DropdownMenuItem<String>>((milestone) {
+                  return DropdownMenuItem<String>(
+                    value: milestone['id']?.toString(),
+                    child: Text(
+                      milestone['name']?.toString() ?? 'Unnamed Milestone',
+                    ),
+                  );
+                }),
+              ],
+              onChanged: (value) {
+                setState(() {
+                  selectedMilestoneId = value;
+                });
+              },
+            ),
+
             const SizedBox(height: 16),
 
             DropdownButtonFormField<TaskPriority>(
@@ -263,8 +306,9 @@ class _TaskDialogState extends State<TaskDialog> {
               selectedStatus.name,
               selectedAssigneeId,
               selectedLabelIds.toList(),
+              selectedMilestoneId,
             );
-
+            if (!context.mounted) return;
             Navigator.pop(context);
           },
           child: Text(widget.buttonText),

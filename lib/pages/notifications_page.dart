@@ -4,6 +4,7 @@ import '../models/notification_model.dart';
 import '../services/api_service.dart';
 import '../models/task.dart';
 import 'task_details_page.dart';
+
 class NotificationsPage extends StatefulWidget {
   const NotificationsPage({super.key});
 
@@ -26,9 +27,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
       final data = await ApiService.getNotifications();
 
       final loadedNotifications = data
-          .map<NotificationModel>(
-            (e) => NotificationModel.fromJson(e),
-          )
+          .map<NotificationModel>((e) => NotificationModel.fromJson(e))
           .toList();
 
       if (!mounted) return;
@@ -48,15 +47,11 @@ class _NotificationsPageState extends State<NotificationsPage> {
     }
   }
 
-  Future<void> markAsRead(
-    NotificationModel notification,
-  ) async {
+  Future<void> markAsRead(NotificationModel notification) async {
     if (notification.isRead) return;
 
     try {
-      await ApiService.markNotificationAsRead(
-        notification.id,
-      );
+      await ApiService.markNotificationAsRead(notification.id);
 
       await loadNotifications();
     } catch (e) {
@@ -96,59 +91,43 @@ class _NotificationsPageState extends State<NotificationsPage> {
     }
   }
 
-  Future<void> openTaskNotification(
-  NotificationModel notification,
-) async {
-  final taskId =
-      notification.metadata?['taskId']?.toString();
+  Future<void> openTaskNotification(NotificationModel notification) async {
+    final taskId = notification.metadata?['taskId']?.toString();
 
-  final projectId =
-      notification.metadata?['projectId']?.toString();
+    final projectId = notification.metadata?['projectId']?.toString();
 
-  if (taskId == null || projectId == null) {
-    debugPrint(
-      'TASK NOTIFICATION ERROR: Missing taskId/projectId',
-    );
-    return;
-  }
+    if (taskId == null || projectId == null) {
+      debugPrint('TASK NOTIFICATION ERROR: Missing taskId/projectId');
+      return;
+    }
 
-  try {
-    final data = await ApiService.getTask(taskId);
+    try {
+      final data = await ApiService.getTask(taskId);
 
-    final task = Task.fromJson(data);
+      final task = Task.fromJson(data);
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => TaskDetailsPage(
-          task: task,
-          projectId: projectId,
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => TaskDetailsPage(task: task, projectId: projectId),
         ),
-      ),
-    );
-  } catch (e) {
-    debugPrint(
-      'OPEN TASK NOTIFICATION ERROR: $e',
-    );
+      );
+    } catch (e) {
+      debugPrint('OPEN TASK NOTIFICATION ERROR: $e');
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Unable to open this task',
-        ),
-      ),
-    );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Unable to open this task')));
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
-    final unreadCount =
-        notifications.where((n) => !n.isRead).length;
+    final unreadCount = notifications.where((n) => !n.isRead).length;
 
     return Scaffold(
       appBar: AppBar(
@@ -162,161 +141,138 @@ class _NotificationsPageState extends State<NotificationsPage> {
         ],
       ),
       body: loading
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
+          ? const Center(child: CircularProgressIndicator())
           : notifications.isEmpty
-              ? const Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.notifications_none,
-                        size: 64,
-                        color: Colors.grey,
+          ? const Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.notifications_none, size: 64, color: Colors.grey),
+                  SizedBox(height: 12),
+                  Text("No notifications", style: TextStyle(fontSize: 18)),
+                ],
+              ),
+            )
+          : RefreshIndicator(
+              onRefresh: loadNotifications,
+              child: ListView.builder(
+                itemCount: notifications.length,
+                itemBuilder: (context, index) {
+                  final notification = notifications[index];
+
+                  return ListTile(
+                    tileColor: notification.isRead
+                        ? null
+                        : Theme.of(
+                            context,
+                          ).colorScheme.primary.withValues(alpha: 0.08),
+
+                    leading: CircleAvatar(
+                      child: Icon(getNotificationIcon(notification.type)),
+                    ),
+
+                    title: Text(
+                      notification.title,
+                      style: TextStyle(
+                        fontWeight: notification.isRead
+                            ? FontWeight.normal
+                            : FontWeight.bold,
                       ),
-                      SizedBox(height: 12),
-                      Text(
-                        "No notifications",
-                        style: TextStyle(
-                          fontSize: 18,
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              : RefreshIndicator(
-                  onRefresh: loadNotifications,
-                  child: ListView.builder(
-                    itemCount: notifications.length,
-                    itemBuilder: (context, index) {
-                      final notification =
-                          notifications[index];
+                    ),
 
-                      return ListTile(
-                        tileColor: notification.isRead
-                            ? null
-                            : Theme.of(context)
-                                .colorScheme
-                                .primary
-                                .withValues(alpha: 0.08),
+                    subtitle: Text(notification.message),
 
-                        leading: CircleAvatar(
-                          child: Icon(
-                            getNotificationIcon(
-                              notification.type,
-                            ),
-                          ),
-                        ),
+                    trailing: notification.isRead
+                        ? null
+                        : const Icon(Icons.circle, size: 10),
 
-                        title: Text(
-                          notification.title,
-                          style: TextStyle(
-                            fontWeight: notification.isRead
-                                ? FontWeight.normal
-                                : FontWeight.bold,
-                          ),
-                        ),
+                    onTap: () async {
+                      await markAsRead(notification);
+                      if (!mounted) return;
 
-                        subtitle: Text(
-                          notification.message,
-                        ),
+                      if (notification.type == NotificationType.taskAssigned ||
+                          notification.type == NotificationType.taskCompleted ||
+                          notification.type ==
+                              NotificationType.taskStatusChanged) {
+                        await openTaskNotification(notification);
+                        return;
+                      }
 
-                        trailing: notification.isRead
-                            ? null
-                            : const Icon(
-                                Icons.circle,
-                                size: 10,
+                      if (notification.type ==
+                          NotificationType.projectInvitation) {
+                        final invitationId =
+                            notification.metadata?['invitationId'];
+
+                        if (invitationId == null) {
+                          debugPrint(
+                            "❌ No invitationId in notification metadata",
+                          );
+                          return;
+                        }
+
+                        await showDialog(
+                          context: context,
+                          builder: (_) => AlertDialog(
+                            title: const Text("Project Invitation"),
+                            content: Text(notification.message),
+                            actions: [
+                              TextButton(
+                                onPressed: () async {
+                                  final navigator = Navigator.of(context);
+                                  try {
+                                    await ApiService.rejectInvitation(
+                                      invitationId.toString(),
+                                    );
+
+                                    if (!mounted) return;
+                                    navigator.pop();
+                                    await loadNotifications();
+                                  } catch (e) {
+                                    debugPrint("REJECT ERROR: $e");
+                                  }
+                                },
+                                child: const Text("Reject"),
                               ),
+                              ElevatedButton(
+                                onPressed: () async {
+                                  final navigator = Navigator.of(context);
+                                  final messenger = ScaffoldMessenger.of(
+                                    context,
+                                  );
+                                  try {
+                                    await ApiService.acceptInvitation(
+                                      invitationId.toString(),
+                                    );
 
-                        onTap: () async {
-                          await markAsRead(notification);
-                          if (!mounted) return;
-                          
-                          if (
-                            notification.type ==
-                                    NotificationType.taskAssigned ||
-                                notification.type ==
-                                    NotificationType.taskCompleted ||
-                                notification.type ==
-                                    NotificationType.taskStatusChanged
-                          ) {
-                           await openTaskNotification(notification);
-                           return;
-                          }
+                                    if (!mounted) return;
+                                    navigator.pop();
 
-                          if (notification.type == 
-                               NotificationType.projectInvitation) {
-                            final invitationId = 
-                                notification.metadata?['invitationId'];
+                                    await loadNotifications();
 
-                            if (invitationId == null) {
-                              debugPrint("❌ No invitationId in notification metadata");
-                              return;
-                            }    
+                                    if (!mounted) return;
 
-                            await showDialog(
-                              context: context,
-                              builder: (_) => AlertDialog(
-                                title: const Text("Project Invitation"),
-                                content: Text(notification.message),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () async {
-                                      final navigator = Navigator.of(context);
-                                      try {
-                                        await ApiService.rejectInvitation(
-                                          invitationId.toString(),
-                                        );
-
-                                        if (!mounted) return;
-                                        navigator.pop();
-                                        await loadNotifications();
-                                      } catch (e) {
-                                        debugPrint("REJECT ERROR: $e");
-                                      }  
-                                    },
-                                     child: const Text("Reject"),
-                                  ),
-                                  ElevatedButton(
-                                    onPressed: () async {
-                                      final navigator = Navigator.of(context);
-                                      final messenger = ScaffoldMessenger.of(context);
-                                      try {
-                                        await ApiService.acceptInvitation(
-                                          invitationId.toString(),
-                                        );
-
-                                        if (!mounted) return;
-                                        navigator.pop();
-
-                                        await loadNotifications();
-
-                                        if (!mounted) return;
-
-                                        messenger.showSnackBar(
-                                          const SnackBar(
-                                            content: Text(
-                                              "Invitation accepted. You are now a project member.",
-                                            ),
-                                          ),
-                                        );
-                                      } catch (e) {
-                                        debugPrint("ACCEPT ERROR: $e");
-                                      }
-                                    },
-                                    child: const Text("ACCEPT"),
-                                  ),
-                                ],
+                                    messenger.showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          "Invitation accepted. You are now a project member.",
+                                        ),
+                                      ),
+                                    );
+                                  } catch (e) {
+                                    debugPrint("ACCEPT ERROR: $e");
+                                  }
+                                },
+                                child: const Text("ACCEPT"),
                               ),
-                            );
-                           }
- 
-                        },
-                      );
+                            ],
+                          ),
+                        );
+                      }
                     },
-                  ),
-                ),
+                  );
+                },
+              ),
+            ),
     );
   }
 }

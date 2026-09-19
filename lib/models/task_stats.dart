@@ -9,9 +9,7 @@ class TaskStats {
     required this.pending,
   });
 
-  factory TaskStats.fromJson(
-    Map<String, dynamic> json,
-  ) {
+  factory TaskStats.fromJson(Map<String, dynamic> json) {
     return TaskStats(
       total: json['total'],
       completed: json['completed'],

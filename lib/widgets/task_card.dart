@@ -30,36 +30,28 @@ class TaskCard extends StatelessWidget {
   }
 
   Color getLabelColor(String hex) {
-  try {
-    final cleaned = hex.replaceFirst('#', '');
+    try {
+      final cleaned = hex.replaceFirst('#', '');
 
-    if (cleaned.length != 6) {
+      if (cleaned.length != 6) {
+        return Colors.grey;
+      }
+
+      return Color(int.parse('FF$cleaned', radix: 16));
+    } catch (_) {
       return Colors.grey;
     }
-
-    return Color(
-      int.parse('FF$cleaned', radix: 16),
-    );
-  } catch (_) {
-    return Colors.grey;
   }
-}
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 6,
-      ),
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: ListTile(
         leading: IconButton(
           icon: Icon(
-            task.completed
-                ? Icons.check_circle
-                : Icons.circle_outlined,
-            color:
-                task.completed ? Colors.green : Colors.grey,
+            task.completed ? Icons.check_circle : Icons.circle_outlined,
+            color: task.completed ? Colors.green : Colors.grey,
           ),
           onPressed: onToggle,
         ),
@@ -90,13 +82,10 @@ class TaskCard extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              labelPadding:
-                  const EdgeInsets.symmetric(horizontal: 4),
+              labelPadding: const EdgeInsets.symmetric(horizontal: 4),
               visualDensity: VisualDensity.compact,
-              materialTapTargetSize:
-                  MaterialTapTargetSize.shrinkWrap,
-              backgroundColor:
-                  getPriorityColor(task.priority),
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              backgroundColor: getPriorityColor(task.priority),
             ),
           ],
         ),
@@ -104,61 +93,51 @@ class TaskCard extends StatelessWidget {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (task.description != null &&
-                task.description!.isNotEmpty)
+            if (task.description != null && task.description!.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 6),
                 child: Text(task.description!),
               ),
 
             if (task.dueDate != null)
+              if (task.labels.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: task.labels.map((label) {
+                      final color = getLabelColor(label.color);
 
-            if (task.labels.isNotEmpty)
-  Padding(
-    padding: const EdgeInsets.only(top: 8),
-    child: Wrap(
-      spacing: 6,
-      runSpacing: 4,
-      children: task.labels.map((label) {
-        final color = getLabelColor(label.color);
-
-        return Chip(
-          label: Text(
-            label.name,
-            style: TextStyle(
-              color: color,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          backgroundColor: color.withValues(
-            alpha: 0.12,
-          ),
-          side: BorderSide(
-            color: color.withValues(alpha: 0.4),
-          ),
-          visualDensity: VisualDensity.compact,
-          materialTapTargetSize:
-              MaterialTapTargetSize.shrinkWrap,
-        );
-      }).toList(),
-    ),
-  ),
-              Padding(
-                padding: const EdgeInsets.only(top: 6),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.calendar_today,
-                      size: 14,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      "${task.dueDate!.day}/${task.dueDate!.month}/${task.dueDate!.year}",
-                    ),
-                  ],
+                      return Chip(
+                        label: Text(
+                          label.name,
+                          style: TextStyle(
+                            color: color,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        backgroundColor: color.withValues(alpha: 0.12),
+                        side: BorderSide(color: color.withValues(alpha: 0.4)),
+                        visualDensity: VisualDensity.compact,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      );
+                    }).toList(),
+                  ),
                 ),
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Row(
+                children: [
+                  const Icon(Icons.calendar_today, size: 14),
+                  const SizedBox(width: 6),
+                  Text(
+                    "${task.dueDate!.day}/${task.dueDate!.month}/${task.dueDate!.year}",
+                  ),
+                ],
               ),
+            ),
           ],
         ),
 
@@ -175,17 +154,11 @@ class TaskCard extends StatelessWidget {
             }
           },
           itemBuilder: (_) => const [
-            PopupMenuItem(
-              value: 'edit',
-              child: Text("Edit"),
-            ),
-            PopupMenuItem(
-              value: 'delete',
-              child: Text("Delete"),
-            ),
+            PopupMenuItem(value: 'edit', child: Text("Edit")),
+            PopupMenuItem(value: 'delete', child: Text("Delete")),
           ],
         ),
       ),
     );
   }
-}    
+}

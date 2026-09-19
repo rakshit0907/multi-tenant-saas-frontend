@@ -28,9 +28,7 @@ class NotificationModel {
     this.metadata,
   });
 
-  factory NotificationModel.fromJson(
-    Map<String, dynamic> json,
-  ) {
+  factory NotificationModel.fromJson(Map<String, dynamic> json) {
     return NotificationModel(
       id: json['id'],
       type: _parseType(json['type']),

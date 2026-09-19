@@ -4,10 +4,7 @@ import '../models/task_stats.dart';
 class TaskStatsCard extends StatelessWidget {
   final TaskStats stats;
 
-  const TaskStatsCard({
-    super.key,
-    required this.stats,
-  });
+  const TaskStatsCard({super.key, required this.stats});
 
   @override
   Widget build(BuildContext context) {
@@ -17,14 +14,9 @@ class TaskStatsCard extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(18),
         child: Row(
-          mainAxisAlignment:
-              MainAxisAlignment.spaceAround,
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _StatItem(
-              label: "Total",
-              value: stats.total,
-              color: Colors.blue,
-            ),
+            _StatItem(label: "Total", value: stats.total, color: Colors.blue),
             _StatItem(
               label: "Completed",
               value: stats.completed,
@@ -66,12 +58,7 @@ class _StatItem extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 6),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 15,
-          ),
-        ),
+        Text(label, style: const TextStyle(fontSize: 15)),
       ],
     );
   }

@@ -11,6 +11,8 @@ class Task {
   final String status;
   final String? assigneeId;
   final String? assigneeName;
+  final String? milestoneId;
+  final String? milestoneName;
 
   Task({
     required this.id,
@@ -22,6 +24,8 @@ class Task {
     required this.status,
     this.assigneeId,
     this.assigneeName,
+    this.milestoneId,
+    this.milestoneName,
     this.labels = const [],
   });
 
@@ -36,6 +40,8 @@ class Task {
       status: json['status'] ?? 'PENDING',
       assigneeId: json['assignee']?['id'],
       assigneeName: json['assignee']?['name'],
+      milestoneId: json['milestone']?['id'],
+      milestoneName: json['milestone']?['name'],
       labels:
           (json['labels'] as List<dynamic>?)
               ?.map(

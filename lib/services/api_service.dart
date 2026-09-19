@@ -466,6 +466,7 @@ class ApiService {
     String status,
     String? assigneeId, {
     List<String>? labelIds,
+    String? milestoneId,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
@@ -482,6 +483,7 @@ class ApiService {
     if (labelIds != null) {
       body['labelIds'] = labelIds;
     }
+    body['milestoneId'] = milestoneId;
 
     final response = await http.post(
       Uri.parse('$baseUrl/tasks/project/$projectId'),
@@ -506,6 +508,7 @@ class ApiService {
     String status,
     String? assigneeId, {
     List<String>? labelIds,
+    String? milestoneId,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
@@ -522,6 +525,7 @@ class ApiService {
     if (labelIds != null) {
       body['labelIds'] = labelIds;
     }
+    body['milestoneId'] = milestoneId;
 
     final response = await http.patch(
       Uri.parse('$baseUrl/tasks/$taskId'),
