@@ -72,14 +72,16 @@ class _MilestonesPageState extends State<MilestonesPage> {
     DateTime? selectedDate;
 
     final existingDate = milestone?['targetDate'];
+
     if (existingDate != null) {
       selectedDate = DateTime.tryParse(existingDate.toString())?.toLocal();
     }
 
     bool saving = false;
 
-    await showDialog<void>(
+    final saved = await showDialog<bool>(
       context: context,
+      barrierDismissible: false,
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
@@ -120,17 +122,20 @@ class _MilestonesPageState extends State<MilestonesPage> {
                               ? null
                               : () async {
                                   final picked = await showDatePicker(
-                                    context: context,
+                                    context: dialogContext,
                                     initialDate: selectedDate ?? DateTime.now(),
                                     firstDate: DateTime.now(),
                                     lastDate: DateTime(2100),
                                   );
 
-                                  if (picked != null) {
-                                    setDialogState(() {
-                                      selectedDate = picked;
-                                    });
+                                  if (picked == null ||
+                                      !dialogContext.mounted) {
+                                    return;
                                   }
+
+                                  setDialogState(() {
+                                    selectedDate = picked;
+                                  });
                                 },
                         ),
                       ],
@@ -143,7 +148,7 @@ class _MilestonesPageState extends State<MilestonesPage> {
                   onPressed: saving
                       ? null
                       : () {
-                          Navigator.pop(dialogContext);
+                          Navigator.of(dialogContext).pop(false);
                         },
                   child: const Text('Cancel'),
                 ),
@@ -154,11 +159,12 @@ class _MilestonesPageState extends State<MilestonesPage> {
                           final name = nameController.text.trim();
 
                           if (name.isEmpty) {
-                            ScaffoldMessenger.of(this.context).showSnackBar(
+                            ScaffoldMessenger.of(dialogContext).showSnackBar(
                               const SnackBar(
                                 content: Text('Milestone name is required'),
                               ),
                             );
+
                             return;
                           }
 
@@ -184,31 +190,21 @@ class _MilestonesPageState extends State<MilestonesPage> {
                               );
                             }
 
-                            if (!mounted) return;
+                            if (!dialogContext.mounted) {
+                              return;
+                            }
 
-                            Navigator.pop(dialogContext);
-
-                            await loadMilestones();
-
-                            if (!mounted) return;
-
-                            ScaffoldMessenger.of(this.context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  editing
-                                      ? 'Milestone updated'
-                                      : 'Milestone created',
-                                ),
-                              ),
-                            );
+                            Navigator.of(dialogContext).pop(true);
                           } catch (e) {
-                            if (!mounted) return;
+                            if (!dialogContext.mounted) {
+                              return;
+                            }
 
                             setDialogState(() {
                               saving = false;
                             });
 
-                            ScaffoldMessenger.of(this.context).showSnackBar(
+                            ScaffoldMessenger.of(dialogContext).showSnackBar(
                               SnackBar(content: Text(e.toString())),
                             );
                           }
@@ -230,6 +226,22 @@ class _MilestonesPageState extends State<MilestonesPage> {
 
     nameController.dispose();
     descriptionController.dispose();
+
+    if (saved != true || !mounted) {
+      return;
+    }
+
+    await loadMilestones();
+
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(editing ? 'Milestone updated' : 'Milestone created'),
+      ),
+    );
   }
 
   Future<void> _toggleStatus(Map<String, dynamic> milestone) async {
@@ -263,13 +275,13 @@ class _MilestonesPageState extends State<MilestonesPage> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(dialogContext, false);
+                Navigator.of(dialogContext).pop(false);
               },
               child: const Text('Cancel'),
             ),
             FilledButton(
               onPressed: () {
-                Navigator.pop(dialogContext, true);
+                Navigator.of(dialogContext).pop(true);
               },
               child: const Text('Delete'),
             ),
@@ -278,7 +290,7 @@ class _MilestonesPageState extends State<MilestonesPage> {
       },
     );
 
-    if (confirmed != true) return;
+    if (confirmed != true || !mounted) return;
 
     try {
       await ApiService.deleteMilestone(
@@ -357,6 +369,22 @@ class _MilestonesPageState extends State<MilestonesPage> {
 
                   final completed = milestone['status'] == 'COMPLETED';
 
+                  final taskCount =
+                      int.tryParse(milestone['taskCount']?.toString() ?? '') ??
+                      0;
+
+                  final completedTaskCount =
+                      int.tryParse(
+                        milestone['completedTaskCount']?.toString() ?? '',
+                      ) ??
+                      0;
+
+                  final progress =
+                      int.tryParse(milestone['progress']?.toString() ?? '') ??
+                      0;
+
+                  final progressValue = (progress.clamp(0, 100)) / 100.0;
+
                   return Card(
                     child: Padding(
                       padding: const EdgeInsets.all(16),
@@ -416,6 +444,31 @@ class _MilestonesPageState extends State<MilestonesPage> {
                             const SizedBox(height: 10),
                             Text(milestone['description'].toString()),
                           ],
+
+                          const SizedBox(height: 16),
+
+                          Row(
+                            children: [
+                              Text(
+                                '$completedTaskCount of $taskCount tasks completed',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                              const Spacer(),
+                              Text(
+                                '$progress%',
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 8),
+
+                          LinearProgressIndicator(
+                            value: progressValue,
+                            minHeight: 7,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                           const SizedBox(height: 14),
                           Row(
                             children: [

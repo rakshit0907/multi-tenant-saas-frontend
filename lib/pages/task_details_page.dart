@@ -381,7 +381,11 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
     }
   }
 
-  void openEditDialog() {
+  Future<void> openEditDialog() async {
+    await loadMilestones();
+
+    if (!mounted) return;
+
     showDialog(
       context: context,
       builder: (_) => TaskDialog(

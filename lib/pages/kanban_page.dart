@@ -26,6 +26,7 @@ class _KanbanPageState extends State<KanbanPage> {
   List<Task> tasks = [];
   List members = [];
   List<TaskLabel> labels = [];
+  List<dynamic> milestones = [];
   bool loading = true;
 
   @override
@@ -40,6 +41,7 @@ class _KanbanPageState extends State<KanbanPage> {
         ApiService.getProjectMembers(widget.projectId),
         ApiService.getTasks(widget.projectId),
         ApiService.getLabels(widget.projectId),
+        ApiService.getMilestones(widget.projectId),
       ]);
 
       if (!mounted) return;
@@ -47,12 +49,13 @@ class _KanbanPageState extends State<KanbanPage> {
       final membersData = results[0];
       final tasksData = results[1];
       final labelsData = results[2] as List<TaskLabel>;
-
+      final milestonesData = results[3];
       setState(() {
         members = membersData;
         tasks = tasksData.map<Task>((e) => Task.fromJson(e)).toList();
         labels = labelsData;
         loading = false;
+        milestones = milestonesData;
       });
     } catch (e) {
       debugPrint('LOAD KANBAN ERROR: $e');
@@ -151,6 +154,7 @@ class _KanbanPageState extends State<KanbanPage> {
                     title: "Create Task",
                     buttonText: "Create",
                     members: members,
+                    milestones: milestones,
                     onSave:
                         (
                           title,
@@ -170,6 +174,8 @@ class _KanbanPageState extends State<KanbanPage> {
                             priority,
                             status,
                             assigneeId,
+                            labelIds: labelIds,
+                            milestoneId: milestoneId,
                           );
 
                           await loadTasks();

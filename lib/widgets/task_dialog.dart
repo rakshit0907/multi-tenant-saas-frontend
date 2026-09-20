@@ -166,7 +166,6 @@ class _TaskDialogState extends State<TaskDialog> {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint("Dialog members: ${widget.members}");
     return AlertDialog(
       title: Text(widget.title),
       content: SingleChildScrollView(

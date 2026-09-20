@@ -738,7 +738,11 @@ class _TasksPageState extends State<TasksPage> {
                               task: task,
                               onToggle: () => toggleTask(task.id),
                               onDelete: () => deleteTask(task.id),
-                              onEdit: () {
+                              onEdit: () async {
+                                await loadMilestones();
+
+                                if (!mounted) return;
+
                                 showDialog(
                                   context: context,
                                   builder: (_) => TaskDialog(
@@ -793,9 +797,11 @@ class _TasksPageState extends State<TasksPage> {
 
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
-        onPressed: () {
-          debugPrint("Project ID: ${widget.projectId}");
-          debugPrint("MEMBERS BEFORE CREATE DIALOG: $members");
+        onPressed: () async {
+          await loadMilestones();
+
+          if (!mounted) return;
+
           showDialog(
             context: context,
             builder: (_) => TaskDialog(
