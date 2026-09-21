@@ -25,6 +25,7 @@ class _ProjectDashboardPageState extends State<ProjectDashboardPage> {
   List<dynamic> activities = [];
   List<dynamic> workload = [];
   List<dynamic> upcomingDeadlines = [];
+  List<dynamic> milestones = [];
 
   bool loading = true;
 
@@ -50,6 +51,7 @@ class _ProjectDashboardPageState extends State<ProjectDashboardPage> {
         workload = List<dynamic>.from(data['workload'] ?? []);
 
         upcomingDeadlines = List<dynamic>.from(data['upcomingDeadlines'] ?? []);
+        milestones = List<dynamic>.from(data['milestones'] ?? []);
 
         loading = false;
       });
@@ -97,6 +99,16 @@ class _ProjectDashboardPageState extends State<ProjectDashboardPage> {
     if (difference.inDays < 7) {
       return '${difference.inDays} days ago';
     }
+
+    return '${date.day}/${date.month}/${date.year}';
+  }
+
+  String _formatMilestoneDate(dynamic value) {
+    if (value == null) return 'No target date';
+
+    final date = DateTime.tryParse(value.toString())?.toLocal();
+
+    if (date == null) return 'No target date';
 
     return '${date.day}/${date.month}/${date.year}';
   }
@@ -505,6 +517,157 @@ class _ProjectDashboardPageState extends State<ProjectDashboardPage> {
                           ),
                         );
                       },
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.flag_outlined),
+                              const SizedBox(width: 8),
+                              const Expanded(
+                                child: Text(
+                                  'Milestones',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () async {
+                                  await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => MilestonesPage(
+                                        projectId: widget.projectId,
+                                        projectName: widget.projectName,
+                                      ),
+                                    ),
+                                  );
+
+                                  if (!mounted) return;
+                                  await loadStats();
+                                },
+                                child: const Text('View all'),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          if (milestones.isEmpty)
+                            const Text(
+                              'No milestones yet',
+                              style: TextStyle(color: Colors.grey),
+                            )
+                          else
+                            ...milestones.take(3).map((milestone) {
+                              final taskCount =
+                                  int.tryParse(
+                                    milestone['taskCount']?.toString() ?? '',
+                                  ) ??
+                                  0;
+
+                              final completedTaskCount =
+                                  int.tryParse(
+                                    milestone['completedTaskCount']
+                                            ?.toString() ??
+                                        '',
+                                  ) ??
+                                  0;
+
+                              final progress =
+                                  int.tryParse(
+                                    milestone['progress']?.toString() ?? '',
+                                  ) ??
+                                  0;
+
+                              final progressValue =
+                                  progress.clamp(0, 100) / 100.0;
+
+                              final completed =
+                                  milestone['status']?.toString() ==
+                                  'COMPLETED';
+
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 18),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            milestone['name']?.toString() ??
+                                                'Unnamed milestone',
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                        Chip(
+                                          label: Text(
+                                            completed ? 'Completed' : 'Active',
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+
+                                    const SizedBox(height: 6),
+
+                                    Text(
+                                      _formatMilestoneDate(
+                                        milestone['targetDate'],
+                                      ),
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+
+                                    const SizedBox(height: 10),
+
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            '$completedTaskCount of '
+                                            '$taskCount tasks completed',
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ),
+                                        Text(
+                                          '$progress%',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+
+                                    const SizedBox(height: 8),
+
+                                    LinearProgressIndicator(
+                                      value: progressValue,
+                                      minHeight: 7,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }),
+                        ],
+                      ),
                     ),
                   ),
 
