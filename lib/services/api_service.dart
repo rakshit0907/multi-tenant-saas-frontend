@@ -72,7 +72,13 @@ class ApiService {
     throw Exception("Failed to load role");
   }
 
-  static Future<void> createProject(String name) async {
+  static Future<void> createProject({
+    required String name,
+    String? description,
+    String status = 'PLANNING',
+    DateTime? startDate,
+    DateTime? dueDate,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
 
@@ -82,11 +88,78 @@ class ApiService {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
       },
-      body: jsonEncode({'name': name}),
+      body: jsonEncode({
+        'name': name.trim(),
+        'description': description?.trim(),
+        'status': status,
+        'startDate': startDate?.toIso8601String(),
+        'dueDate': dueDate?.toIso8601String(),
+      }),
     );
 
     if (response.statusCode != 201 && response.statusCode != 200) {
-      throw Exception('Failed to create project');
+      final data = jsonDecode(response.body);
+
+      throw Exception(
+        data['message']?.toString() ?? 'Failed to create project',
+      );
+    }
+  }
+
+  static Future<void> updateProject(
+    String projectId, {
+    String? name,
+    String? description,
+    String? status,
+    DateTime? startDate,
+    DateTime? dueDate,
+    bool clearStartDate = false,
+    bool clearDueDate = false,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    final body = <String, dynamic>{};
+
+    if (name != null) {
+      body['name'] = name.trim();
+    }
+
+    if (description != null) {
+      body['description'] = description.trim();
+    }
+
+    if (status != null) {
+      body['status'] = status;
+    }
+
+    if (clearStartDate) {
+      body['startDate'] = null;
+    } else if (startDate != null) {
+      body['startDate'] = startDate.toIso8601String();
+    }
+
+    if (clearDueDate) {
+      body['dueDate'] = null;
+    } else if (dueDate != null) {
+      body['dueDate'] = dueDate.toIso8601String();
+    }
+
+    final response = await http.patch(
+      Uri.parse('$baseUrl/projects/$projectId'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode != 200) {
+      final data = jsonDecode(response.body);
+
+      throw Exception(
+        data['message']?.toString() ?? 'Failed to update project',
+      );
     }
   }
 
