@@ -6,6 +6,7 @@ import 'services/api_service.dart';
 import 'pages/members_page.dart';
 import 'pages/project_dashboard_page.dart';
 import 'pages/notifications_page.dart';
+import 'models/workspace.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -18,15 +19,36 @@ class _DashboardPageState extends State<DashboardPage> {
   String userId = "";
   String tenantId = "";
   String role = "";
+  String workspaceRole = "";
+
+  List<Workspace> workspaces = [];
+  Workspace? activeWorkspace;
 
   List<Project> projects = [];
+
   bool loading = true;
+  bool switchingWorkspace = false;
 
   @override
   void initState() {
     super.initState();
-    loadUserInfo();
-    loadProjects();
+    initializeDashboard();
+  }
+
+  Future<void> initializeDashboard() async {
+    try {
+      await loadUserInfo();
+      await loadWorkspaces();
+      await loadProjects();
+    } catch (e) {
+      debugPrint(e.toString());
+
+      if (!mounted) return;
+
+      setState(() {
+        loading = false;
+      });
+    }
   }
 
   Future<void> deleteProject(String projectId) async {
@@ -606,17 +628,19 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Future<void> loadUserInfo() async {
     final prefs = await SharedPreferences.getInstance();
-
     final token = prefs.getString('token');
 
     if (token == null) return;
 
     final decodedToken = JwtDecoder.decode(token);
 
+    if (!mounted) return;
+
     setState(() {
-      userId = decodedToken['userId'] ?? '';
-      tenantId = decodedToken['tenantId'] ?? '';
-      role = decodedToken['role'] ?? '';
+      userId = decodedToken['userId']?.toString() ?? '';
+      tenantId = decodedToken['tenantId']?.toString() ?? '';
+      role = decodedToken['role']?.toString() ?? '';
+      workspaceRole = decodedToken['workspaceRole']?.toString() ?? '';
     });
   }
 
@@ -648,6 +672,102 @@ class _DashboardPageState extends State<DashboardPage> {
     Navigator.pushReplacementNamed(context, '/login');
   }
 
+  Future<void> loadWorkspaces() async {
+    final data = await ApiService.getWorkspaces();
+
+    Workspace? selectedWorkspace;
+
+    for (final workspace in data) {
+      if (workspace.id == tenantId) {
+        selectedWorkspace = workspace;
+        break;
+      }
+    }
+
+    if (!mounted) return;
+
+    setState(() {
+      workspaces = data;
+      activeWorkspace = selectedWorkspace;
+    });
+  }
+
+  Future<void> switchWorkspace(Workspace workspace) async {
+    if (workspace.id == tenantId || switchingWorkspace) {
+      return;
+    }
+
+    setState(() {
+      switchingWorkspace = true;
+    });
+
+    try {
+      await ApiService.switchWorkspace(workspace.id);
+
+      // Decode the newly issued JWT.
+      await loadUserInfo();
+
+      // Reload workspace list and all workspace-scoped dashboard data.
+      await loadWorkspaces();
+      await loadProjects();
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          switchingWorkspace = false;
+        });
+      }
+    }
+  }
+
+  Future<void> showWorkspaceSelector() async {
+    if (workspaces.isEmpty || switchingWorkspace) return;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const ListTile(
+                title: Text(
+                  'Switch workspace',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+              const Divider(height: 1),
+              ...workspaces.map((workspace) {
+                final isActive = workspace.id == tenantId;
+
+                return ListTile(
+                  leading: Icon(
+                    isActive ? Icons.check_circle : Icons.business_outlined,
+                  ),
+                  title: Text(workspace.name),
+                  subtitle: Text(workspace.role),
+                  trailing: isActive ? const Text('Active') : null,
+                  enabled: !switchingWorkspace,
+                  onTap: isActive
+                      ? null
+                      : () async {
+                          Navigator.pop(sheetContext);
+                          await switchWorkspace(workspace);
+                        },
+                );
+              }),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -656,7 +776,35 @@ class _DashboardPageState extends State<DashboardPage> {
         child: const Icon(Icons.add),
       ),
       appBar: AppBar(
-        title: const Text('Projects'),
+        title: InkWell(
+          onTap: showWorkspaceSelector,
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.business_outlined, size: 20),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    activeWorkspace?.name ?? 'Workspace',
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                if (switchingWorkspace)
+                  const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                else
+                  const Icon(Icons.arrow_drop_down),
+              ],
+            ),
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
@@ -676,8 +824,14 @@ class _DashboardPageState extends State<DashboardPage> {
               children: [
                 const SizedBox(height: 20),
 
-                Text("Role: $role"),
-                Text("Tenant: $tenantId"),
+                if (activeWorkspace != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text('${activeWorkspace!.name} • $workspaceRole'),
+                    ),
+                  ),
 
                 const Divider(),
 

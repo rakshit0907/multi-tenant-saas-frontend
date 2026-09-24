@@ -7,6 +7,7 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_filex/open_filex.dart';
 import '../models/task_label.dart';
+import '../models/workspace.dart';
 
 class ApiService {
   static const String baseUrl = 'http://10.0.2.2:3000';
@@ -1079,5 +1080,74 @@ class ApiService {
 
       throw Exception(data['message']?.toString() ?? 'Password reset failed');
     }
+  }
+
+  static Future<List<Workspace>> getWorkspaces() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    if (token == null) {
+      throw Exception('Authentication token not found');
+    }
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/tenant/workspaces'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+
+      return data
+          .map((json) => Workspace.fromJson(json as Map<String, dynamic>))
+          .toList();
+    }
+
+    throw Exception('Failed to load workspaces: ${response.body}');
+  }
+
+  static Future<Workspace> switchWorkspace(String workspaceId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    if (token == null) {
+      throw Exception('Authentication token not found');
+    }
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/tenant/workspaces/$workspaceId/switch'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+
+      final newToken = data['token'] as String?;
+
+      if (newToken == null || newToken.isEmpty) {
+        throw Exception(
+          'Workspace switch did not return an authentication token',
+        );
+      }
+
+      final workspaceData = data['workspace'];
+
+      if (workspaceData is! Map<String, dynamic>) {
+        throw Exception('Workspace switch returned invalid workspace data');
+      }
+
+      // Replace the old active-workspace JWT only after a successful response.
+      await prefs.setString('token', newToken);
+
+      return Workspace.fromJson(workspaceData);
+    }
+
+    final data = jsonDecode(response.body);
+
+    throw Exception(
+      data is Map<String, dynamic>
+          ? data['message']?.toString() ?? 'Failed to switch workspace'
+          : 'Failed to switch workspace',
+    );
   }
 }
