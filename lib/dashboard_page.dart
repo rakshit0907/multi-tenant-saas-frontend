@@ -807,6 +807,11 @@ class _DashboardPageState extends State<DashboardPage> {
         ),
         actions: [
           IconButton(
+            tooltip: 'Create workspace',
+            icon: const Icon(Icons.add_business_outlined),
+            onPressed: showCreateWorkspaceDialog,
+          ),
+          IconButton(
             icon: const Icon(Icons.notifications_outlined),
             onPressed: () {
               Navigator.push(
@@ -818,6 +823,7 @@ class _DashboardPageState extends State<DashboardPage> {
           IconButton(onPressed: logout, icon: const Icon(Icons.logout)),
         ],
       ),
+
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : Column(
@@ -948,5 +954,123 @@ class _DashboardPageState extends State<DashboardPage> {
               ],
             ),
     );
+  }
+
+  Future<void> showCreateWorkspaceDialog() async {
+    final controller = TextEditingController();
+    bool submitting = false;
+    String? errorMessage;
+
+    final createdWorkspace = await showDialog<Map<String, dynamic>>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            Future<void> submit() async {
+              final name = controller.text.trim();
+
+              if (name.isEmpty) {
+                setDialogState(() {
+                  errorMessage = 'Workspace name is required';
+                });
+                return;
+              }
+
+              setDialogState(() {
+                submitting = true;
+                errorMessage = null;
+              });
+
+              try {
+                final workspace = await ApiService.createWorkspace(name);
+
+                if (!dialogContext.mounted) return;
+
+                Navigator.of(dialogContext).pop(workspace);
+              } catch (e) {
+                if (!dialogContext.mounted) return;
+
+                setDialogState(() {
+                  submitting = false;
+                  errorMessage = e.toString().replaceFirst('Exception: ', '');
+                });
+              }
+            }
+
+            return AlertDialog(
+              title: const Text('Create Workspace'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: controller,
+                    autofocus: true,
+                    enabled: !submitting,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: submitting ? null : (_) => submit(),
+                    decoration: const InputDecoration(
+                      labelText: 'Workspace name',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  if (errorMessage != null) ...[
+                    const SizedBox(height: 12),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        errorMessage!,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: submitting
+                      ? null
+                      : () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: submitting ? null : submit,
+                  child: submitting
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Create'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    controller.dispose();
+
+    if (createdWorkspace == null || !mounted) return;
+
+    await loadWorkspaces();
+
+    if (!mounted) return;
+
+    Workspace? newWorkspace;
+
+    for (final workspace in workspaces) {
+      if (workspace.id == createdWorkspace['id']?.toString()) {
+        newWorkspace = workspace;
+        break;
+      }
+    }
+
+    if (newWorkspace != null) {
+      await switchWorkspace(newWorkspace);
+    }
   }
 }

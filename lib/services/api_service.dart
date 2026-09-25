@@ -1150,4 +1150,32 @@ class ApiService {
           : 'Failed to switch workspace',
     );
   }
+
+  static Future<Map<String, dynamic>> createWorkspace(String name) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    if (token == null) {
+      throw Exception('Authentication token not found');
+    }
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/tenant/workspaces'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'name': name.trim()}),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return Map<String, dynamic>.from(jsonDecode(response.body));
+    }
+
+    final data = jsonDecode(response.body);
+
+    throw Exception(
+      data['message']?.toString() ?? 'Failed to create workspace',
+    );
+  }
 }
