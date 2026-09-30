@@ -10,6 +10,7 @@ import 'pages/forgot_password_page.dart';
 import 'pages/reset_password_page.dart';
 import 'dart:async';
 import 'package:app_links/app_links.dart';
+import 'pages/workspace_invite_page.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() {
@@ -49,26 +50,40 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
+
   void _processDeepLink(Uri uri) {
-    debugPrint('DEEP LINK RECEIVED: $uri');
+  debugPrint('DEEP LINK RECEIVED: $uri');
 
-    if (uri.scheme == 'multisaas' && uri.host == 'reset-password') {
-      final token = uri.queryParameters['token'];
+  if (uri.scheme == 'multisaas' && uri.host == 'reset-password') {
+    final token = uri.queryParameters['token'];
 
-      debugPrint('RESET TOKEN: $token');
+    if (token != null && token.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        navigatorKey.currentState?.pushNamed(
+          '/reset-password',
+          arguments: token,
+        );
+      });
+    }
 
-      if (token != null && token.isNotEmpty) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          debugPrint('OPENING RESET PASSWORD PAGE');
+    return;
+  }
 
-          navigatorKey.currentState?.pushNamed(
-            '/reset-password',
-            arguments: token,
-          );
-        });
-      }
+  if (uri.scheme == 'multisaas' && uri.host == 'workspace-invite') {
+    final token = uri.queryParameters['token'];
+
+    debugPrint('WORKSPACE INVITE TOKEN: $token');
+
+    if (token != null && token.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        navigatorKey.currentState?.pushNamed(
+          '/workspace-invite',
+          arguments: token,
+        );
+      });
     }
   }
+}
 
   @override
   void dispose() {
@@ -92,6 +107,7 @@ class _MyAppState extends State<MyApp> {
         '/verify-email-pending': (context) => const VerifyEmailPendingPage(),
         '/forgot-password': (context) => const ForgotPasswordPage(),
         '/reset-password': (context) => const ResetPasswordPage(),
+        '/workspace-invite': (context) => const WorkspaceInvitePage(),
       },
     );
   }

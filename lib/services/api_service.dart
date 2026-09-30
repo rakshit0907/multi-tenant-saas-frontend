@@ -1191,7 +1191,7 @@ class ApiService {
     }
 
     debugPrint('INVITE EMAIL SENT: "$email"');
-debugPrint('INVITE ROLE SENT: "$role"');
+    debugPrint('INVITE ROLE SENT: "$role"');
 
     final response = await http.post(
       Uri.parse('$baseUrl/tenant/invite'),
@@ -1225,5 +1225,45 @@ debugPrint('INVITE ROLE SENT: "$role"');
 
       throw Exception('Failed to send workspace invitation');
     }
+  }
+
+  static Future<Map<String, dynamic>> acceptWorkspaceInviteExisting(
+    String inviteToken,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    final authToken = prefs.getString('token');
+
+    if (authToken == null || authToken.isEmpty) {
+      throw Exception('Please log in first');
+    }
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/auth/accept-invite-existing'),
+      headers: {
+        'Authorization': 'Bearer $authToken',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'token': inviteToken}),
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      final message = data['message'];
+
+      if (message is List) {
+        throw Exception(message.join(', '));
+      }
+
+      throw Exception(
+        message?.toString() ?? 'Failed to accept workspace invitation',
+      );
+    }
+
+    if (data['token'] != null) {
+      await prefs.setString('token', data['token'].toString());
+    }
+
+    return Map<String, dynamic>.from(data);
   }
 }
