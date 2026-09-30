@@ -2,12 +2,12 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
-import '../models/user_model.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_filex/open_filex.dart';
 import '../models/task_label.dart';
 import '../models/workspace.dart';
+import '../models/workspace_member.dart';
 
 class ApiService {
   static const String baseUrl = 'http://10.0.2.2:3000';
@@ -353,7 +353,7 @@ class ApiService {
     throw Exception('Failed to load projects');
   }
 
-  static Future<List<UserModel>> getOrganizationUsers() async {
+  static Future<List<WorkspaceMember>> getOrganizationUsers() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
 
@@ -365,7 +365,7 @@ class ApiService {
     if (response.statusCode == 200) {
       final List data = jsonDecode(response.body);
 
-      return data.map((e) => UserModel.fromJson(e)).toList();
+      return data.map((e) => WorkspaceMember.fromJson(e)).toList();
     }
 
     throw Exception("Failed to load organization users");

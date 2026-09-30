@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/user_model.dart';
+import '../models/workspace_member.dart';
 import '../services/api_service.dart';
 
 class MembersPage extends StatefulWidget {
@@ -13,7 +13,7 @@ class MembersPage extends StatefulWidget {
 
 class _MembersPageState extends State<MembersPage> {
   List members = [];
-  List<UserModel> organizationUsers = [];
+  List<WorkspaceMember> organizationUsers = [];
   bool loading = true;
 
   String? myRole;
