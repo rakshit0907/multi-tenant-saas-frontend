@@ -316,9 +316,6 @@ class _DashboardPageState extends State<DashboardPage> {
       },
     );
 
-    nameController.dispose();
-    descriptionController.dispose();
-
     if (created != true || !mounted) return;
 
     setState(() {
@@ -811,6 +808,13 @@ class _DashboardPageState extends State<DashboardPage> {
             icon: const Icon(Icons.add_business_outlined),
             onPressed: showCreateWorkspaceDialog,
           ),
+
+          if (workspaceRole == 'OWNER' || workspaceRole == 'ADMIN')
+            IconButton(
+              tooltip: 'Invite member',
+              icon: const Icon(Icons.person_add_alt_1_outlined),
+              onPressed: showInviteWorkspaceMemberDialog,
+            ),
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
             onPressed: () {
@@ -1052,8 +1056,6 @@ class _DashboardPageState extends State<DashboardPage> {
       },
     );
 
-    controller.dispose();
-
     if (createdWorkspace == null || !mounted) return;
 
     await loadWorkspaces();
@@ -1072,5 +1074,152 @@ class _DashboardPageState extends State<DashboardPage> {
     if (newWorkspace != null) {
       await switchWorkspace(newWorkspace);
     }
+  }
+
+  Future<void> showInviteWorkspaceMemberDialog() async {
+    String emailInput = '';
+    String selectedRole = 'MEMBER';
+    bool submitting = false;
+    String? errorMessage;
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            Future<void> submit() async {
+              final email = emailInput.trim();
+
+              if (email.isEmpty) {
+                setDialogState(() {
+                  errorMessage = 'NEW CODE TEST';
+                });
+                return;
+              }
+
+              setDialogState(() {
+                submitting = true;
+                errorMessage = null;
+              });
+
+              try {
+                await ApiService.sendWorkspaceInvite(
+                  email: email,
+                  role: selectedRole,
+                );
+
+                if (!dialogContext.mounted) return;
+
+                Navigator.of(dialogContext).pop();
+
+                ScaffoldMessenger.of(this.context).showSnackBar(
+                  SnackBar(content: Text('Invitation sent to $email')),
+                );
+              } catch (e) {
+                if (!dialogContext.mounted) return;
+
+                setDialogState(() {
+                  submitting = false;
+                  errorMessage = e.toString().replaceFirst('Exception: ', '');
+                });
+              }
+            }
+
+            return AlertDialog(
+              title: const Text('Invite Member'),
+              content: SizedBox(
+                width: 420,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      enabled: !submitting,
+                      keyboardType: TextInputType.emailAddress,
+
+                      // IMPORTANT
+                      onChanged: (value) {
+                        emailInput = value;
+
+                        if (errorMessage != null) {
+                          setDialogState(() {
+                            errorMessage = null;
+                          });
+                        }
+                      },
+
+                      decoration: const InputDecoration(
+                        labelText: 'Email',
+                        hintText: 'name@example.com',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    DropdownButtonFormField<String>(
+                      initialValue: selectedRole,
+                      decoration: const InputDecoration(
+                        labelText: 'Workspace role',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: const [
+                        DropdownMenuItem(value: 'ADMIN', child: Text('Admin')),
+                        DropdownMenuItem(
+                          value: 'MEMBER',
+                          child: Text('Member'),
+                        ),
+                        DropdownMenuItem(value: 'GUEST', child: Text('Guest')),
+                      ],
+                      onChanged: submitting
+                          ? null
+                          : (value) {
+                              if (value == null) return;
+
+                              setDialogState(() {
+                                selectedRole = value;
+                                errorMessage = null;
+                              });
+                            },
+                    ),
+
+                    if (errorMessage != null) ...[
+                      const SizedBox(height: 12),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          errorMessage!,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: submitting
+                      ? null
+                      : () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: submitting ? null : submit,
+                  child: submitting
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Send Invite'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 }

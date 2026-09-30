@@ -39,7 +39,9 @@ class _MyAppState extends State<MyApp> {
     final initialLink = await _appLinks.getInitialLink();
 
     if (initialLink != null) {
-      _processDeepLink(initialLink);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _processDeepLink(initialLink);
+      });
     }
 
     _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
@@ -48,14 +50,22 @@ class _MyAppState extends State<MyApp> {
   }
 
   void _processDeepLink(Uri uri) {
+    debugPrint('DEEP LINK RECEIVED: $uri');
+
     if (uri.scheme == 'multisaas' && uri.host == 'reset-password') {
       final token = uri.queryParameters['token'];
 
+      debugPrint('RESET TOKEN: $token');
+
       if (token != null && token.isNotEmpty) {
-        navigatorKey.currentState?.pushNamed(
-          '/reset-password',
-          arguments: token,
-        );
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          debugPrint('OPENING RESET PASSWORD PAGE');
+
+          navigatorKey.currentState?.pushNamed(
+            '/reset-password',
+            arguments: token,
+          );
+        });
       }
     }
   }

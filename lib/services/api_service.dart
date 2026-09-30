@@ -1178,4 +1178,52 @@ class ApiService {
       data['message']?.toString() ?? 'Failed to create workspace',
     );
   }
+
+  static Future<void> sendWorkspaceInvite({
+    required String email,
+    required String role,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    if (token == null || token.isEmpty) {
+      throw Exception('Authentication required');
+    }
+
+    debugPrint('INVITE EMAIL SENT: "$email"');
+debugPrint('INVITE ROLE SENT: "$role"');
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/tenant/invite'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'email': email.trim().toLowerCase(), 'role': role}),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return;
+    }
+
+    try {
+      final data = jsonDecode(response.body);
+
+      final message = data['message'];
+
+      if (message is List) {
+        throw Exception(message.join(', '));
+      }
+
+      throw Exception(
+        message?.toString() ?? 'Failed to send workspace invitation',
+      );
+    } catch (e) {
+      if (e is Exception) {
+        rethrow;
+      }
+
+      throw Exception('Failed to send workspace invitation');
+    }
+  }
 }
