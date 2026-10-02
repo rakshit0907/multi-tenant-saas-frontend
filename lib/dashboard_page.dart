@@ -7,6 +7,7 @@ import 'pages/members_page.dart';
 import 'pages/project_dashboard_page.dart';
 import 'pages/notifications_page.dart';
 import 'models/workspace.dart';
+import 'pages/workspace_members_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -809,12 +810,27 @@ class _DashboardPageState extends State<DashboardPage> {
             onPressed: showCreateWorkspaceDialog,
           ),
 
+          IconButton(
+            tooltip: 'Workspace members',
+            icon: const Icon(Icons.groups_outlined),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) =>
+                      WorkspaceMembersPage(workspaceRole: workspaceRole),
+                ),
+              );
+            },
+          ),
+
           if (workspaceRole == 'OWNER' || workspaceRole == 'ADMIN')
             IconButton(
               tooltip: 'Invite member',
               icon: const Icon(Icons.person_add_alt_1_outlined),
               onPressed: showInviteWorkspaceMemberDialog,
             ),
+
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
             onPressed: () {
@@ -824,6 +840,7 @@ class _DashboardPageState extends State<DashboardPage> {
               );
             },
           ),
+
           IconButton(onPressed: logout, icon: const Icon(Icons.logout)),
         ],
       ),
