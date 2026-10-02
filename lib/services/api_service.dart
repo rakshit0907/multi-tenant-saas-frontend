@@ -1266,4 +1266,53 @@ class ApiService {
 
     return Map<String, dynamic>.from(data);
   }
+
+  static Future<void> updateWorkspaceMemberRole(
+    String userId,
+    String role,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    final response = await http.patch(
+      Uri.parse('$baseUrl/tenant/members/$userId/role'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'role': role}),
+    );
+
+    debugPrint('WORKSPACE ROLE STATUS: ${response.statusCode}');
+    debugPrint('WORKSPACE ROLE BODY: ${response.body}');
+
+    if (response.statusCode != 200) {
+      final data = jsonDecode(response.body);
+
+      throw Exception(
+        data['message']?.toString() ?? 'Failed to update workspace role',
+      );
+    }
+  }
+
+  static Future<void> removeWorkspaceMember(String userId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    final response = await http.delete(
+      Uri.parse('$baseUrl/tenant/members/$userId'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    debugPrint('REMOVE WORKSPACE MEMBER STATUS: ${response.statusCode}');
+    debugPrint('REMOVE WORKSPACE MEMBER BODY: ${response.body}');
+
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      final data = jsonDecode(response.body);
+
+      throw Exception(
+        data['message']?.toString() ?? 'Failed to remove workspace member',
+      );
+    }
+  }
 }
