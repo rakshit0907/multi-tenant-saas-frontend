@@ -1315,4 +1315,31 @@ class ApiService {
       );
     }
   }
+
+  static Future<Map<String, dynamic>> updateWorkspaceName(String name) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    final response = await http.patch(
+      Uri.parse('$baseUrl/tenant/workspace'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'name': name}),
+    );
+
+    debugPrint('UPDATE WORKSPACE STATUS: ${response.statusCode}');
+    debugPrint('UPDATE WORKSPACE BODY: ${response.body}');
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      return Map<String, dynamic>.from(data);
+    }
+
+    throw Exception(
+      data['message']?.toString() ?? 'Failed to update workspace',
+    );
+  }
 }

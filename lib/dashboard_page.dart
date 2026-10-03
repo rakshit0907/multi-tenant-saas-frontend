@@ -8,6 +8,7 @@ import 'pages/project_dashboard_page.dart';
 import 'pages/notifications_page.dart';
 import 'models/workspace.dart';
 import 'pages/workspace_members_page.dart';
+import 'pages/workspace_settings_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -822,6 +823,29 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
               );
             },
+          ),
+
+          IconButton(
+            tooltip: 'Workspace settings',
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: activeWorkspace == null
+                ? null
+                : () async {
+                    final updatedWorkspace =
+                        await Navigator.push<Map<String, dynamic>>(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => WorkspaceSettingsPage(
+                              workspace: activeWorkspace!,
+                              workspaceRole: workspaceRole,
+                            ),
+                          ),
+                        );
+
+                    if (updatedWorkspace == null || !mounted) return;
+
+                    await loadWorkspaces();
+                  },
           ),
 
           if (workspaceRole == 'OWNER' || workspaceRole == 'ADMIN')
