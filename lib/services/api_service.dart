@@ -1267,6 +1267,39 @@ class ApiService {
     return Map<String, dynamic>.from(data);
   }
 
+  static Future<Map<String, dynamic>> acceptWorkspaceInviteNewUser({
+    required String inviteToken,
+    required String name,
+    required String password,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/auth/accept-invite'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'token': inviteToken,
+        'name': name.trim(),
+        'password': password,
+      }),
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      final message = data['message'];
+
+      if (message is List) {
+        throw Exception(message.join(', '));
+      }
+
+      throw Exception(
+        message?.toString() ??
+            'Failed to create account from workspace invitation',
+      );
+    }
+
+    return Map<String, dynamic>.from(data);
+  }
+
   static Future<void> updateWorkspaceMemberRole(
     String userId,
     String role,
