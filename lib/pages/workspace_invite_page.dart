@@ -61,6 +61,13 @@ class _WorkspaceInvitePageState extends State<WorkspaceInvitePage> {
     try {
       final result = await ApiService.acceptWorkspaceInviteExisting(token);
 
+      final newToken = result['token']?.toString();
+
+      if (newToken != null && newToken.isNotEmpty) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('token', newToken);
+      }
+
       if (!mounted) return;
 
       final workspace = result['workspace'];
@@ -330,7 +337,7 @@ class _WorkspaceInvitePageState extends State<WorkspaceInvitePage> {
           onPressed: accepting
               ? null
               : () {
-                  Navigator.pushNamed(context, '/login');
+                  Navigator.pushNamed(context, '/login', arguments: token);
                 },
           child: const Text('Already have an account? Log in'),
         ),

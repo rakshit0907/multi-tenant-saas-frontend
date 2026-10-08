@@ -50,40 +50,39 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-
   void _processDeepLink(Uri uri) {
-  debugPrint('DEEP LINK RECEIVED: $uri');
+    debugPrint('DEEP LINK RECEIVED: $uri');
 
-  if (uri.scheme == 'multisaas' && uri.host == 'reset-password') {
-    final token = uri.queryParameters['token'];
+    if (uri.scheme == 'multisaas' && uri.host == 'reset-password') {
+      final token = uri.queryParameters['token'];
 
-    if (token != null && token.isNotEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        navigatorKey.currentState?.pushNamed(
-          '/reset-password',
-          arguments: token,
-        );
-      });
+      if (token != null && token.isNotEmpty) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          navigatorKey.currentState?.pushNamed(
+            '/reset-password',
+            arguments: token,
+          );
+        });
+      }
+
+      return;
     }
 
-    return;
-  }
+    if (uri.scheme == 'multisaas' && uri.host == 'workspace-invite') {
+      final token = uri.queryParameters['token'];
 
-  if (uri.scheme == 'multisaas' && uri.host == 'workspace-invite') {
-    final token = uri.queryParameters['token'];
+      debugPrint('WORKSPACE INVITE TOKEN: $token');
 
-    debugPrint('WORKSPACE INVITE TOKEN: $token');
-
-    if (token != null && token.isNotEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        navigatorKey.currentState?.pushNamed(
-          '/workspace-invite',
-          arguments: token,
-        );
-      });
+      if (token != null && token.isNotEmpty) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          navigatorKey.currentState?.pushNamed(
+            '/workspace-invite',
+            arguments: token,
+          );
+        });
+      }
     }
   }
-}
 
   @override
   void dispose() {
@@ -146,7 +145,18 @@ class _LoginPageState extends State<LoginPage> {
 
         if (!mounted) return;
 
-        Navigator.pushReplacementNamed(context, '/dashboard');
+        final inviteToken =
+            ModalRoute.of(context)?.settings.arguments as String?;
+
+        if (inviteToken != null && inviteToken.isNotEmpty) {
+          Navigator.pushReplacementNamed(
+            context,
+            '/workspace-invite',
+            arguments: inviteToken,
+          );
+        } else {
+          Navigator.pushReplacementNamed(context, '/dashboard');
+        }
       } else {
         if (!mounted) return;
 
