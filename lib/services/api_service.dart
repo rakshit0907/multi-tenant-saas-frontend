@@ -1375,4 +1375,33 @@ class ApiService {
       data['message']?.toString() ?? 'Failed to update workspace',
     );
   }
+
+  static Future<Map<String, dynamic>> acceptWorkspaceInviteById(
+    String invitationId,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    if (token == null || token.isEmpty) {
+      throw Exception('Please log in first');
+    }
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/tenant/invites/$invitationId/accept'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception(
+        data['message'] ?? 'Failed to accept workspace invitation',
+      );
+    }
+
+    return Map<String, dynamic>.from(data);
+  }
 }

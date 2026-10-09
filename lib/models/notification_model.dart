@@ -1,5 +1,6 @@
 enum NotificationType {
   projectInvitation,
+  workspaceInvitation,
   taskAssigned,
   taskCompleted,
   taskStatusChanged,
@@ -47,6 +48,8 @@ class NotificationModel {
     switch (type) {
       case 'PROJECT_INVITATION':
         return NotificationType.projectInvitation;
+      case 'WORKSPACE_INVITATION':
+        return NotificationType.workspaceInvitation;
       case 'TASK_ASSIGNED':
         return NotificationType.taskAssigned;
       case 'TASK_COMPLETED':

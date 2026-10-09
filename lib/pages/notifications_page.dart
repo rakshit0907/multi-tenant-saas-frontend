@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/notification_model.dart';
 import '../services/api_service.dart';
 import '../models/task.dart';
@@ -73,6 +73,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
     switch (type) {
       case NotificationType.projectInvitation:
         return Icons.mail_outline;
+
+      case NotificationType.workspaceInvitation:
+        return Icons.business_outlined;
 
       case NotificationType.taskAssigned:
         return Icons.assignment_ind_outlined;
@@ -195,6 +198,96 @@ class _NotificationsPageState extends State<NotificationsPage> {
                           notification.type ==
                               NotificationType.taskStatusChanged) {
                         await openTaskNotification(notification);
+                        return;
+                      }
+
+                      if (notification.type ==
+                          NotificationType.workspaceInvitation) {
+                        final invitationId = notification
+                            .metadata?['invitationId']
+                            ?.toString();
+
+                        if (invitationId == null || invitationId.isEmpty) {
+                          debugPrint(
+                            'WORKSPACE INVITATION ERROR: Missing invitationId',
+                          );
+                          return;
+                        }
+
+                        await showDialog(
+                          context: context,
+                          builder: (dialogContext) => AlertDialog(
+                            title: const Text('Workspace Invitation'),
+                            content: Text(notification.message),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(dialogContext).pop();
+                                },
+                                child: const Text('Cancel'),
+                              ),
+                              ElevatedButton(
+                                onPressed: () async {
+                                  final navigator = Navigator.of(context);
+                                  final dialogNavigator = Navigator.of(
+                                    dialogContext,
+                                  );
+                                  final messenger = ScaffoldMessenger.of(
+                                    context,
+                                  );
+
+                                  try {
+                                    final result =
+                                        await ApiService.acceptWorkspaceInviteById(
+                                          invitationId,
+                                        );
+
+                                    final newToken = result['token']
+                                        ?.toString();
+
+                                    if (newToken == null || newToken.isEmpty) {
+                                      throw Exception(
+                                        'Workspace token was not returned',
+                                      );
+                                    }
+
+                                    final prefs =
+                                        await SharedPreferences.getInstance();
+                                    await prefs.setString('token', newToken);
+
+                                    if (!mounted) return;
+
+                                    dialogNavigator.pop();
+
+                                    navigator.pushNamedAndRemoveUntil(
+                                      '/dashboard',
+                                      (route) => false,
+                                    );
+                                  } catch (e) {
+                                    debugPrint(
+                                      'ACCEPT WORKSPACE INVITATION ERROR: $e',
+                                    );
+
+                                    if (!mounted) return;
+
+                                    messenger.showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          e.toString().replaceFirst(
+                                            'Exception: ',
+                                            '',
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                },
+                                child: const Text('ACCEPT'),
+                              ),
+                            ],
+                          ),
+                        );
+
                         return;
                       }
 
