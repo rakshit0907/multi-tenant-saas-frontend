@@ -237,6 +237,130 @@ class _WorkspaceMembersPageState extends State<WorkspaceMembersPage> {
     );
   }
 
+  Future<void> showInviteMemberDialog() async {
+    final emailController = TextEditingController();
+    String selectedRole = 'MEMBER';
+    bool submitting = false;
+
+    await showDialog(
+      context: context,
+      barrierDismissible: !submitting,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Invite Member'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(
+                      labelText: 'Email',
+                      hintText: 'name@example.com',
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    value: selectedRole,
+                    decoration: const InputDecoration(labelText: 'Role'),
+                    items: const [
+                      DropdownMenuItem(value: 'ADMIN', child: Text('ADMIN')),
+                      DropdownMenuItem(value: 'MEMBER', child: Text('MEMBER')),
+                      DropdownMenuItem(value: 'GUEST', child: Text('GUEST')),
+                    ],
+                    onChanged: submitting
+                        ? null
+                        : (value) {
+                            if (value == null) return;
+
+                            setDialogState(() {
+                              selectedRole = value;
+                            });
+                          },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: submitting
+                      ? null
+                      : () {
+                          Navigator.pop(dialogContext);
+                        },
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: submitting
+                      ? null
+                      : () async {
+                          final email = emailController.text.trim();
+
+                          if (email.isEmpty) {
+                            ScaffoldMessenger.of(this.context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Email is required'),
+                              ),
+                            );
+                            return;
+                          }
+
+                          setDialogState(() {
+                            submitting = true;
+                          });
+
+                          try {
+                            await ApiService.sendWorkspaceInvite(
+                              email: email,
+                              role: selectedRole,
+                            );
+
+                            if (!mounted) return;
+
+                            Navigator.pop(dialogContext);
+
+                            ScaffoldMessenger.of(this.context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Workspace invitation sent successfully',
+                                ),
+                              ),
+                            );
+                          } catch (e) {
+                            if (!mounted) return;
+
+                            setDialogState(() {
+                              submitting = false;
+                            });
+
+                            ScaffoldMessenger.of(this.context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  e.toString().replaceFirst('Exception: ', ''),
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                  child: submitting
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Send Invite'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    emailController.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -247,13 +371,7 @@ class _WorkspaceMembersPageState extends State<WorkspaceMembersPage> {
             IconButton(
               tooltip: 'Invite member',
               icon: const Icon(Icons.person_add_alt_1_outlined),
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Use the dashboard invite button for now'),
-                  ),
-                );
-              },
+              onPressed: showInviteMemberDialog,
             ),
         ],
       ),
