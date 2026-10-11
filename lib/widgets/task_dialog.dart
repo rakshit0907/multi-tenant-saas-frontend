@@ -150,10 +150,18 @@ class _TaskDialogState extends State<TaskDialog> {
   }
 
   Future<void> pickDate() async {
+    final now = DateTime.now();
+
+    final initialDate = dueDate ?? now;
+
+    final firstDate = dueDate != null && dueDate!.isBefore(now)
+        ? dueDate!
+        : now;
+
     final picked = await showDatePicker(
       context: context,
-      initialDate: dueDate ?? DateTime.now(),
-      firstDate: DateTime.now(),
+      initialDate: initialDate,
+      firstDate: firstDate,
       lastDate: DateTime(2100),
     );
 

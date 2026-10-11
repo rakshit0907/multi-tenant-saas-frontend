@@ -9,6 +9,7 @@ import 'pages/notifications_page.dart';
 import 'models/workspace.dart';
 import 'pages/workspace_members_page.dart';
 import 'pages/workspace_settings_page.dart';
+import 'pages/calendar_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -806,56 +807,18 @@ class _DashboardPageState extends State<DashboardPage> {
         ),
         actions: [
           IconButton(
-            tooltip: 'Create workspace',
-            icon: const Icon(Icons.add_business_outlined),
-            onPressed: showCreateWorkspaceDialog,
-          ),
-
-          IconButton(
-            tooltip: 'Workspace members',
-            icon: const Icon(Icons.groups_outlined),
+            tooltip: 'Calendar',
+            icon: const Icon(Icons.calendar_month_outlined),
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) =>
-                      WorkspaceMembersPage(workspaceRole: workspaceRole),
-                ),
+                MaterialPageRoute(builder: (_) => const CalendarPage()),
               );
             },
           ),
 
           IconButton(
-            tooltip: 'Workspace settings',
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: activeWorkspace == null
-                ? null
-                : () async {
-                    final updatedWorkspace =
-                        await Navigator.push<Map<String, dynamic>>(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => WorkspaceSettingsPage(
-                              workspace: activeWorkspace!,
-                              workspaceRole: workspaceRole,
-                            ),
-                          ),
-                        );
-
-                    if (updatedWorkspace == null || !mounted) return;
-
-                    await loadWorkspaces();
-                  },
-          ),
-
-          if (workspaceRole == 'OWNER' || workspaceRole == 'ADMIN')
-            IconButton(
-              tooltip: 'Invite member',
-              icon: const Icon(Icons.person_add_alt_1_outlined),
-              onPressed: showInviteWorkspaceMemberDialog,
-            ),
-
-          IconButton(
+            tooltip: 'Notifications',
             icon: const Icon(Icons.notifications_outlined),
             onPressed: () {
               Navigator.push(
@@ -865,7 +828,105 @@ class _DashboardPageState extends State<DashboardPage> {
             },
           ),
 
-          IconButton(onPressed: logout, icon: const Icon(Icons.logout)),
+          PopupMenuButton<String>(
+            tooltip: 'More',
+            onSelected: (value) async {
+              switch (value) {
+                case 'create-workspace':
+                  await showCreateWorkspaceDialog();
+                  break;
+
+                case 'workspace-members':
+                  if (!mounted) return;
+
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          WorkspaceMembersPage(workspaceRole: workspaceRole),
+                    ),
+                  );
+                  break;
+
+                case 'workspace-settings':
+                  if (activeWorkspace == null) return;
+
+                  final updatedWorkspace =
+                      await Navigator.push<Map<String, dynamic>>(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => WorkspaceSettingsPage(
+                            workspace: activeWorkspace!,
+                            workspaceRole: workspaceRole,
+                          ),
+                        ),
+                      );
+
+                  if (updatedWorkspace != null && mounted) {
+                    await loadWorkspaces();
+                  }
+                  break;
+
+                case 'invite-member':
+                  await showInviteWorkspaceMemberDialog();
+                  break;
+
+                case 'logout':
+                  await logout();
+                  break;
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'create-workspace',
+                child: ListTile(
+                  leading: Icon(Icons.add_business_outlined),
+                  title: Text('Create workspace'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+
+              const PopupMenuItem(
+                value: 'workspace-members',
+                child: ListTile(
+                  leading: Icon(Icons.groups_outlined),
+                  title: Text('Workspace members'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+
+              if (activeWorkspace != null)
+                const PopupMenuItem(
+                  value: 'workspace-settings',
+                  child: ListTile(
+                    leading: Icon(Icons.settings_outlined),
+                    title: Text('Workspace settings'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+
+              if (workspaceRole == 'OWNER' || workspaceRole == 'ADMIN')
+                const PopupMenuItem(
+                  value: 'invite-member',
+                  child: ListTile(
+                    leading: Icon(Icons.person_add_alt_1_outlined),
+                    title: Text('Invite member'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+
+              const PopupMenuDivider(),
+
+              const PopupMenuItem(
+                value: 'logout',
+                child: ListTile(
+                  leading: Icon(Icons.logout),
+                  title: Text('Logout'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+            ],
+          ),
         ],
       ),
 

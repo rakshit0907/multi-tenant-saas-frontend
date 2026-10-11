@@ -515,6 +515,36 @@ class ApiService {
     throw Exception('Failed to load tasks: ${response.body}');
   }
 
+  static Future<List<dynamic>> getCalendarTasks({
+    required DateTime start,
+    required DateTime end,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    if (token == null || token.isEmpty) {
+      throw Exception('Authentication token not found');
+    }
+
+    final uri = Uri.parse('$baseUrl/tasks/calendar').replace(
+      queryParameters: {
+        'start': start.toIso8601String(),
+        'end': end.toIso8601String(),
+      },
+    );
+
+    final response = await http.get(
+      uri,
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      return List<dynamic>.from(jsonDecode(response.body));
+    }
+
+    throw Exception('Failed to load calendar tasks: ${response.body}');
+  }
+
   static Future<Map<String, dynamic>> getTask(String taskId) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
