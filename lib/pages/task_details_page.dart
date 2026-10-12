@@ -25,7 +25,7 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
   List<TaskLabel> labels = [];
   List<dynamic> milestones = [];
   List<dynamic> attachments = [];
-
+  List<dynamic> mentionSuggestions = [];
   bool loadingAttachments = true;
   bool uploadingAttachment = false;
 
@@ -155,6 +155,77 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
     descriptionController.dispose();
     commentController.dispose();
     super.dispose();
+  }
+
+  void handleCommentChanged(String value) {
+    final cursorPosition = commentController.selection.baseOffset;
+
+    if (cursorPosition < 0) {
+      return;
+    }
+
+    final textBeforeCursor = value.substring(0, cursorPosition);
+    final match = RegExp(r'@([a-zA-Z0-9._-]*)$').firstMatch(textBeforeCursor);
+
+    if (match == null) {
+      if (mentionSuggestions.isNotEmpty) {
+        setState(() {
+          mentionSuggestions = [];
+        });
+      }
+
+      return;
+    }
+
+    final query = (match.group(1) ?? '').toLowerCase();
+
+    final suggestions = members.where((member) {
+      final name = member['user']?['name']?.toString() ?? '';
+
+      return name.toLowerCase().contains(query);
+    }).toList();
+
+    setState(() {
+      mentionSuggestions = suggestions;
+    });
+  }
+
+  void insertMention(dynamic member) {
+    final name = member['user']?['name']?.toString();
+
+    if (name == null || name.trim().isEmpty) {
+      return;
+    }
+
+    final cursorPosition = commentController.selection.baseOffset;
+
+    if (cursorPosition < 0) {
+      return;
+    }
+
+    final text = commentController.text;
+    final textBeforeCursor = text.substring(0, cursorPosition);
+
+    final match = RegExp(r'@([a-zA-Z0-9._-]*)$').firstMatch(textBeforeCursor);
+
+    if (match == null) {
+      return;
+    }
+
+    final mentionText = '@${name.trim().replaceAll(' ', '_')} ';
+
+    final newText = text.replaceRange(match.start, cursorPosition, mentionText);
+
+    final newCursorPosition = match.start + mentionText.length;
+
+    commentController.value = TextEditingValue(
+      text: newText,
+      selection: TextSelection.collapsed(offset: newCursorPosition),
+    );
+
+    setState(() {
+      mentionSuggestions = [];
+    });
   }
 
   Future<void> addComment() async {
@@ -791,14 +862,57 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Expanded(
-                  child: TextField(
-                    controller: commentController,
-                    minLines: 1,
-                    maxLines: 4,
-                    decoration: const InputDecoration(
-                      hintText: 'Write a comment...',
-                      border: OutlineInputBorder(),
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (mentionSuggestions.isNotEmpty)
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          constraints: const BoxConstraints(maxHeight: 180),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: ListView.separated(
+                            shrinkWrap: true,
+                            itemCount: mentionSuggestions.length,
+                            separatorBuilder: (_, __) =>
+                                const Divider(height: 1),
+                            itemBuilder: (context, index) {
+                              final member = mentionSuggestions[index];
+                              final user = member['user'];
+
+                              final name =
+                                  user?['name']?.toString() ?? 'Unknown user';
+
+                              final email = user?['email']?.toString() ?? '';
+
+                              return ListTile(
+                                dense: true,
+                                leading: const CircleAvatar(
+                                  radius: 16,
+                                  child: Icon(Icons.person_outline, size: 16),
+                                ),
+                                title: Text(name),
+                                subtitle: email.isEmpty ? null : Text(email),
+                                onTap: () {
+                                  insertMention(member);
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                      TextField(
+                        controller: commentController,
+                        minLines: 1,
+                        maxLines: 4,
+                        onChanged: handleCommentChanged,
+                        decoration: const InputDecoration(
+                          hintText: 'Write a comment... Use @ to mention',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
 

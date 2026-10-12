@@ -86,6 +86,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
       case NotificationType.taskStatusChanged:
         return Icons.sync_alt;
 
+      case NotificationType.taskMentioned:
+        return Icons.alternate_email;
+
       case NotificationType.memberAdded:
         return Icons.person_add_outlined;
 
@@ -97,7 +100,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
   Future<void> openTaskNotification(NotificationModel notification) async {
     final taskId = notification.metadata?['taskId']?.toString();
 
-    final projectId = notification.metadata?['projectId']?.toString();
+    final projectId =
+        notification.metadata?['projectId']?.toString() ??
+        notification.projectId;
 
     if (taskId == null || projectId == null) {
       debugPrint('TASK NOTIFICATION ERROR: Missing taskId/projectId');
@@ -196,7 +201,8 @@ class _NotificationsPageState extends State<NotificationsPage> {
                       if (notification.type == NotificationType.taskAssigned ||
                           notification.type == NotificationType.taskCompleted ||
                           notification.type ==
-                              NotificationType.taskStatusChanged) {
+                              NotificationType.taskStatusChanged ||
+                          notification.type == NotificationType.taskMentioned) {
                         await openTaskNotification(notification);
                         return;
                       }

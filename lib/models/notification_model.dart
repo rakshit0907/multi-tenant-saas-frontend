@@ -4,6 +4,7 @@ enum NotificationType {
   taskAssigned,
   taskCompleted,
   taskStatusChanged,
+  taskMentioned,
   memberAdded,
   memberRemoved,
 }
@@ -60,6 +61,8 @@ class NotificationModel {
         return NotificationType.memberAdded;
       case 'MEMBER_REMOVED':
         return NotificationType.memberRemoved;
+      case 'TASK_MENTIONED':
+        return NotificationType.taskMentioned;
       default:
         throw Exception('Unknown notification type: $type');
     }
