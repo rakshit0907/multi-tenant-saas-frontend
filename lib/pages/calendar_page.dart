@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:table_calendar/table_calendar.dart';
 import '../services/api_service.dart';
 
 class CalendarPage extends StatefulWidget {
@@ -74,7 +74,7 @@ class _CalendarPageState extends State<CalendarPage> {
         first.day == second.day;
   }
 
-  List<dynamic> get _selectedDateTasks {
+  List<dynamic> _tasksForDate(DateTime date) {
     return _tasks.where((task) {
       final rawDueDate = task['dueDate']?.toString();
 
@@ -88,8 +88,12 @@ class _CalendarPageState extends State<CalendarPage> {
         return false;
       }
 
-      return _isSameDay(dueDate, _selectedDate);
+      return _isSameDay(dueDate, date);
     }).toList();
+  }
+
+  List<dynamic> get _selectedDateTasks {
+    return _tasksForDate(_selectedDate);
   }
 
   Future<void> _changeMonth(int amount) async {
@@ -139,6 +143,26 @@ class _CalendarPageState extends State<CalendarPage> {
     }
   }
 
+  Color _markerColorForTask(dynamic task) {
+    final status = task['status']?.toString();
+    final priority = task['priority']?.toString();
+
+    if (status == 'COMPLETED') {
+      return Colors.green;
+    }
+
+    switch (priority) {
+      case 'HIGH':
+        return Colors.red;
+      case 'MEDIUM':
+        return Colors.orange;
+      case 'LOW':
+        return Colors.blue;
+      default:
+        return Colors.grey;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final selectedTasks = _selectedDateTasks;
@@ -181,23 +205,80 @@ class _CalendarPageState extends State<CalendarPage> {
               ],
             ),
           ),
-          CalendarDatePicker(
-            initialDate: _selectedDate,
-            firstDate: DateTime(2000),
-            lastDate: DateTime(2100),
-            currentDate: DateTime.now(),
-            onDateChanged: (date) {
-              setState(() {
-                _selectedDate = date;
+          TableCalendar<dynamic>(
+            firstDay: DateTime(2000),
+            lastDay: DateTime(2100),
+            focusedDay: _focusedMonth,
+            headerVisible: false,
 
-                if (date.year != _focusedMonth.year ||
-                    date.month != _focusedMonth.month) {
-                  _focusedMonth = DateTime(date.year, date.month, 1);
-
-                  _loadMonth();
-                }
-              });
+            selectedDayPredicate: (day) {
+              return _isSameDay(day, _selectedDate);
             },
+
+            eventLoader: (day) {
+              return _tasksForDate(day);
+            },
+
+            onDaySelected: (selectedDay, focusedDay) async {
+              final monthChanged =
+                  selectedDay.year != _focusedMonth.year ||
+                  selectedDay.month != _focusedMonth.month;
+
+              setState(() {
+                _selectedDate = selectedDay;
+                _focusedMonth = DateTime(focusedDay.year, focusedDay.month, 1);
+              });
+
+              if (monthChanged) {
+                await _loadMonth();
+              }
+            },
+
+            onPageChanged: (focusedDay) async {
+              final newMonth = DateTime(focusedDay.year, focusedDay.month, 1);
+
+              if (newMonth.year == _focusedMonth.year &&
+                  newMonth.month == _focusedMonth.month) {
+                return;
+              }
+
+              setState(() {
+                _focusedMonth = newMonth;
+                _selectedDate = newMonth;
+              });
+
+              await _loadMonth();
+            },
+
+            calendarStyle: const CalendarStyle(),
+
+            calendarBuilders: CalendarBuilders<dynamic>(
+              markerBuilder: (context, day, events) {
+                if (events.isEmpty) {
+                  return null;
+                }
+
+                final visibleEvents = events.take(3).toList();
+
+                return Positioned(
+                  bottom: 5,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: visibleEvents.map((task) {
+                      return Container(
+                        width: 6,
+                        height: 6,
+                        margin: const EdgeInsets.symmetric(horizontal: 1),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: _markerColorForTask(task),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                );
+              },
+            ),
           ),
           const Divider(height: 1),
           Expanded(

@@ -41,6 +41,7 @@ dependencies:
   open_filex: ^4.7.0
   path_provider: ^2.1.6
   app_links: ^7.2.1
+  table_calendar: ^3.3.0
 
 dev_dependencies:
   flutter_test:
