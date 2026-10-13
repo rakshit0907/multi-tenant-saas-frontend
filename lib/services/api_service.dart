@@ -1434,4 +1434,27 @@ class ApiService {
 
     return Map<String, dynamic>.from(data);
   }
+
+  static Future<Map<String, dynamic>> getDashboardSummary() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    if (token == null || token.isEmpty) {
+      throw Exception('Authentication token not found');
+    }
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/dashboard'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    debugPrint('DASHBOARD STATUS: ${response.statusCode}');
+    debugPrint('DASHBOARD BODY: ${response.body}');
+
+    if (response.statusCode == 200) {
+      return Map<String, dynamic>.from(jsonDecode(response.body));
+    }
+
+    throw Exception('Failed to load dashboard: ${response.body}');
+  }
 }

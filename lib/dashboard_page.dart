@@ -29,6 +29,8 @@ class _DashboardPageState extends State<DashboardPage> {
 
   List<Project> projects = [];
 
+  Map<String, dynamic> dashboardSummary = {};
+
   bool loading = true;
   bool switchingWorkspace = false;
 
@@ -43,6 +45,7 @@ class _DashboardPageState extends State<DashboardPage> {
       await loadUserInfo();
       await loadWorkspaces();
       await loadProjects();
+      await loadDashboardSummary();
     } catch (e) {
       debugPrint(e.toString());
 
@@ -662,6 +665,20 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
+  Future<void> loadDashboardSummary() async {
+    try {
+      final data = await ApiService.getDashboardSummary();
+
+      if (!mounted) return;
+
+      setState(() {
+        dashboardSummary = data;
+      });
+    } catch (e) {
+      debugPrint('LOAD DASHBOARD SUMMARY ERROR: $e');
+    }
+  }
+
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
 
@@ -710,6 +727,7 @@ class _DashboardPageState extends State<DashboardPage> {
       // Reload workspace list and all workspace-scoped dashboard data.
       await loadWorkspaces();
       await loadProjects();
+      await loadDashboardSummary();
     } catch (e) {
       if (!mounted) return;
 
@@ -765,6 +783,37 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildDashboardStatCard({
+    required String title,
+    required String value,
+    required IconData icon,
+  }) {
+    return SizedBox(
+      width: 160,
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon),
+              const SizedBox(height: 12),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(title),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -945,6 +994,57 @@ class _DashboardPageState extends State<DashboardPage> {
                     ),
                   ),
 
+                const SizedBox(height: 16),
+
+                if (dashboardSummary.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 12,
+                          children: [
+                            _buildDashboardStatCard(
+                              title: 'Projects',
+                              value:
+                                  dashboardSummary['projects']?['total']
+                                      ?.toString() ??
+                                  '0',
+                              icon: Icons.folder_outlined,
+                            ),
+                            _buildDashboardStatCard(
+                              title: 'Open Tasks',
+                              value:
+                                  dashboardSummary['tasks']?['open']
+                                      ?.toString() ??
+                                  '0',
+                              icon: Icons.pending_actions_outlined,
+                            ),
+                            _buildDashboardStatCard(
+                              title: 'In Progress',
+                              value:
+                                  dashboardSummary['tasks']?['inProgress']
+                                      ?.toString() ??
+                                  '0',
+                              icon: Icons.timelapse_outlined,
+                            ),
+                            _buildDashboardStatCard(
+                              title: 'Completed',
+                              value:
+                                  dashboardSummary['tasks']?['completed']
+                                      ?.toString() ??
+                                  '0',
+                              icon: Icons.task_alt,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                const SizedBox(height: 16),
                 const Divider(),
 
                 Expanded(
@@ -1120,6 +1220,55 @@ class _DashboardPageState extends State<DashboardPage> {
                       border: OutlineInputBorder(),
                     ),
                   ),
+
+                  if (dashboardSummary.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Wrap(
+                            spacing: 12,
+                            runSpacing: 12,
+                            children: [
+                              _buildDashboardStatCard(
+                                title: 'Projects',
+                                value:
+                                    dashboardSummary['projects']?['total']
+                                        ?.toString() ??
+                                    '0',
+                                icon: Icons.folder_outlined,
+                              ),
+                              _buildDashboardStatCard(
+                                title: 'Open Tasks',
+                                value:
+                                    dashboardSummary['tasks']?['open']
+                                        ?.toString() ??
+                                    '0',
+                                icon: Icons.pending_actions_outlined,
+                              ),
+                              _buildDashboardStatCard(
+                                title: 'In Progress',
+                                value:
+                                    dashboardSummary['tasks']?['inProgress']
+                                        ?.toString() ??
+                                    '0',
+                                icon: Icons.timelapse_outlined,
+                              ),
+                              _buildDashboardStatCard(
+                                title: 'Completed',
+                                value:
+                                    dashboardSummary['tasks']?['completed']
+                                        ?.toString() ??
+                                    '0',
+                                icon: Icons.task_alt,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                        ],
+                      ),
+                    ),
                   if (errorMessage != null) ...[
                     const SizedBox(height: 12),
                     Align(
