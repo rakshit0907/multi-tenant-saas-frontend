@@ -817,6 +817,18 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
+  String _formatDashboardDate(dynamic value) {
+    if (value == null) return 'No due date';
+
+    final date = DateTime.tryParse(value.toString());
+
+    if (date == null) return 'No due date';
+
+    final localDate = date.toLocal();
+
+    return '${localDate.day}/${localDate.month}/${localDate.year}';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1043,6 +1055,124 @@ class _DashboardPageState extends State<DashboardPage> {
                       ],
                     ),
                   ),
+
+                if (dashboardSummary['tasks']?['dueSoon'] is List) ...[
+                  const SizedBox(height: 20),
+
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Due Soon',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Builder(
+                      builder: (context) {
+                        final dueSoon =
+                            dashboardSummary['tasks']['dueSoon']
+                                as List<dynamic>;
+
+                        if (dueSoon.isEmpty) {
+                          return const Card(
+                            child: ListTile(
+                              leading: Icon(Icons.event_available_outlined),
+                              title: Text('No tasks due soon'),
+                            ),
+                          );
+                        }
+
+                        return Column(
+                          children: dueSoon.take(3).map<Widget>((task) {
+                            final project = task['project'];
+
+                            return Card(
+                              child: ListTile(
+                                leading: const Icon(Icons.schedule_outlined),
+                                title: Text(
+                                  task['title']?.toString() ?? 'Untitled task',
+                                ),
+                                subtitle: Text(
+                                  '${project?['name'] ?? 'Project'} • '
+                                  '${_formatDashboardDate(task['dueDate'])}',
+                                ),
+                                trailing: Text(
+                                  task['priority']?.toString() ?? '',
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+
+                if (dashboardSummary['upcomingMilestones'] is List) ...[
+                  const SizedBox(height: 20),
+
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Upcoming Milestones',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Builder(
+                      builder: (context) {
+                        final milestones =
+                            dashboardSummary['upcomingMilestones']
+                                as List<dynamic>;
+
+                        if (milestones.isEmpty) {
+                          return const Card(
+                            child: ListTile(
+                              leading: Icon(Icons.flag_outlined),
+                              title: Text('No upcoming milestones'),
+                            ),
+                          );
+                        }
+
+                        return Column(
+                          children: milestones.take(3).map<Widget>((milestone) {
+                            final project = milestone['project'];
+
+                            return Card(
+                              child: ListTile(
+                                leading: const Icon(Icons.flag_outlined),
+                                title: Text(
+                                  milestone['name']?.toString() ??
+                                      'Unnamed milestone',
+                                ),
+                                subtitle: Text(
+                                  '${project?['name'] ?? 'Project'} • '
+                                  '${_formatDashboardDate(milestone['targetDate'])}',
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        );
+                      },
+                    ),
+                  ),
+                ],
 
                 const SizedBox(height: 16),
                 const Divider(),
