@@ -29,17 +29,40 @@ class _KanbanPageState extends State<KanbanPage> {
   List<dynamic> milestones = [];
   bool loading = true;
 
+  final TextEditingController searchController = TextEditingController();
+
+  String? selectedPriority;
+  String? selectedAssigneeId;
+  String? selectedLabelId;
+
+  String selectedSortBy = 'dueDate';
+  String selectedSortOrder = 'ASC';
+
   @override
   void initState() {
     super.initState();
     loadTasks();
   }
 
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
+
   Future<void> loadTasks() async {
     try {
       final results = await Future.wait([
         ApiService.getProjectMembers(widget.projectId),
-        ApiService.getTasks(widget.projectId),
+        ApiService.getTasks(
+          widget.projectId,
+          search: searchController.text.trim(),
+          priority: selectedPriority,
+          assigneeId: selectedAssigneeId,
+          labelId: selectedLabelId,
+          sortBy: selectedSortBy,
+          sortOrder: selectedSortOrder,
+        ),
         ApiService.getLabels(widget.projectId),
         ApiService.getMilestones(widget.projectId),
       ]);
@@ -49,6 +72,9 @@ class _KanbanPageState extends State<KanbanPage> {
       final membersData = results[0];
       final tasksData = results[1];
       final labelsData = results[2] as List<TaskLabel>;
+      debugPrint(
+        'KANBAN LABELS: ${labelsData.map((label) => '${label.id}:${label.name}').toList()}',
+      );
       final milestonesData = results[3];
       setState(() {
         members = membersData;
@@ -66,6 +92,116 @@ class _KanbanPageState extends State<KanbanPage> {
         loading = false;
       });
     }
+  }
+
+  Future<void> showManageLabelsDialog() async {
+    final nameController = TextEditingController();
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Manage Labels'),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: nameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Label name',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () async {
+                          final name = nameController.text.trim();
+
+                          if (name.isEmpty) {
+                            return;
+                          }
+
+                          try {
+                            await ApiService.createLabel(
+                              widget.projectId,
+                              name,
+                            );
+
+                            nameController.clear();
+
+                            final updatedLabels = await ApiService.getLabels(
+                              widget.projectId,
+                            );
+
+                            if (!mounted) return;
+
+                            setState(() {
+                              labels = updatedLabels;
+                            });
+
+                            setDialogState(() {});
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Label created')),
+                            );
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Failed to create label: $e'),
+                              ),
+                            );
+                          }
+                        },
+                        icon: const Icon(Icons.add),
+                        label: const Text('Create Label'),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    if (labels.isEmpty)
+                      const Text('No labels yet')
+                    else
+                      Flexible(
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: labels.length,
+                          itemBuilder: (context, index) {
+                            final label = labels[index];
+
+                            return ListTile(
+                              leading: const Icon(Icons.label_outline),
+                              title: Text(label.name),
+                            );
+                          },
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Close'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    nameController.dispose();
   }
 
   Future<void> moveTask(Task task, String newColumn) async {
@@ -146,6 +282,13 @@ class _KanbanPageState extends State<KanbanPage> {
           ),
           actions: [
             IconButton(
+              tooltip: 'Manage labels',
+              icon: const Icon(Icons.label_outline),
+              onPressed: showManageLabelsDialog,
+            ),
+
+            IconButton(
+              tooltip: 'Create task',
               icon: const Icon(Icons.add),
               onPressed: () {
                 showDialog(
@@ -188,22 +331,199 @@ class _KanbanPageState extends State<KanbanPage> {
         ),
         body: loading
             ? const Center(child: CircularProgressIndicator())
-            : TabBarView(
+            : Column(
                 children: [
-                  KanbanColumn(
-                    projectId: widget.projectId,
-                    tasks: pendingTasks,
-                    onMove: moveTask,
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+                    child: TextField(
+                      controller: searchController,
+                      decoration: InputDecoration(
+                        hintText: 'Search tasks...',
+                        prefixIcon: const Icon(Icons.search),
+                        suffixIcon: searchController.text.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.clear),
+                                onPressed: () async {
+                                  searchController.clear();
+                                  await loadTasks();
+                                },
+                              )
+                            : null,
+                        border: const OutlineInputBorder(),
+                      ),
+                      onSubmitted: (_) async {
+                        await loadTasks();
+                      },
+                    ),
                   ),
-                  KanbanColumn(
-                    projectId: widget.projectId,
-                    tasks: inProgressTasks,
-                    onMove: moveTask,
+
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Row(
+                      children: [
+                        DropdownButton<String?>(
+                          value: selectedPriority,
+                          hint: const Text('Priority'),
+                          items: const [
+                            DropdownMenuItem<String?>(
+                              value: null,
+                              child: Text('All priorities'),
+                            ),
+                            DropdownMenuItem<String?>(
+                              value: 'LOW',
+                              child: Text('Low'),
+                            ),
+                            DropdownMenuItem<String?>(
+                              value: 'MEDIUM',
+                              child: Text('Medium'),
+                            ),
+                            DropdownMenuItem<String?>(
+                              value: 'HIGH',
+                              child: Text('High'),
+                            ),
+                          ],
+                          onChanged: (value) async {
+                            setState(() {
+                              selectedPriority = value;
+                            });
+
+                            await loadTasks();
+                          },
+                        ),
+
+                        const SizedBox(width: 12),
+
+                        DropdownButton<String?>(
+                          value: selectedAssigneeId,
+                          hint: const Text('Assignee'),
+                          items: [
+                            const DropdownMenuItem<String?>(
+                              value: null,
+                              child: Text('All assignees'),
+                            ),
+                            ...members.map((member) {
+                              final user = member['user'];
+
+                              return DropdownMenuItem<String?>(
+                                value: user?['id']?.toString(),
+                                child: Text(
+                                  user?['name']?.toString() ?? 'Unknown',
+                                ),
+                              );
+                            }),
+                          ],
+                          onChanged: (value) async {
+                            setState(() {
+                              selectedAssigneeId = value;
+                            });
+
+                            await loadTasks();
+                          },
+                        ),
+
+                        const SizedBox(width: 12),
+
+                        DropdownButton<String?>(
+                          value: selectedLabelId,
+                          hint: const Text('Label'),
+                          items: [
+                            const DropdownMenuItem<String?>(
+                              value: null,
+                              child: Text('All labels'),
+                            ),
+                            ...labels.map((label) {
+                              return DropdownMenuItem<String?>(
+                                value: label.id,
+                                child: Text(label.name),
+                              );
+                            }),
+                          ],
+                          onChanged: (value) async {
+                            setState(() {
+                              selectedLabelId = value;
+                            });
+
+                            await loadTasks();
+                          },
+                        ),
+
+                        const SizedBox(width: 12),
+
+                        DropdownButton<String>(
+                          value: selectedSortBy,
+                          items: const [
+                            DropdownMenuItem(
+                              value: 'dueDate',
+                              child: Text('Due date'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'title',
+                              child: Text('Title'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'priority',
+                              child: Text('Priority'),
+                            ),
+                          ],
+                          onChanged: (value) async {
+                            if (value == null) return;
+
+                            setState(() {
+                              selectedSortBy = value;
+                            });
+
+                            await loadTasks();
+                          },
+                        ),
+
+                        const SizedBox(width: 8),
+
+                        IconButton(
+                          tooltip: selectedSortOrder == 'ASC'
+                              ? 'Ascending'
+                              : 'Descending',
+                          icon: Icon(
+                            selectedSortOrder == 'ASC'
+                                ? Icons.arrow_upward
+                                : Icons.arrow_downward,
+                          ),
+                          onPressed: () async {
+                            setState(() {
+                              selectedSortOrder = selectedSortOrder == 'ASC'
+                                  ? 'DESC'
+                                  : 'ASC';
+                            });
+
+                            await loadTasks();
+                          },
+                        ),
+                      ],
+                    ),
                   ),
-                  KanbanColumn(
-                    projectId: widget.projectId,
-                    tasks: completedTasks,
-                    onMove: moveTask,
+
+                  const SizedBox(height: 8),
+
+                  Expanded(
+                    child: TabBarView(
+                      children: [
+                        KanbanColumn(
+                          projectId: widget.projectId,
+                          tasks: pendingTasks,
+                          onMove: moveTask,
+                        ),
+                        KanbanColumn(
+                          projectId: widget.projectId,
+                          tasks: inProgressTasks,
+                          onMove: moveTask,
+                        ),
+                        KanbanColumn(
+                          projectId: widget.projectId,
+                          tasks: completedTasks,
+                          onMove: moveTask,
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
