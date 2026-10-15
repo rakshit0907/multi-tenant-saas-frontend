@@ -306,7 +306,6 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
         currentTask = Task(
           id: currentTask.id,
           title: titleController.text.trim(),
-          completed: currentTask.completed,
           description: descriptionController.text.trim(),
           dueDate: selectedDueDate,
           priority: selectedPriority,
@@ -519,7 +518,6 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
                   currentTask = Task(
                     id: currentTask.id,
                     title: title,
-                    completed: currentTask.completed,
                     description: description,
                     dueDate: dueDate,
                     priority: priority,
@@ -673,11 +671,11 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
             ],
 
             buildInfoRow(
-              currentTask.completed
+              currentTask.status == 'COMPLETED'
                   ? Icons.check_circle
                   : Icons.radio_button_unchecked,
               'Completion',
-              currentTask.completed ? 'Completed' : 'Not Completed',
+              currentTask.status == 'COMPLETED' ? 'Completed' : 'Not Completed',
             ),
 
             const SizedBox(height: 12),
