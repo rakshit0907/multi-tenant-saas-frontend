@@ -11,19 +11,7 @@ import '../models/workspace_member.dart';
 
 class ApiService {
   static const String baseUrl = 'http://10.0.2.2:3000';
-  static Future<void> toggleTask(String taskId) async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-
-    final response = await http.patch(
-      Uri.parse('$baseUrl/tasks/$taskId/toggle'),
-      headers: {'Authorization': 'Bearer $token'},
-    );
-
-    if (response.statusCode != 200) {
-      throw Exception('Failed to toggle task');
-    }
-  }
+ 
 
   static Future<void> verifyEmail(String token) async {
     final response = await http.post(
@@ -1019,6 +1007,9 @@ class ApiService {
       Uri.parse('$baseUrl/tasks/project/$projectId/labels'),
       headers: {'Authorization': 'Bearer $token'},
     );
+
+    debugPrint('LABELS STATUS: ${response.statusCode}');
+debugPrint('LABELS BODY: ${response.body}');
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);

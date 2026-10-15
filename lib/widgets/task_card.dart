@@ -3,15 +3,12 @@ import '../models/task.dart';
 
 class TaskCard extends StatelessWidget {
   final Task task;
-
-  final VoidCallback onToggle;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
   const TaskCard({
     super.key,
     required this.task,
-    required this.onToggle,
     required this.onEdit,
     required this.onDelete,
   });
@@ -48,12 +45,11 @@ class TaskCard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: ListTile(
-        leading: IconButton(
-          icon: Icon(
-            task.completed ? Icons.check_circle : Icons.circle_outlined,
-            color: task.completed ? Colors.green : Colors.grey,
-          ),
-          onPressed: onToggle,
+        leading: Icon(
+          task.status == 'COMPLETED'
+              ? Icons.check_circle
+              : Icons.circle_outlined,
+          color: task.status == 'COMPLETED' ? Colors.green : Colors.grey,
         ),
 
         title: Row(
@@ -64,7 +60,7 @@ class TaskCard extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
-                  decoration: task.completed
+                  decoration: task.status == 'COMPLETED'
                       ? TextDecoration.lineThrough
                       : null,
                 ),

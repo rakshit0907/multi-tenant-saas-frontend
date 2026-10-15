@@ -456,16 +456,6 @@ class _TasksPageState extends State<TasksPage> {
     }
   }
 
-  Future<void> toggleTask(String taskId) async {
-    try {
-      await ApiService.toggleTask(taskId);
-
-      await loadTasks();
-    } catch (e) {
-      debugPrint(e.toString());
-    }
-  }
-
   Future<void> deleteTask(String taskId) async {
     try {
       await ApiService.deleteTask(taskId);
@@ -736,7 +726,6 @@ class _TasksPageState extends State<TasksPage> {
 
                             return TaskCard(
                               task: task,
-                              onToggle: () => toggleTask(task.id),
                               onDelete: () => deleteTask(task.id),
                               onEdit: () async {
                                 await loadMilestones();
