@@ -1231,6 +1231,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                         );
                                       },
                                     ),
+
                                     ListTile(
                                       leading: const Icon(Icons.group),
                                       title: const Text("View Members"),
@@ -1252,36 +1253,60 @@ class _DashboardPageState extends State<DashboardPage> {
                             );
                           },
 
-                          trailing: IconButton(
-                            icon: const Icon(Icons.delete),
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (dialogContext) {
-                                  return AlertDialog(
-                                    title: const Text("Delete Project"),
-                                    content: Text("Delete '${project.name}'?"),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.pop(dialogContext);
-                                        },
-                                        child: const Text("Cancel"),
-                                      ),
-                                      ElevatedButton(
-                                        onPressed: () async {
-                                          Navigator.pop(dialogContext);
-
-                                          await deleteProject(project.id);
-                                        },
-                                        child: const Text("Delete"),
-                                      ),
-                                    ],
-                                  );
-                                },
-                              );
-                            },
-                          ),
+                          trailing: project.currentUserRole == 'OWNER'
+                              ? Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      tooltip: 'Edit project',
+                                      icon: const Icon(Icons.edit_outlined),
+                                      onPressed: () async {
+                                        await showEditProjectDialog(project);
+                                      },
+                                    ),
+                                    IconButton(
+                                      tooltip: 'Delete project',
+                                      icon: const Icon(Icons.delete_outline),
+                                      onPressed: () {
+                                        showDialog(
+                                          context: context,
+                                          builder: (dialogContext) {
+                                            return AlertDialog(
+                                              title: const Text(
+                                                "Delete Project",
+                                              ),
+                                              content: Text(
+                                                "Delete '${project.name}'?",
+                                              ),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () {
+                                                    Navigator.pop(
+                                                      dialogContext,
+                                                    );
+                                                  },
+                                                  child: const Text("Cancel"),
+                                                ),
+                                                ElevatedButton(
+                                                  onPressed: () async {
+                                                    Navigator.pop(
+                                                      dialogContext,
+                                                    );
+                                                    await deleteProject(
+                                                      project.id,
+                                                    );
+                                                  },
+                                                  child: const Text("Delete"),
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
+                                      },
+                                    ),
+                                  ],
+                                )
+                              : null,
                         ),
                       );
                     },

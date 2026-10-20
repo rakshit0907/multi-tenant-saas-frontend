@@ -3,6 +3,8 @@ class Project {
   final String name;
   final String? description;
   final String status;
+  final String currentUserRole;
+
   final DateTime? startDate;
   final DateTime? dueDate;
 
@@ -13,6 +15,7 @@ class Project {
     required this.status,
     this.startDate,
     this.dueDate,
+    this.currentUserRole = '',
   });
 
   factory Project.fromJson(Map<String, dynamic> json) {
@@ -27,6 +30,7 @@ class Project {
       dueDate: json['dueDate'] == null
           ? null
           : DateTime.tryParse(json['dueDate'].toString()),
+      currentUserRole: json['currentUserRole']?.toString() ?? '',
     );
   }
 }
