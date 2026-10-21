@@ -11,7 +11,6 @@ import '../models/workspace_member.dart';
 
 class ApiService {
   static const String baseUrl = 'http://10.0.2.2:3000';
- 
 
   static Future<void> verifyEmail(String token) async {
     final response = await http.post(
@@ -1009,7 +1008,7 @@ class ApiService {
     );
 
     debugPrint('LABELS STATUS: ${response.statusCode}');
-debugPrint('LABELS BODY: ${response.body}');
+    debugPrint('LABELS BODY: ${response.body}');
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
@@ -1424,6 +1423,31 @@ debugPrint('LABELS BODY: ${response.body}');
     }
 
     return Map<String, dynamic>.from(data);
+  }
+
+  static Future<void> rejectWorkspaceInviteById(String invitationId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    if (token == null || token.isEmpty) {
+      throw Exception('Please log in first');
+    }
+
+    final response = await http.patch(
+      Uri.parse('$baseUrl/tenant/invites/$invitationId/reject'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception(
+        data['message'] ?? 'Failed to reject workspace invitation',
+      );
+    }
   }
 
   static Future<Map<String, dynamic>> getDashboardSummary() async {

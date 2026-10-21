@@ -232,6 +232,49 @@ class _NotificationsPageState extends State<NotificationsPage> {
                                 },
                                 child: const Text('Cancel'),
                               ),
+
+                              TextButton(
+                                onPressed: () async {
+                                  final dialogNavigator = Navigator.of(
+                                    dialogContext,
+                                  );
+                                  final messenger = ScaffoldMessenger.of(
+                                    context,
+                                  );
+
+                                  try {
+                                    await ApiService.rejectWorkspaceInviteById(
+                                      invitationId,
+                                    );
+
+                                    if (!mounted) return;
+
+                                    dialogNavigator.pop();
+
+                                    messenger.showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Workspace invitation rejected',
+                                        ),
+                                      ),
+                                    );
+                                  } catch (e) {
+                                    if (!mounted) return;
+
+                                    messenger.showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          e.toString().replaceFirst(
+                                            'Exception: ',
+                                            '',
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                },
+                                child: const Text('REJECT'),
+                              ),
                               ElevatedButton(
                                 onPressed: () async {
                                   final navigator = Navigator.of(context);
