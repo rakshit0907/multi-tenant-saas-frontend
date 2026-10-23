@@ -11,6 +11,7 @@ import 'pages/reset_password_page.dart';
 import 'dart:async';
 import 'package:app_links/app_links.dart';
 import 'pages/workspace_invite_page.dart';
+import 'theme/app_theme.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() {
@@ -95,6 +96,7 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
+      theme: AppTheme.light,
 
       // 🚀 Splash is entry point
       home: const SplashPage(),
