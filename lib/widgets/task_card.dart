@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/task.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
 
 class TaskCard extends StatelessWidget {
   final Task task;
@@ -16,13 +18,13 @@ class TaskCard extends StatelessWidget {
   Color getPriorityColor(String? priority) {
     switch (priority) {
       case 'HIGH':
-        return Colors.red;
+        return AppColors.primary;
       case 'MEDIUM':
-        return Colors.orange;
+        return AppColors.accent;
       case 'LOW':
-        return Colors.green;
+        return AppColors.secondary;
       default:
-        return Colors.grey;
+        return AppColors.border;
     }
   }
 
@@ -31,25 +33,36 @@ class TaskCard extends StatelessWidget {
       final cleaned = hex.replaceFirst('#', '');
 
       if (cleaned.length != 6) {
-        return Colors.grey;
+        return AppColors.textSecondary;
       }
 
       return Color(int.parse('FF$cleaned', radix: 16));
     } catch (_) {
-      return Colors.grey;
+      return AppColors.textSecondary;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      color: AppColors.surface,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        side: const BorderSide(color: AppColors.border),
+      ),
+      margin: EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.xs,
+      ),
       child: ListTile(
         leading: Icon(
           task.status == 'COMPLETED'
               ? Icons.check_circle
               : Icons.circle_outlined,
-          color: task.status == 'COMPLETED' ? Colors.green : Colors.grey,
+          color: task.status == 'COMPLETED'
+              ? AppColors.success
+              : AppColors.textSecondary,
         ),
 
         title: Row(
@@ -58,7 +71,9 @@ class TaskCard extends StatelessWidget {
               child: Text(
                 task.title,
                 overflow: TextOverflow.ellipsis,
+
                 style: TextStyle(
+                  color: AppColors.textPrimary,
                   fontWeight: FontWeight.w600,
                   decoration: task.status == 'COMPLETED'
                       ? TextDecoration.lineThrough
@@ -92,36 +107,41 @@ class TaskCard extends StatelessWidget {
             if (task.description != null && task.description!.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 6),
-                child: Text(task.description!),
-              ),
-
-            if (task.dueDate != null)
-              if (task.labels.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Wrap(
-                    spacing: 6,
-                    runSpacing: 4,
-                    children: task.labels.map((label) {
-                      final color = getLabelColor(label.color);
-
-                      return Chip(
-                        label: Text(
-                          label.name,
-                          style: TextStyle(
-                            color: color,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        backgroundColor: color.withValues(alpha: 0.12),
-                        side: BorderSide(color: color.withValues(alpha: 0.4)),
-                        visualDensity: VisualDensity.compact,
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      );
-                    }).toList(),
+                child: Text(
+                  task.description!,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 14,
                   ),
                 ),
+              ),
+
+            if (task.labels.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: task.labels.map((label) {
+                    final color = getLabelColor(label.color);
+
+                    return Chip(
+                      label: Text(
+                        label.name,
+                        style: TextStyle(
+                          color: color,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      backgroundColor: AppColors.surface,
+                      side: BorderSide(color: color.withValues(alpha: 0.4)),
+                      visualDensity: VisualDensity.compact,
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    );
+                  }).toList(),
+                ),
+              ),
             Padding(
               padding: const EdgeInsets.only(top: 6),
               child: Row(
@@ -130,6 +150,10 @@ class TaskCard extends StatelessWidget {
                   const SizedBox(width: 6),
                   Text(
                     "${task.dueDate!.day}/${task.dueDate!.month}/${task.dueDate!.year}",
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
                   ),
                 ],
               ),
