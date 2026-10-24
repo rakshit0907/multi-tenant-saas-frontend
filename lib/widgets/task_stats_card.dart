@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+
 import '../models/task_stats.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
 
 class TaskStatsCard extends StatelessWidget {
   final TaskStats stats;
@@ -9,23 +12,32 @@ class TaskStatsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.all(12),
-      elevation: 2,
+      margin: const EdgeInsets.all(AppSpacing.md),
+      color: AppColors.surface,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        side: const BorderSide(color: AppColors.border),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _StatItem(label: "Total", value: stats.total, color: Colors.blue),
             _StatItem(
-              label: "Completed",
-              value: stats.completed,
-              color: Colors.green,
+              label: 'Total',
+              value: stats.total,
+              color: AppColors.accessiblePrimary,
             ),
             _StatItem(
-              label: "Pending",
+              label: 'Completed',
+              value: stats.completed,
+              color: AppColors.accessibleSecondary,
+            ),
+            _StatItem(
+              label: 'Pending',
               value: stats.pending,
-              color: Colors.orange,
+              color: AppColors.accent,
             ),
           ],
         ),
@@ -48,17 +60,23 @@ class _StatItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           value.toString(),
-          style: TextStyle(
-            fontSize: 26,
-            fontWeight: FontWeight.bold,
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+            fontWeight: FontWeight.w700,
             color: color,
           ),
         ),
-        const SizedBox(height: 6),
-        Text(label, style: const TextStyle(fontSize: 15)),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          label,
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+          textAlign: TextAlign.center,
+        ),
       ],
     );
   }
