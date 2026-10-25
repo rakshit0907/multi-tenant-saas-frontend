@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+
 import '../models/task_label.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
 
 enum TaskPriority { LOW, MEDIUM, HIGH }
 
@@ -175,28 +178,98 @@ class _TaskDialogState extends State<TaskDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(widget.title),
+      backgroundColor: AppColors.surface,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        side: const BorderSide(color: AppColors.border),
+      ),
+      title: Text(
+        widget.title,
+        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+          color: AppColors.textPrimary,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      contentPadding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.sm,
+        AppSpacing.md,
+        AppSpacing.md,
+      ),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            const SizedBox(height: AppSpacing.xs),
             TextField(
               controller: titleController,
-              decoration: const InputDecoration(labelText: "Title"),
+              decoration: InputDecoration(
+                labelText: 'Title',
+                labelStyle: const TextStyle(color: AppColors.textSecondary),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  borderSide: const BorderSide(color: AppColors.border),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  borderSide: const BorderSide(color: AppColors.border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  borderSide: const BorderSide(
+                    color: AppColors.accessiblePrimary,
+                    width: 1.5,
+                  ),
+                ),
+              ),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: descriptionController,
               maxLines: 4,
-              decoration: const InputDecoration(labelText: "Description"),
+              decoration: InputDecoration(
+                labelText: 'Description',
+                alignLabelWithHint: true,
+                labelStyle: const TextStyle(color: AppColors.textSecondary),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  borderSide: const BorderSide(color: AppColors.border),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  borderSide: const BorderSide(color: AppColors.border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  borderSide: const BorderSide(
+                    color: AppColors.accessiblePrimary,
+                    width: 1.5,
+                  ),
+                ),
+              ),
             ),
             const SizedBox(height: 16),
 
             DropdownButtonFormField<String>(
               initialValue: selectedMilestoneId,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Milestone',
-                border: OutlineInputBorder(),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  borderSide: const BorderSide(color: AppColors.border),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  borderSide: const BorderSide(color: AppColors.border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  borderSide: const BorderSide(
+                    color: AppColors.accessiblePrimary,
+                    width: 1.5,
+                  ),
+                ),
               ),
               items: [
                 const DropdownMenuItem<String>(
@@ -223,9 +296,23 @@ class _TaskDialogState extends State<TaskDialog> {
 
             DropdownButtonFormField<TaskPriority>(
               initialValue: selectedPriority,
-              decoration: const InputDecoration(
-                labelText: "Priority",
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: 'Priority',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  borderSide: BorderSide(color: AppColors.border),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  borderSide: BorderSide(color: AppColors.border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  borderSide: BorderSide(
+                    color: AppColors.accessiblePrimary,
+                    width: 1.5,
+                  ),
+                ),
               ),
               items: TaskPriority.values.map((priority) {
                 return DropdownMenuItem(
@@ -244,8 +331,8 @@ class _TaskDialogState extends State<TaskDialog> {
 
             DropdownButtonFormField<TaskStatus>(
               initialValue: selectedStatus,
-              decoration: const InputDecoration(
-                labelText: "Status",
+              decoration: InputDecoration(
+                labelText: 'Status',
                 border: OutlineInputBorder(),
               ),
               items: TaskStatus.values.map((status) {
@@ -265,7 +352,7 @@ class _TaskDialogState extends State<TaskDialog> {
 
             DropdownButtonFormField<String>(
               initialValue: selectedAssigneeId,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Assign To',
                 border: OutlineInputBorder(),
               ),
@@ -278,32 +365,53 @@ class _TaskDialogState extends State<TaskDialog> {
             ),
 
             const SizedBox(height: 16),
-
-            const SizedBox(height: 16),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.calendar_today),
-              title: Text(
-                dueDate == null
-                    ? "Select Due Date"
-                    : "${dueDate!.day}/${dueDate!.month}/${dueDate!.year}",
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.background,
+                border: Border.all(color: AppColors.border),
+                borderRadius: BorderRadius.circular(AppRadius.md),
               ),
-              trailing: IconButton(
-                icon: const Icon(Icons.edit_calendar),
-                onPressed: pickDate,
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.calendar_today),
+                title: Text(
+                  dueDate == null
+                      ? "Select Due Date"
+                      : "${dueDate!.day}/${dueDate!.month}/${dueDate!.year}",
+                ),
+                trailing: IconButton(
+                  icon: const Icon(Icons.edit_calendar),
+                  onPressed: pickDate,
+                ),
+                onTap: pickDate,
               ),
             ),
           ],
         ),
       ),
+
       actions: [
         TextButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          child: const Text("Cancel"),
+          onPressed: () => Navigator.pop(context),
+          style: TextButton.styleFrom(
+            foregroundColor: AppColors.textSecondary,
+            minimumSize: const Size(48, 48),
+          ),
+          child: const Text('Cancel'),
         ),
         ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.accessiblePrimary,
+            foregroundColor: AppColors.surface,
+            minimumSize: const Size(48, 48),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.md),
+            ),
+          ),
           onPressed: () {
             widget.onSave(
               titleController.text.trim(),

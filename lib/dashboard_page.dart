@@ -10,6 +10,8 @@ import 'models/workspace.dart';
 import 'pages/workspace_members_page.dart';
 import 'pages/workspace_settings_page.dart';
 import 'pages/calendar_page.dart';
+import 'theme/app_colors.dart';
+import 'theme/app_spacing.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -794,22 +796,42 @@ class _DashboardPageState extends State<DashboardPage> {
     return SizedBox(
       width: 160,
       child: Card(
+        color: AppColors.surface,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          side: const BorderSide(color: AppColors.border),
+        ),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.md),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon),
-              const SizedBox(height: 12),
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                ),
+                alignment: Alignment.center,
+                child: Icon(icon, color: AppColors.accessiblePrimary, size: 22),
+              ),
+              const SizedBox(height: AppSpacing.md),
               Text(
                 value,
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(title),
+              const SizedBox(height: AppSpacing.xxs),
+              Text(
+                title,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
             ],
           ),
         ),
@@ -994,15 +1016,56 @@ class _DashboardPageState extends State<DashboardPage> {
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 20),
+                const SizedBox(height: AppSpacing.lg),
+
+                // Dashboard heading
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Your overview',
+                        style: Theme.of(context).textTheme.headlineLarge,
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        "A clear view of your team's progress.",
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: AppSpacing.lg),
 
                 if (activeWorkspace != null)
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text('${activeWorkspace!.name} • $workspaceRole'),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.business_outlined,
+                          size: 18,
+                          color: AppColors.textSecondary,
+                        ),
+                        const SizedBox(width: AppSpacing.xs),
+                        Expanded(
+                          child: Text(
+                            '${activeWorkspace!.name} • $workspaceRole',
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: AppColors.textSecondary),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
 
