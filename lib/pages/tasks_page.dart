@@ -8,6 +8,8 @@ import '../services/api_service.dart';
 import '../widgets/task_card.dart';
 import '../widgets/task_dialog.dart';
 import '../widgets/task_stats_card.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
 
 class TasksPage extends StatefulWidget {
   final String projectId;
@@ -550,10 +552,36 @@ class _TasksPageState extends State<TasksPage> {
                   padding: const EdgeInsets.all(12),
                   child: TextField(
                     controller: searchController,
-                    decoration: const InputDecoration(
-                      hintText: "Search by title or description..",
-                      prefixIcon: Icon(Icons.search),
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      hintText: 'Search by title or description...',
+                      hintStyle: const TextStyle(
+                        color: AppColors.textSecondary,
+                      ),
+                      prefixIcon: const Icon(
+                        Icons.search,
+                        color: AppColors.textSecondary,
+                      ),
+                      filled: true,
+                      fillColor: AppColors.surface,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: AppSpacing.md,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                        borderSide: const BorderSide(color: AppColors.border),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                        borderSide: const BorderSide(color: AppColors.border),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                        borderSide: const BorderSide(
+                          color: AppColors.accessiblePrimary,
+                          width: 1.5,
+                        ),
+                      ),
                     ),
                     onChanged: (value) {
                       searchQuery = value;
@@ -582,8 +610,29 @@ class _TasksPageState extends State<TasksPage> {
                         return Padding(
                           padding: const EdgeInsets.only(right: 8),
                           child: ChoiceChip(
-                            label: Text(filter),
+                            label: Text(
+                              filter,
+                              style: TextStyle(
+                                color: selectedFilter == filter
+                                    ? AppColors.surface
+                                    : AppColors.textPrimary,
+                                fontWeight: selectedFilter == filter
+                                    ? FontWeight.w600
+                                    : FontWeight.w500,
+                              ),
+                            ),
                             selected: selectedFilter == filter,
+                            selectedColor: AppColors.accessiblePrimary,
+                            backgroundColor: AppColors.surface,
+                            side: BorderSide(
+                              color: selectedFilter == filter
+                                  ? AppColors.accessiblePrimary
+                                  : AppColors.border,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(AppRadius.md),
+                            ),
+                            showCheckmark: false,
                             onSelected: (_) {
                               setState(() {
                                 selectedFilter = filter;
@@ -606,10 +655,33 @@ class _TasksPageState extends State<TasksPage> {
                     ),
                     child: DropdownButtonFormField<String?>(
                       initialValue: selectedLabelId,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Label',
-                        border: OutlineInputBorder(),
+                        labelStyle: const TextStyle(
+                          color: AppColors.textSecondary,
+                        ),
+                        filled: true,
+                        fillColor: AppColors.surface,
                         isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                          vertical: AppSpacing.md,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                          borderSide: const BorderSide(color: AppColors.border),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                          borderSide: const BorderSide(color: AppColors.border),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                          borderSide: const BorderSide(
+                            color: AppColors.accessiblePrimary,
+                            width: 1.5,
+                          ),
+                        ),
                       ),
                       items: [
                         const DropdownMenuItem<String?>(
@@ -641,8 +713,12 @@ class _TasksPageState extends State<TasksPage> {
                   child: Row(
                     children: [
                       const Text(
-                        'Sort:',
-                        style: TextStyle(fontWeight: FontWeight.w600),
+                        'Sort',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
 
                       const SizedBox(width: 12),
@@ -650,9 +726,33 @@ class _TasksPageState extends State<TasksPage> {
                       Expanded(
                         child: DropdownButtonFormField<String>(
                           initialValue: sortBy,
-                          decoration: const InputDecoration(
-                            border: OutlineInputBorder(),
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: AppColors.surface,
                             isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.md,
+                              vertical: AppSpacing.md,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(AppRadius.md),
+                              borderSide: const BorderSide(
+                                color: AppColors.border,
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(AppRadius.md),
+                              borderSide: const BorderSide(
+                                color: AppColors.border,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(AppRadius.md),
+                              borderSide: const BorderSide(
+                                color: AppColors.accessiblePrimary,
+                                width: 1.5,
+                              ),
+                            ),
                           ),
                           items: const [
                             DropdownMenuItem(
@@ -690,6 +790,15 @@ class _TasksPageState extends State<TasksPage> {
                         tooltip: sortOrder == 'ASC'
                             ? 'Ascending'
                             : 'Descending',
+                        style: IconButton.styleFrom(
+                          foregroundColor: AppColors.accessiblePrimary,
+                          backgroundColor: AppColors.surface,
+                          minimumSize: const Size(48, 48),
+                          side: const BorderSide(color: AppColors.border),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppRadius.md),
+                          ),
+                        ),
                         onPressed: () {
                           setState(() {
                             sortOrder = sortOrder == 'ASC' ? 'DESC' : 'ASC';
@@ -710,16 +819,52 @@ class _TasksPageState extends State<TasksPage> {
                 Expanded(
                   child: tasks.isEmpty
                       ? Center(
-                          child: Text(
-                            searchQuery.isNotEmpty ||
-                                    selectedFilter != "All" ||
-                                    selectedLabelId != null
-                                ? "No matching tasks"
-                                : "No tasks yet",
-                            style: const TextStyle(fontSize: 18),
+                          child: Padding(
+                            padding: const EdgeInsets.all(AppSpacing.xl),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.task_alt_outlined,
+                                  size: 48,
+                                  color: AppColors.secondary,
+                                ),
+                                const SizedBox(height: AppSpacing.md),
+                                Text(
+                                  searchQuery.isNotEmpty ||
+                                          selectedFilter != "All" ||
+                                          selectedLabelId != null
+                                      ? "No matching tasks"
+                                      : "No tasks yet",
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    color: AppColors.textPrimary,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.xs),
+                                Text(
+                                  searchQuery.isNotEmpty ||
+                                          selectedFilter != "All" ||
+                                          selectedLabelId != null
+                                      ? "Try changing your search or filters."
+                                      : "Your tasks will appear here.",
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         )
                       : ListView.builder(
+                          padding: const EdgeInsets.only(
+                            top: AppSpacing.xs,
+                            bottom: AppSpacing.xl,
+                          ),
                           itemCount: tasks.length,
                           itemBuilder: (context, index) {
                             final task = tasks[index];
