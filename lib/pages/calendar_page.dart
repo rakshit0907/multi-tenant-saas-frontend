@@ -145,25 +145,25 @@ class _CalendarPageState extends State<CalendarPage> {
     }
   }
 
-  Color _markerColorForTask(dynamic task) {
-    final status = task['status']?.toString();
-    final priority = task['priority']?.toString();
+ Color _markerColorForTask(dynamic task) {
+  final status = task['status']?.toString();
+  final priority = task['priority']?.toString();
 
-    if (status == 'COMPLETED') {
-      return Colors.green;
-    }
-
-    switch (priority) {
-      case 'HIGH':
-        return Colors.red;
-      case 'MEDIUM':
-        return Colors.orange;
-      case 'LOW':
-        return Colors.blue;
-      default:
-        return Colors.grey;
-    }
+  if (status == 'COMPLETED') {
+    return AppColors.accessibleSecondary;
   }
+
+  switch (priority) {
+    case 'HIGH':
+      return AppColors.accessiblePrimary;
+    case 'MEDIUM':
+      return AppColors.accent;
+    case 'LOW':
+      return AppColors.accessibleSecondary;
+    default:
+      return AppColors.border;
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -374,21 +374,81 @@ class _CalendarPageState extends State<CalendarPage> {
           const Divider(height: 1),
           Expanded(
             child: _loading
-                ? const Center(child: CircularProgressIndicator())
+                ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const SizedBox(
+                          width: 28,
+                          height: 28,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        Text(
+                          'Loading your schedule...',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: AppColors.textSecondary),
+                        ),
+                      ],
+                    ),
+                  )
                 : _errorMessage != null
                 ? Center(
                     child: Padding(
-                      padding: const EdgeInsets.all(24),
+                      padding: const EdgeInsets.all(AppSpacing.xl),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.error_outline, size: 40),
-                          const SizedBox(height: 12),
-                          Text(_errorMessage!, textAlign: TextAlign.center),
-                          const SizedBox(height: 12),
-                          ElevatedButton(
+                          Container(
+                            width: 64,
+                            height: 64,
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              borderRadius: BorderRadius.circular(AppRadius.lg),
+                              border: const Border.fromBorderSide(
+                                BorderSide(color: AppColors.border),
+                              ),
+                            ),
+                            child: const Icon(
+                              Icons.cloud_off_outlined,
+                              size: 30,
+                              color: AppColors.accessibleSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          Text(
+                            'Unable to load calendar',
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  color: AppColors.textPrimary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                          ),
+                          const SizedBox(height: AppSpacing.xs),
+                          Text(
+                            _errorMessage!,
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: AppColors.textSecondary),
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          OutlinedButton(
                             onPressed: _loadMonth,
-                            child: const Text('Retry'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.accessiblePrimary,
+                              side: const BorderSide(color: AppColors.border),
+                              minimumSize: const Size(120, 48),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                  AppRadius.md,
+                                ),
+                              ),
+                            ),
+                            child: const Text('Try again'),
                           ),
                         ],
                       ),
