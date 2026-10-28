@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../services/api_service.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
 
 class MilestonesPage extends StatefulWidget {
   final String projectId;
@@ -317,51 +319,138 @@ class _MilestonesPageState extends State<MilestonesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('${widget.projectName} Milestones')),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        surfaceTintColor: Colors.transparent,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Milestones',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            Text(
+              widget.projectName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+            ),
+          ],
+        ),
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showMilestoneDialog(),
-        icon: const Icon(Icons.add),
+        backgroundColor: AppColors.accessiblePrimary,
+        foregroundColor: AppColors.surface,
+        elevation: 1,
+        icon: const Icon(Icons.add_rounded),
         label: const Text('Milestone'),
       ),
       body: RefreshIndicator(
         onRefresh: loadMilestones,
         child: loading
-            ? const Center(child: CircularProgressIndicator())
+            ? const Center(
+                child: CircularProgressIndicator(
+                  color: AppColors.accessiblePrimary,
+                ),
+              )
             : error != null
             ? ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(AppSpacing.xl),
                 children: [
-                  const SizedBox(height: 100),
-                  const Icon(Icons.error_outline, size: 48),
-                  const SizedBox(height: 16),
-                  Text(error!, textAlign: TextAlign.center),
+                  const SizedBox(height: AppSpacing.xxl),
+                  const Icon(
+                    Icons.error_outline_rounded,
+                    size: 48,
+                    color: AppColors.error,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Text(
+                    'Couldn’t load milestones',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    error!,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Center(
+                    child: OutlinedButton.icon(
+                      onPressed: loadMilestones,
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: const Text('Try again'),
+                    ),
+                  ),
                 ],
               )
             : milestones.isEmpty
             ? ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(24),
-                children: const [
-                  SizedBox(height: 100),
-                  Icon(Icons.flag_outlined, size: 64),
-                  SizedBox(height: 16),
+                padding: const EdgeInsets.all(AppSpacing.xl),
+                children: [
+                  const SizedBox(height: AppSpacing.xxl),
+                  Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(AppSpacing.lg),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(AppRadius.lg),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: const Icon(
+                        Icons.flag_outlined,
+                        size: 36,
+                        color: AppColors.secondary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
                   Text(
                     'No milestones yet',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.xs),
                   Text(
-                    'Create a milestone to track important project goals.',
+                    'Break this project into milestones to track important goals.',
                     textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  Center(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _showMilestoneDialog(),
+                      icon: const Icon(Icons.add_rounded),
+                      label: const Text('Create milestone'),
+                    ),
                   ),
                 ],
               )
             : ListView.separated(
                 padding: const EdgeInsets.all(16),
                 itemCount: milestones.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 10),
+                separatorBuilder: (_, _) =>
+                    const SizedBox(height: AppSpacing.md),
                 itemBuilder: (context, index) {
                   final milestone = Map<String, dynamic>.from(
                     milestones[index],
@@ -386,28 +475,48 @@ class _MilestonesPageState extends State<MilestonesPage> {
                   final progressValue = (progress.clamp(0, 100)) / 100.0;
 
                   return Card(
+                    margin: EdgeInsets.zero,
+                    color: AppColors.surface,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.lg),
+                      side: const BorderSide(color: AppColors.border),
+                    ),
                     child: Padding(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(AppSpacing.lg),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             children: [
                               Icon(
-                                completed ? Icons.flag : Icons.flag_outlined,
+                                completed
+                                    ? Icons.flag_rounded
+                                    : Icons.flag_outlined,
+                                color: completed
+                                    ? AppColors.secondary
+                                    : AppColors.accessiblePrimary,
+                                size: 22,
                               ),
                               const SizedBox(width: 10),
                               Expanded(
                                 child: Text(
                                   milestone['name']?.toString() ??
                                       'Unnamed milestone',
-                                  style: const TextStyle(
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                  style: Theme.of(context).textTheme.titleMedium
+                                      ?.copyWith(
+                                        color: AppColors.textPrimary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                 ),
                               ),
                               PopupMenuButton<String>(
+                                icon: const Icon(Icons.more_horiz_rounded),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    AppRadius.md,
+                                  ),
+                                ),
                                 onSelected: (value) {
                                   if (value == 'edit') {
                                     _showMilestoneDialog(milestone: milestone);
@@ -441,23 +550,38 @@ class _MilestonesPageState extends State<MilestonesPage> {
                                   .trim()
                                   .isNotEmpty ==
                               true) ...[
-                            const SizedBox(height: 10),
-                            Text(milestone['description'].toString()),
+                            const SizedBox(height: AppSpacing.sm),
+                            Text(
+                              milestone['description'].toString(),
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(
+                                    color: AppColors.textSecondary,
+                                    height: 1.4,
+                                  ),
+                            ),
                           ],
 
                           const SizedBox(height: 16),
 
                           Row(
                             children: [
-                              Text(
-                                '$completedTaskCount of $taskCount tasks completed',
-                                style: Theme.of(context).textTheme.bodySmall,
+                              Expanded(
+                                child: Text(
+                                  '$completedTaskCount of $taskCount tasks completed',
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: AppColors.textSecondary,
+                                      ),
+                                ),
                               ),
-                              const Spacer(),
+                              const SizedBox(width: AppSpacing.sm),
                               Text(
                                 '$progress%',
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(fontWeight: FontWeight.w600),
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(
+                                      color: AppColors.textPrimary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                               ),
                             ],
                           ),
@@ -466,8 +590,14 @@ class _MilestonesPageState extends State<MilestonesPage> {
 
                           LinearProgressIndicator(
                             value: progressValue,
-                            minHeight: 7,
-                            borderRadius: BorderRadius.circular(8),
+                            minHeight: 6,
+                            backgroundColor: AppColors.border,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              completed
+                                  ? AppColors.secondary
+                                  : AppColors.accessiblePrimary,
+                            ),
+                            borderRadius: BorderRadius.circular(AppRadius.sm),
                           ),
                           const SizedBox(height: 14),
                           Row(
@@ -475,12 +605,56 @@ class _MilestonesPageState extends State<MilestonesPage> {
                               const Icon(
                                 Icons.calendar_today_outlined,
                                 size: 16,
+                                color: AppColors.textSecondary,
                               ),
-                              const SizedBox(width: 6),
-                              Text(_formatDate(milestone['targetDate'])),
-                              const Spacer(),
+                              const SizedBox(width: AppSpacing.xs),
+                              Expanded(
+                                child: Text(
+                                  _formatDate(milestone['targetDate']),
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: AppColors.textSecondary,
+                                      ),
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.sm),
                               Chip(
                                 label: Text(completed ? 'Completed' : 'Active'),
+                                avatar: Icon(
+                                  completed
+                                      ? Icons.check_circle_outline
+                                      : Icons.timelapse_rounded,
+                                  size: 16,
+                                  color: completed
+                                      ? AppColors.secondary
+                                      : AppColors.accessiblePrimary,
+                                ),
+                                backgroundColor: completed
+                                    ? AppColors.secondary.withValues(
+                                        alpha: 0.12,
+                                      )
+                                    : AppColors.accessiblePrimary.withValues(
+                                        alpha: 0.08,
+                                      ),
+                                side: BorderSide(
+                                  color: completed
+                                      ? AppColors.secondary.withValues(
+                                          alpha: 0.35,
+                                        )
+                                      : AppColors.accessiblePrimary.withValues(
+                                          alpha: 0.25,
+                                        ),
+                                ),
+                                labelStyle: TextStyle(
+                                  color: completed
+                                      ? AppColors.secondary
+                                      : AppColors.accessiblePrimary,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 12,
+                                ),
+                                visualDensity: VisualDensity.compact,
+                                materialTapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
                               ),
                             ],
                           ),
