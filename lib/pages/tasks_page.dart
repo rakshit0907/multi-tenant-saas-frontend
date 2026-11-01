@@ -44,6 +44,10 @@ class _TasksPageState extends State<TasksPage> {
   String sortOrder = 'ASC';
 
   Timer? _searchDebounce;
+  int _taskRequestId = 0;
+  bool _isRefreshingTasks = false;
+  String? _taskError;
+  bool _hasLoadedTasks = false;
 
   final List<String> filters = [
     "All",
@@ -469,35 +473,39 @@ class _TasksPageState extends State<TasksPage> {
   }
 
   Future<void> loadTasks() async {
-    try {
-      String? status;
-      String? priority;
+    final requestId = ++_taskRequestId;
 
-      switch (selectedFilter) {
-        case 'Pending':
-          status = 'PENDING';
-          break;
+    if (!mounted) return;
 
-        case 'Completed':
-          status = 'COMPLETED';
-          break;
+    setState(() {
+      _isRefreshingTasks = true;
+      _taskError = null;
+    });
 
-        case 'High':
-          priority = 'HIGH';
-          break;
+    String? status;
+    String? priority;
 
-        case 'Medium':
-          priority = 'MEDIUM';
-          break;
+    switch (selectedFilter) {
+      case 'Pending':
+        status = 'PENDING';
+        break;
+      case 'Completed':
+        status = 'COMPLETED';
+        break;
+      case 'High':
+        priority = 'HIGH';
+        break;
+      case 'Medium':
+        priority = 'MEDIUM';
+        break;
+      case 'Low':
+        priority = 'LOW';
+        break;
+    }
 
-        case 'Low':
-          priority = 'LOW';
-          break;
-      }
-
-      final results = await Future.wait([
-        ApiService.getTaskStats(widget.projectId),
-        ApiService.getTasks(
+    Future<void> loadTaskList() async {
+      try {
+        final tasksData = await ApiService.getTasks(
           widget.projectId,
           search: searchQuery,
           status: status,
@@ -505,23 +513,50 @@ class _TasksPageState extends State<TasksPage> {
           labelId: selectedLabelId,
           sortBy: sortBy,
           sortOrder: sortOrder,
-        ),
-      ]);
+        );
 
-      final statsData = results[0] as Map<String, dynamic>;
-      final tasksData = results[1] as List<dynamic>;
+        final loadedTasks = tasksData
+            .map<Task>((e) => Task.fromJson(e))
+            .toList();
 
-      final loadedTasks = tasksData.map<Task>((e) => Task.fromJson(e)).toList();
+        if (!mounted || requestId != _taskRequestId) return;
 
-      if (!mounted) return;
+        setState(() {
+          tasks = loadedTasks;
+          _hasLoadedTasks = true;
+          _taskError = null;
+          _isRefreshingTasks = false;
+        });
+      } catch (e) {
+        if (!mounted || requestId != _taskRequestId) return;
 
-      setState(() {
-        stats = TaskStats.fromJson(statsData);
-        tasks = loadedTasks;
-      });
-    } catch (e) {
-      debugPrint('LOAD TASKS ERROR: $e');
+        debugPrint('LOAD TASKS ERROR: $e');
+
+        setState(() {
+          _hasLoadedTasks = true;
+          _taskError = 'Unable to load tasks. Please try again.';
+          _isRefreshingTasks = false;
+        });
+      }
     }
+
+    Future<void> loadTaskStats() async {
+      try {
+        final statsData = await ApiService.getTaskStats(widget.projectId);
+
+        if (!mounted || requestId != _taskRequestId) return;
+
+        setState(() {
+          stats = TaskStats.fromJson(statsData);
+        });
+      } catch (e) {
+        if (!mounted || requestId != _taskRequestId) return;
+
+        debugPrint('LOAD TASK STATS ERROR: $e');
+      }
+    }
+
+    await Future.wait([loadTaskList(), loadTaskStats()]);
   }
 
   @override
@@ -586,6 +621,9 @@ class _TasksPageState extends State<TasksPage> {
                     onChanged: (value) {
                       searchQuery = value;
 
+                      // Invalidate requests using the previous search query.
+                      _taskRequestId++;
+
                       _searchDebounce?.cancel();
 
                       _searchDebounce = Timer(
@@ -638,6 +676,7 @@ class _TasksPageState extends State<TasksPage> {
                                 selectedFilter = filter;
                               });
 
+                              _searchDebounce?.cancel();
                               loadTasks();
                             },
                           ),
@@ -700,6 +739,7 @@ class _TasksPageState extends State<TasksPage> {
                           selectedLabelId = value;
                         });
 
+                        _searchDebounce?.cancel();
                         loadTasks();
                       },
                     ),
@@ -779,6 +819,7 @@ class _TasksPageState extends State<TasksPage> {
                               sortBy = value;
                             });
 
+                            _searchDebounce?.cancel();
                             loadTasks();
                           },
                         ),
@@ -804,6 +845,7 @@ class _TasksPageState extends State<TasksPage> {
                             sortOrder = sortOrder == 'ASC' ? 'DESC' : 'ASC';
                           });
 
+                          _searchDebounce?.cancel();
                           loadTasks();
                         },
                         icon: Icon(
@@ -815,9 +857,83 @@ class _TasksPageState extends State<TasksPage> {
                     ],
                   ),
                 ),
+                if (_isRefreshingTasks)
+                  const LinearProgressIndicator(
+                    minHeight: 2,
+                    backgroundColor: AppColors.border,
+                    color: AppColors.accessiblePrimary,
+                  ),
+
+                if (_taskError != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.sm,
+                    ),
+                    child: Material(
+                      color: AppColors.error.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.error_outline,
+                              color: AppColors.error,
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: Text(
+                                _taskError!,
+                                style: const TextStyle(color: AppColors.error),
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: loadTasks,
+                              child: const Text('Retry'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
                 if (stats != null) TaskStatsCard(stats: stats!),
+
                 Expanded(
-                  child: tasks.isEmpty
+                  child: !_hasLoadedTasks
+                      ? const Center(child: CircularProgressIndicator())
+                      : tasks.isEmpty && _taskError != null
+                      ? Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(AppSpacing.xl),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.error_outline,
+                                  color: AppColors.error,
+                                  size: 32,
+                                ),
+                                const SizedBox(height: AppSpacing.sm),
+                                const Text(
+                                  'Tasks could not be loaded.',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: AppColors.textPrimary,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.sm),
+                                TextButton(
+                                  onPressed: loadTasks,
+                                  child: const Text('Try again'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      : tasks.isEmpty
                       ? Center(
                           child: Padding(
                             padding: const EdgeInsets.all(AppSpacing.xl),

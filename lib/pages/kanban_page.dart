@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/task.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
 import '../services/api_service.dart';
 import '../widgets/task_dialog.dart';
 import 'task_details_page.dart';
@@ -262,40 +264,64 @@ class _KanbanPageState extends State<KanbanPage> {
       length: 3,
       initialIndex: initialTab,
       child: Scaffold(
+        backgroundColor: AppColors.background,
         appBar: AppBar(
+          backgroundColor: AppColors.background,
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+          scrolledUnderElevation: 0,
           title: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(widget.projectName),
               Text(
-                "${tasks.length} Tasks",
-                style: const TextStyle(fontSize: 12),
+                widget.projectName,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Text(
+                '${tasks.length} ${tasks.length == 1 ? 'task' : 'tasks'}',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
               ),
             ],
           ),
           bottom: TabBar(
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
+            labelColor: AppColors.accessiblePrimary,
+            unselectedLabelColor: AppColors.textSecondary,
+            indicatorColor: AppColors.accessiblePrimary,
+            indicatorSize: TabBarIndicatorSize.label,
+            indicatorWeight: 3,
+            dividerColor: AppColors.border,
+            labelStyle: const TextStyle(fontWeight: FontWeight.w600),
+            unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
             tabs: [
-              Tab(text: "Pending (${pendingTasks.length})"),
-              Tab(text: "In Progress (${inProgressTasks.length})"),
-              Tab(text: "Completed (${completedTasks.length})"),
+              Tab(text: 'Pending (${pendingTasks.length})'),
+              Tab(text: 'In Progress (${inProgressTasks.length})'),
+              Tab(text: 'Completed (${completedTasks.length})'),
             ],
           ),
           actions: [
             IconButton(
               tooltip: 'Manage labels',
-              icon: const Icon(Icons.label_outline),
+              icon: const Icon(Icons.label_outline_rounded),
+              color: AppColors.accessibleSecondary,
               onPressed: showManageLabelsDialog,
             ),
-
             IconButton(
               tooltip: 'Create task',
-              icon: const Icon(Icons.add),
+              icon: const Icon(Icons.add_rounded),
+              color: AppColors.accessiblePrimary,
               onPressed: () {
                 showDialog(
                   context: context,
                   builder: (_) => TaskDialog(
-                    title: "Create Task",
-                    buttonText: "Create",
+                    title: 'Create Task',
+                    buttonText: 'Create',
                     members: members,
                     milestones: milestones,
                     onSave:
@@ -327,29 +353,67 @@ class _KanbanPageState extends State<KanbanPage> {
                 );
               },
             ),
+            const SizedBox(width: AppSpacing.xs),
           ],
         ),
         body: loading
-            ? const Center(child: CircularProgressIndicator())
+            ? const Center(
+                child: CircularProgressIndicator(
+                  color: AppColors.accessiblePrimary,
+                ),
+              )
             : Column(
                 children: [
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.md,
+                      AppSpacing.md,
+                      AppSpacing.md,
+                      AppSpacing.sm,
+                    ),
                     child: TextField(
                       controller: searchController,
                       decoration: InputDecoration(
                         hintText: 'Search tasks...',
-                        prefixIcon: const Icon(Icons.search),
+                        hintStyle: const TextStyle(
+                          color: AppColors.textSecondary,
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.search_rounded,
+                          color: AppColors.accessibleSecondary,
+                        ),
                         suffixIcon: searchController.text.isNotEmpty
                             ? IconButton(
-                                icon: const Icon(Icons.clear),
+                                tooltip: 'Clear search',
+                                icon: const Icon(Icons.close_rounded),
                                 onPressed: () async {
                                   searchController.clear();
+                                  setState(() {});
                                   await loadTasks();
                                 },
                               )
                             : null,
-                        border: const OutlineInputBorder(),
+                        filled: true,
+                        fillColor: AppColors.surface,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                          vertical: AppSpacing.md,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                          borderSide: const BorderSide(color: AppColors.border),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                          borderSide: const BorderSide(color: AppColors.border),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                          borderSide: const BorderSide(
+                            color: AppColors.accessiblePrimary,
+                            width: 1.5,
+                          ),
+                        ),
                       ),
                       onSubmitted: (_) async {
                         await loadTasks();
@@ -359,146 +423,205 @@ class _KanbanPageState extends State<KanbanPage> {
 
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Row(
-                      children: [
-                        DropdownButton<String?>(
-                          value: selectedPriority,
-                          hint: const Text('Priority'),
-                          items: const [
-                            DropdownMenuItem<String?>(
-                              value: null,
-                              child: Text('All priorities'),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.sm,
                             ),
-                            DropdownMenuItem<String?>(
-                              value: 'LOW',
-                              child: Text('Low'),
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              borderRadius: BorderRadius.circular(AppRadius.md),
+                              border: Border.all(color: AppColors.border),
                             ),
-                            DropdownMenuItem<String?>(
-                              value: 'MEDIUM',
-                              child: Text('Medium'),
-                            ),
-                            DropdownMenuItem<String?>(
-                              value: 'HIGH',
-                              child: Text('High'),
-                            ),
-                          ],
-                          onChanged: (value) async {
-                            setState(() {
-                              selectedPriority = value;
-                            });
-
-                            await loadTasks();
-                          },
-                        ),
-
-                        const SizedBox(width: 12),
-
-                        DropdownButton<String?>(
-                          value: selectedAssigneeId,
-                          hint: const Text('Assignee'),
-                          items: [
-                            const DropdownMenuItem<String?>(
-                              value: null,
-                              child: Text('All assignees'),
-                            ),
-                            ...members.map((member) {
-                              final user = member['user'];
-
-                              return DropdownMenuItem<String?>(
-                                value: user?['id']?.toString(),
-                                child: Text(
-                                  user?['name']?.toString() ?? 'Unknown',
+                            child: DropdownButton<String?>(
+                              value: selectedPriority,
+                              hint: const Text('Priority'),
+                              underline: const SizedBox.shrink(),
+                              borderRadius: BorderRadius.circular(AppRadius.md),
+                              items: const [
+                                DropdownMenuItem<String?>(
+                                  value: null,
+                                  child: Text('All priorities'),
                                 ),
-                              );
-                            }),
-                          ],
-                          onChanged: (value) async {
-                            setState(() {
-                              selectedAssigneeId = value;
-                            });
+                                DropdownMenuItem<String?>(
+                                  value: 'LOW',
+                                  child: Text('Low'),
+                                ),
+                                DropdownMenuItem<String?>(
+                                  value: 'MEDIUM',
+                                  child: Text('Medium'),
+                                ),
+                                DropdownMenuItem<String?>(
+                                  value: 'HIGH',
+                                  child: Text('High'),
+                                ),
+                              ],
+                              onChanged: (value) async {
+                                setState(() {
+                                  selectedPriority = value;
+                                });
 
-                            await loadTasks();
-                          },
-                        ),
-
-                        const SizedBox(width: 12),
-
-                        DropdownButton<String?>(
-                          value: selectedLabelId,
-                          hint: const Text('Label'),
-                          items: [
-                            const DropdownMenuItem<String?>(
-                              value: null,
-                              child: Text('All labels'),
+                                await loadTasks();
+                              },
                             ),
-                            ...labels.map((label) {
-                              return DropdownMenuItem<String?>(
-                                value: label.id,
-                                child: Text(label.name),
-                              );
-                            }),
-                          ],
-                          onChanged: (value) async {
-                            setState(() {
-                              selectedLabelId = value;
-                            });
-
-                            await loadTasks();
-                          },
-                        ),
-
-                        const SizedBox(width: 12),
-
-                        DropdownButton<String>(
-                          value: selectedSortBy,
-                          items: const [
-                            DropdownMenuItem(
-                              value: 'dueDate',
-                              child: Text('Due date'),
-                            ),
-                            DropdownMenuItem(
-                              value: 'title',
-                              child: Text('Title'),
-                            ),
-                            DropdownMenuItem(
-                              value: 'priority',
-                              child: Text('Priority'),
-                            ),
-                          ],
-                          onChanged: (value) async {
-                            if (value == null) return;
-
-                            setState(() {
-                              selectedSortBy = value;
-                            });
-
-                            await loadTasks();
-                          },
-                        ),
-
-                        const SizedBox(width: 8),
-
-                        IconButton(
-                          tooltip: selectedSortOrder == 'ASC'
-                              ? 'Ascending'
-                              : 'Descending',
-                          icon: Icon(
-                            selectedSortOrder == 'ASC'
-                                ? Icons.arrow_upward
-                                : Icons.arrow_downward,
                           ),
-                          onPressed: () async {
-                            setState(() {
-                              selectedSortOrder = selectedSortOrder == 'ASC'
-                                  ? 'DESC'
-                                  : 'ASC';
-                            });
 
-                            await loadTasks();
-                          },
-                        ),
-                      ],
+                          const SizedBox(width: 12),
+
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.sm,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              borderRadius: BorderRadius.circular(AppRadius.md),
+                              border: Border.all(color: AppColors.border),
+                            ),
+                            child: DropdownButton<String?>(
+                              value: selectedAssigneeId,
+                              hint: const Text('Assignee'),
+                              underline: const SizedBox.shrink(),
+                              borderRadius: BorderRadius.circular(AppRadius.md),
+                              items: [
+                                const DropdownMenuItem<String?>(
+                                  value: null,
+                                  child: Text('All assignees'),
+                                ),
+                                ...members.map((member) {
+                                  final user = member['user'];
+                                  return DropdownMenuItem<String?>(
+                                    value: user?['id']?.toString(),
+                                    child: Text(
+                                      user?['name']?.toString() ?? 'Unknown',
+                                    ),
+                                  );
+                                }),
+                              ],
+                              onChanged: (value) async {
+                                setState(() {
+                                  selectedAssigneeId = value;
+                                });
+                                await loadTasks();
+                              },
+                            ),
+                          ),
+
+                          const SizedBox(width: 12),
+
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.sm,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              borderRadius: BorderRadius.circular(AppRadius.md),
+                              border: Border.all(color: AppColors.border),
+                            ),
+                            child: DropdownButton<String?>(
+                              value: selectedLabelId,
+                              hint: const Text('Label'),
+                              underline: const SizedBox.shrink(),
+                              borderRadius: BorderRadius.circular(AppRadius.md),
+                              items: [
+                                const DropdownMenuItem<String?>(
+                                  value: null,
+                                  child: Text('All labels'),
+                                ),
+                                ...labels.map((label) {
+                                  return DropdownMenuItem<String?>(
+                                    value: label.id,
+                                    child: Text(label.name),
+                                  );
+                                }),
+                              ],
+                              onChanged: (value) async {
+                                setState(() {
+                                  selectedLabelId = value;
+                                });
+                                await loadTasks();
+                              },
+                            ),
+                          ),
+
+                          const SizedBox(width: 12),
+
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.sm,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              borderRadius: BorderRadius.circular(AppRadius.md),
+                              border: Border.all(color: AppColors.border),
+                            ),
+                            child: DropdownButton<String>(
+                              value: selectedSortBy,
+                              underline: const SizedBox.shrink(),
+                              borderRadius: BorderRadius.circular(AppRadius.md),
+                              items: const [
+                                DropdownMenuItem(
+                                  value: 'dueDate',
+                                  child: Text('Due date'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'title',
+                                  child: Text('Title'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'priority',
+                                  child: Text('Priority'),
+                                ),
+                              ],
+                              onChanged: (value) async {
+                                if (value == null) return;
+                                setState(() {
+                                  selectedSortBy = value;
+                                });
+                                await loadTasks();
+                              },
+                            ),
+                          ),
+
+                          const SizedBox(width: 8),
+
+                          Container(
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              borderRadius: BorderRadius.circular(AppRadius.md),
+                              border: Border.all(color: AppColors.border),
+                            ),
+                            child: IconButton(
+                              tooltip: selectedSortOrder == 'ASC'
+                                  ? 'Ascending'
+                                  : 'Descending',
+                              color: AppColors.accessiblePrimary,
+                              icon: Icon(
+                                selectedSortOrder == 'ASC'
+                                    ? Icons.arrow_upward
+                                    : Icons.arrow_downward,
+                              ),
+                              onPressed: () async {
+                                setState(() {
+                                  selectedSortOrder = selectedSortOrder == 'ASC'
+                                      ? 'DESC'
+                                      : 'ASC';
+                                });
+                                await loadTasks();
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
 
@@ -547,7 +670,46 @@ class KanbanColumn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (tasks.isEmpty) {
-      return const Center(child: Text("No Tasks"));
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: const Icon(
+                  Icons.inbox_outlined,
+                  size: 28,
+                  color: AppColors.accessibleSecondary,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                'No tasks to show',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                'Try adjusting your search or filters.',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
     return ListView.builder(
@@ -557,8 +719,18 @@ class KanbanColumn extends StatelessWidget {
         final task = tasks[index];
 
         return Card(
-          margin: const EdgeInsets.only(bottom: 12),
+          color: AppColors.surface,
+          elevation: 0,
+          margin: const EdgeInsets.only(bottom: AppSpacing.md),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            side: const BorderSide(color: AppColors.border),
+          ),
           child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
             onTap: () {
               Navigator.push(
                 context,
@@ -570,7 +742,10 @@ class KanbanColumn extends StatelessWidget {
             },
             title: Text(
               task.title,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
             ),
 
             subtitle: Column(
@@ -595,10 +770,22 @@ class KanbanColumn extends StatelessWidget {
                       return Chip(
                         label: Text(
                           label.name,
-                          style: const TextStyle(fontSize: 11),
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        backgroundColor: AppColors.background,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.sm),
+                          side: const BorderSide(color: AppColors.border),
                         ),
                         visualDensity: VisualDensity.compact,
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.xs,
+                        ),
                       );
                     }).toList(),
                   ),
@@ -607,29 +794,27 @@ class KanbanColumn extends StatelessWidget {
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Container(
-                    margin: const EdgeInsets.only(top: 4),
+                    margin: const EdgeInsets.only(top: AppSpacing.xs),
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3,
+                      horizontal: AppSpacing.sm,
+                      vertical: AppSpacing.xs,
                     ),
                     decoration: BoxDecoration(
-                      color: task.priority == "HIGH"
-                          ? Colors.red.shade100
-                          : task.priority == "MEDIUM"
-                          ? Colors.orange.shade100
-                          : Colors.green.shade100,
-                      borderRadius: BorderRadius.circular(20),
+                      color: task.priority == 'HIGH'
+                          ? AppColors.accessiblePrimary
+                          : task.priority == 'MEDIUM'
+                          ? AppColors.accent
+                          : AppColors.accessibleSecondary,
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
                     ),
                     child: Text(
                       task.priority,
                       style: TextStyle(
                         fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: task.priority == "HIGH"
-                            ? Colors.red
-                            : task.priority == "MEDIUM"
-                            ? Colors.orange
-                            : Colors.green,
+                        fontWeight: FontWeight.w600,
+                        color: task.priority == 'MEDIUM'
+                            ? AppColors.textPrimary
+                            : AppColors.surface,
                       ),
                     ),
                   ),
@@ -645,8 +830,8 @@ class KanbanColumn extends StatelessWidget {
                       color:
                           task.dueDate!.isBefore(DateTime.now()) &&
                               task.status != "COMPLETED"
-                          ? Colors.red
-                          : Colors.grey,
+                          ? AppColors.accessiblePrimary
+                          : AppColors.textSecondary,
                       fontWeight:
                           task.dueDate!.isBefore(DateTime.now()) &&
                               task.status != "COMPLETED"
@@ -659,34 +844,36 @@ class KanbanColumn extends StatelessWidget {
 
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 3,
+                    horizontal: AppSpacing.sm,
+                    vertical: AppSpacing.xs,
                   ),
                   decoration: BoxDecoration(
-                    color: task.status == "PENDING"
-                        ? Colors.orange.shade100
-                        : task.status == "IN_PROGRESS"
-                        ? Colors.blue.shade100
-                        : Colors.green.shade100,
-                    borderRadius: BorderRadius.circular(20),
+                    color: task.status == 'PENDING'
+                        ? AppColors.accent
+                        : task.status == 'IN_PROGRESS'
+                        ? AppColors.accessiblePrimary
+                        : AppColors.accessibleSecondary,
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
                   ),
                   child: Text(
-                    task.status.replaceAll("_", " "),
+                    task.status.replaceAll('_', ' '),
                     style: TextStyle(
                       fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: task.status == "PENDING"
-                          ? Colors.orange
-                          : task.status == "IN_PROGRESS"
-                          ? Colors.blue
-                          : Colors.green,
+                      fontWeight: FontWeight.w600,
+                      color: task.status == 'PENDING'
+                          ? AppColors.textPrimary
+                          : AppColors.surface,
                     ),
                   ),
                 ),
               ],
             ),
             trailing: PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert),
+              tooltip: 'Change task status',
+              icon: const Icon(
+                Icons.more_horiz_rounded,
+                color: AppColors.textSecondary,
+              ),
               onSelected: (value) {
                 onMove(task, value);
               },
