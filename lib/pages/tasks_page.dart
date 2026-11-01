@@ -48,7 +48,7 @@ class _TasksPageState extends State<TasksPage> {
   bool _isRefreshingTasks = false;
   String? _taskError;
   bool _hasLoadedTasks = false;
-
+  bool _statsFailed = false;
   final List<String> filters = [
     "All",
     "Pending",
@@ -548,11 +548,16 @@ class _TasksPageState extends State<TasksPage> {
 
         setState(() {
           stats = TaskStats.fromJson(statsData);
+          _statsFailed = false;
         });
       } catch (e) {
         if (!mounted || requestId != _taskRequestId) return;
 
         debugPrint('LOAD TASK STATS ERROR: $e');
+
+        setState(() {
+          _statsFailed = true;
+        });
       }
     }
 
@@ -899,6 +904,41 @@ class _TasksPageState extends State<TasksPage> {
                   ),
 
                 if (stats != null) TaskStatsCard(stats: stats!),
+
+                if (_statsFailed)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.md,
+                      0,
+                      AppSpacing.md,
+                      AppSpacing.sm,
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.info_outline,
+                          size: 16,
+                          color: AppColors.textSecondary,
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: Text(
+                            stats != null
+                                ? 'Statistics may be out of date.'
+                                : 'Statistics could not be loaded.',
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: loadTasks,
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  ),
 
                 Expanded(
                   child: !_hasLoadedTasks

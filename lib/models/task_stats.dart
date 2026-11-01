@@ -11,9 +11,10 @@ class TaskStats {
 
   factory TaskStats.fromJson(Map<String, dynamic> json) {
     return TaskStats(
-      total: json['total'],
-      completed: json['completed'],
-      pending: json['pending'],
+      total: json['total'] as int,
+      completed: json['done'] as int,
+      // "Pending" means not completed yet: to-do plus in-progress.
+      pending: (json['todo'] as int) + (json['inProgress'] as int),
     );
   }
 }
