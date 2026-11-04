@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
 import '../models/notification_model.dart';
 import '../services/api_service.dart';
 import '../models/task.dart';
@@ -138,279 +140,422 @@ class _NotificationsPageState extends State<NotificationsPage> {
     final unreadCount = notifications.where((n) => !n.isRead).length;
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text("Notifications"),
+        backgroundColor: AppColors.background,
+        surfaceTintColor: Colors.transparent,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Notifications',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            Text(
+              unreadCount == 0
+                  ? 'You’re all caught up'
+                  : '$unreadCount unread ${unreadCount == 1 ? 'notification' : 'notifications'}',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+            ),
+          ],
+        ),
         actions: [
           if (unreadCount > 0)
             TextButton(
               onPressed: markAllAsRead,
-              child: const Text("Mark all read"),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.accessiblePrimary,
+                minimumSize: const Size(48, 48),
+              ),
+              child: const Text('Mark all read'),
             ),
+          const SizedBox(width: AppSpacing.xs),
         ],
       ),
       body: loading
-          ? const Center(child: CircularProgressIndicator())
-          : notifications.isEmpty
-          ? const Center(
+          ? Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.notifications_none, size: 64, color: Colors.grey),
-                  SizedBox(height: 12),
-                  Text("No notifications", style: TextStyle(fontSize: 18)),
+                  const SizedBox(
+                    width: 28,
+                    height: 28,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Text(
+                    'Loading notifications...',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
                 ],
+              ),
+            )
+          : notifications.isEmpty
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.xl),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 72,
+                      height: 72,
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(AppRadius.lg),
+                        border: const Border.fromBorderSide(
+                          BorderSide(color: AppColors.border),
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.notifications_none_rounded,
+                        size: 32,
+                        color: AppColors.accessibleSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    Text(
+                      'You’re all caught up',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      'New updates from your workspace will appear here.',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             )
           : RefreshIndicator(
               onRefresh: loadNotifications,
               child: ListView.builder(
+                padding: const EdgeInsets.only(
+                  top: AppSpacing.sm,
+                  bottom: AppSpacing.lg,
+                ),
                 itemCount: notifications.length,
                 itemBuilder: (context, index) {
                   final notification = notifications[index];
 
-                  return ListTile(
-                    tileColor: notification.isRead
-                        ? null
-                        : Theme.of(
-                            context,
-                          ).colorScheme.primary.withValues(alpha: 0.08),
-
-                    leading: CircleAvatar(
-                      child: Icon(getNotificationIcon(notification.type)),
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.xs,
                     ),
-
-                    title: Text(
-                      notification.title,
-                      style: TextStyle(
-                        fontWeight: notification.isRead
-                            ? FontWeight.normal
-                            : FontWeight.bold,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: notification.isRead
+                            ? AppColors.surface
+                            : AppColors.primary.withValues(alpha: 0.06),
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                        border: Border.all(
+                          color: notification.isRead
+                              ? AppColors.border
+                              : AppColors.primary.withValues(alpha: 0.28),
+                        ),
                       ),
-                    ),
+                      child: ListTile(
+                        tileColor: notification.isRead
+                            ? null
+                            : Theme.of(
+                                context,
+                              ).colorScheme.primary.withValues(alpha: 0.08),
 
-                    subtitle: Text(notification.message),
+                        leading: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: notification.isRead
+                                ? AppColors.background
+                                : AppColors.primary.withValues(alpha: 0.10),
+                            borderRadius: BorderRadius.circular(AppRadius.sm),
+                          ),
+                          child: Icon(
+                            getNotificationIcon(notification.type),
+                            color: notification.isRead
+                                ? AppColors.accessibleSecondary
+                                : AppColors.accessiblePrimary,
+                            size: 22,
+                          ),
+                        ),
 
-                    trailing: notification.isRead
-                        ? null
-                        : const Icon(Icons.circle, size: 10),
+                        title: Text(
+                          notification.title,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: AppColors.textPrimary,
+                                fontWeight: notification.isRead
+                                    ? FontWeight.w500
+                                    : FontWeight.w600,
+                              ),
+                        ),
 
-                    onTap: () async {
-                      await markAsRead(notification);
-                      if (!mounted) return;
+                        subtitle: Padding(
+                          padding: const EdgeInsets.only(top: AppSpacing.xxs),
+                          child: Text(
+                            notification.message,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: AppColors.textSecondary,
+                                  height: 1.4,
+                                ),
+                          ),
+                        ),
 
-                      if (notification.type == NotificationType.taskAssigned ||
-                          notification.type == NotificationType.taskCompleted ||
-                          notification.type ==
-                              NotificationType.taskStatusChanged ||
-                          notification.type == NotificationType.taskMentioned) {
-                        await openTaskNotification(notification);
-                        return;
-                      }
-
-                      if (notification.type ==
-                          NotificationType.workspaceInvitation) {
-                        final invitationId = notification
-                            .metadata?['invitationId']
-                            ?.toString();
-
-                        if (invitationId == null || invitationId.isEmpty) {
-                          debugPrint(
-                            'WORKSPACE INVITATION ERROR: Missing invitationId',
-                          );
-                          return;
-                        }
-
-                        await showDialog(
-                          context: context,
-                          builder: (dialogContext) => AlertDialog(
-                            title: const Text('Workspace Invitation'),
-                            content: Text(notification.message),
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.of(dialogContext).pop();
-                                },
-                                child: const Text('Cancel'),
+                        trailing: notification.isRead
+                            ? null
+                            : Container(
+                                width: 9,
+                                height: 9,
+                                decoration: const BoxDecoration(
+                                  color: AppColors.accessiblePrimary,
+                                  shape: BoxShape.circle,
+                                ),
                               ),
 
-                              TextButton(
-                                onPressed: () async {
-                                  final dialogNavigator = Navigator.of(
-                                    dialogContext,
-                                  );
-                                  final messenger = ScaffoldMessenger.of(
-                                    context,
-                                  );
+                        onTap: () async {
+                          await markAsRead(notification);
+                          if (!mounted) return;
 
-                                  try {
-                                    await ApiService.rejectWorkspaceInviteById(
-                                      invitationId,
-                                    );
+                          if (notification.type ==
+                                  NotificationType.taskAssigned ||
+                              notification.type ==
+                                  NotificationType.taskCompleted ||
+                              notification.type ==
+                                  NotificationType.taskStatusChanged ||
+                              notification.type ==
+                                  NotificationType.taskMentioned) {
+                            await openTaskNotification(notification);
+                            return;
+                          }
 
-                                    if (!mounted) return;
+                          if (notification.type ==
+                              NotificationType.workspaceInvitation) {
+                            final invitationId = notification
+                                .metadata?['invitationId']
+                                ?.toString();
 
-                                    dialogNavigator.pop();
+                            if (invitationId == null || invitationId.isEmpty) {
+                              debugPrint(
+                                'WORKSPACE INVITATION ERROR: Missing invitationId',
+                              );
+                              return;
+                            }
 
-                                    messenger.showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'Workspace invitation rejected',
-                                        ),
-                                      ),
-                                    );
-                                  } catch (e) {
-                                    if (!mounted) return;
+                            await showDialog(
+                              context: context,
+                              builder: (dialogContext) => AlertDialog(
+                                title: const Text('Workspace Invitation'),
+                                content: Text(notification.message),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.of(dialogContext).pop();
+                                    },
+                                    child: const Text('Cancel'),
+                                  ),
 
-                                    messenger.showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          e.toString().replaceFirst(
-                                            'Exception: ',
-                                            '',
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  }
-                                },
-                                child: const Text('REJECT'),
-                              ),
-                              ElevatedButton(
-                                onPressed: () async {
-                                  final navigator = Navigator.of(context);
-                                  final dialogNavigator = Navigator.of(
-                                    dialogContext,
-                                  );
-                                  final messenger = ScaffoldMessenger.of(
-                                    context,
-                                  );
+                                  TextButton(
+                                    onPressed: () async {
+                                      final dialogNavigator = Navigator.of(
+                                        dialogContext,
+                                      );
+                                      final messenger = ScaffoldMessenger.of(
+                                        context,
+                                      );
 
-                                  try {
-                                    final result =
-                                        await ApiService.acceptWorkspaceInviteById(
+                                      try {
+                                        await ApiService.rejectWorkspaceInviteById(
                                           invitationId,
                                         );
 
-                                    final newToken = result['token']
-                                        ?.toString();
+                                        if (!mounted) return;
 
-                                    if (newToken == null || newToken.isEmpty) {
-                                      throw Exception(
-                                        'Workspace token was not returned',
-                                      );
-                                    }
+                                        dialogNavigator.pop();
 
-                                    final prefs =
-                                        await SharedPreferences.getInstance();
-                                    await prefs.setString('token', newToken);
-
-                                    if (!mounted) return;
-
-                                    dialogNavigator.pop();
-
-                                    navigator.pushNamedAndRemoveUntil(
-                                      '/dashboard',
-                                      (route) => false,
-                                    );
-                                  } catch (e) {
-                                    debugPrint(
-                                      'ACCEPT WORKSPACE INVITATION ERROR: $e',
-                                    );
-
-                                    if (!mounted) return;
-
-                                    messenger.showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          e.toString().replaceFirst(
-                                            'Exception: ',
-                                            '',
+                                        messenger.showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'Workspace invitation rejected',
+                                            ),
                                           ),
-                                        ),
-                                      ),
-                                    );
-                                  }
-                                },
-                                child: const Text('ACCEPT'),
+                                        );
+                                      } catch (e) {
+                                        if (!mounted) return;
+
+                                        messenger.showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              e.toString().replaceFirst(
+                                                'Exception: ',
+                                                '',
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    child: const Text('REJECT'),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () async {
+                                      final navigator = Navigator.of(context);
+                                      final dialogNavigator = Navigator.of(
+                                        dialogContext,
+                                      );
+                                      final messenger = ScaffoldMessenger.of(
+                                        context,
+                                      );
+
+                                      try {
+                                        final result =
+                                            await ApiService.acceptWorkspaceInviteById(
+                                              invitationId,
+                                            );
+
+                                        final newToken = result['token']
+                                            ?.toString();
+
+                                        if (newToken == null ||
+                                            newToken.isEmpty) {
+                                          throw Exception(
+                                            'Workspace token was not returned',
+                                          );
+                                        }
+
+                                        final prefs =
+                                            await SharedPreferences.getInstance();
+                                        await prefs.setString(
+                                          'token',
+                                          newToken,
+                                        );
+
+                                        if (!mounted) return;
+
+                                        dialogNavigator.pop();
+
+                                        navigator.pushNamedAndRemoveUntil(
+                                          '/dashboard',
+                                          (route) => false,
+                                        );
+                                      } catch (e) {
+                                        debugPrint(
+                                          'ACCEPT WORKSPACE INVITATION ERROR: $e',
+                                        );
+
+                                        if (!mounted) return;
+
+                                        messenger.showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              e.toString().replaceFirst(
+                                                'Exception: ',
+                                                '',
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    child: const Text('ACCEPT'),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                        );
+                            );
 
-                        return;
-                      }
+                            return;
+                          }
 
-                      if (notification.type ==
-                          NotificationType.projectInvitation) {
-                        final invitationId =
-                            notification.metadata?['invitationId'];
+                          if (notification.type ==
+                              NotificationType.projectInvitation) {
+                            final invitationId =
+                                notification.metadata?['invitationId'];
 
-                        if (invitationId == null) {
-                          debugPrint(
-                            "❌ No invitationId in notification metadata",
-                          );
-                          return;
-                        }
+                            if (invitationId == null) {
+                              debugPrint(
+                                "❌ No invitationId in notification metadata",
+                              );
+                              return;
+                            }
 
-                        await showDialog(
-                          context: context,
-                          builder: (_) => AlertDialog(
-                            title: const Text("Project Invitation"),
-                            content: Text(notification.message),
-                            actions: [
-                              TextButton(
-                                onPressed: () async {
-                                  final navigator = Navigator.of(context);
-                                  try {
-                                    await ApiService.rejectInvitation(
-                                      invitationId.toString(),
-                                    );
+                            await showDialog(
+                              context: context,
+                              builder: (_) => AlertDialog(
+                                title: const Text("Project Invitation"),
+                                content: Text(notification.message),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () async {
+                                      final navigator = Navigator.of(context);
+                                      try {
+                                        await ApiService.rejectInvitation(
+                                          invitationId.toString(),
+                                        );
 
-                                    if (!mounted) return;
-                                    navigator.pop();
-                                    await loadNotifications();
-                                  } catch (e) {
-                                    debugPrint("REJECT ERROR: $e");
-                                  }
-                                },
-                                child: const Text("Reject"),
+                                        if (!mounted) return;
+                                        navigator.pop();
+                                        await loadNotifications();
+                                      } catch (e) {
+                                        debugPrint("REJECT ERROR: $e");
+                                      }
+                                    },
+                                    child: const Text("Reject"),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () async {
+                                      final navigator = Navigator.of(context);
+                                      final messenger = ScaffoldMessenger.of(
+                                        context,
+                                      );
+                                      try {
+                                        await ApiService.acceptInvitation(
+                                          invitationId.toString(),
+                                        );
+
+                                        if (!mounted) return;
+                                        navigator.pop();
+
+                                        await loadNotifications();
+
+                                        if (!mounted) return;
+
+                                        messenger.showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              "Invitation accepted. You are now a project member.",
+                                            ),
+                                          ),
+                                        );
+                                      } catch (e) {
+                                        debugPrint("ACCEPT ERROR: $e");
+                                      }
+                                    },
+                                    child: const Text("ACCEPT"),
+                                  ),
+                                ],
                               ),
-                              ElevatedButton(
-                                onPressed: () async {
-                                  final navigator = Navigator.of(context);
-                                  final messenger = ScaffoldMessenger.of(
-                                    context,
-                                  );
-                                  try {
-                                    await ApiService.acceptInvitation(
-                                      invitationId.toString(),
-                                    );
-
-                                    if (!mounted) return;
-                                    navigator.pop();
-
-                                    await loadNotifications();
-
-                                    if (!mounted) return;
-
-                                    messenger.showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          "Invitation accepted. You are now a project member.",
-                                        ),
-                                      ),
-                                    );
-                                  } catch (e) {
-                                    debugPrint("ACCEPT ERROR: $e");
-                                  }
-                                },
-                                child: const Text("ACCEPT"),
-                              ),
-                            ],
-                          ),
-                        );
-                      }
-                    },
+                            );
+                          }
+                        },
+                      ),
+                    ),
                   );
                 },
               ),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/workspace_member.dart';
 import '../services/api_service.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
 
 class MembersPage extends StatefulWidget {
   final String projectId;
@@ -181,81 +183,196 @@ class _MembersPageState extends State<MembersPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text("Project Members"),
+        backgroundColor: AppColors.background,
+        surfaceTintColor: Colors.transparent,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Project Members',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            Text(
+              '${members.length} ${members.length == 1 ? 'member' : 'members'}',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+            ),
+          ],
+        ),
         actions: [
-          if (myRole == "OWNER")
+          if (myRole == 'OWNER')
             IconButton(
-              icon: const Icon(Icons.person_add),
+              tooltip: 'Invite member',
+              icon: const Icon(Icons.person_add_alt_1_rounded),
+              color: AppColors.accessiblePrimary,
               onPressed: showAddMemberDialog,
             ),
         ],
       ),
       body: loading
-          ? const Center(child: CircularProgressIndicator())
-          : members.isEmpty
           ? const Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.group_off, size: 60, color: Colors.grey),
-                  SizedBox(height: 12),
-                  Text("No members added yet", style: TextStyle(fontSize: 18)),
-                ],
+              child: CircularProgressIndicator(
+                color: AppColors.accessiblePrimary,
+              ),
+            )
+          : members.isEmpty
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.xl),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(AppSpacing.lg),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(AppRadius.lg),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: const Icon(
+                        Icons.group_off_rounded,
+                        size: 36,
+                        color: AppColors.secondary,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    Text(
+                      'No members yet',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      'Project members will appear here once they’re added.',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    if (myRole == 'OWNER') ...[
+                      const SizedBox(height: AppSpacing.lg),
+                      OutlinedButton.icon(
+                        onPressed: showAddMemberDialog,
+                        icon: const Icon(Icons.person_add_alt_1_rounded),
+                        label: const Text('Invite member'),
+                      ),
+                    ],
+                  ],
+                ),
               ),
             )
           : ListView.builder(
+              padding: const EdgeInsets.all(AppSpacing.md),
               itemCount: members.length,
               itemBuilder: (context, index) {
                 final member = members[index];
 
-                return ListTile(
-                  leading: const CircleAvatar(child: Icon(Icons.person)),
-                  title: Text(member["user"]["name"]),
-                  subtitle: Text(member["user"]["email"]),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(member["role"]),
-
-                      if (myRole == "OWNER" && member["role"] != "OWNER")
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const SizedBox(width: 8),
-                            IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.red),
-                              onPressed: () async {
-                                final confirm = await showDialog<bool>(
-                                  context: context,
-                                  builder: (_) => AlertDialog(
-                                    title: const Text("Remove Member"),
-                                    content: Text(
-                                      "Remove ${member["user"]["name"]} from this project?",
-                                    ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () =>
-                                            Navigator.pop(context, false),
-                                        child: const Text("Cancel"),
-                                      ),
-                                      ElevatedButton(
-                                        onPressed: () =>
-                                            Navigator.pop(context, true),
-                                        child: const Text("Remove"),
-                                      ),
-                                    ],
-                                  ),
-                                );
-
-                                if (confirm == true) {
-                                  await removeMember(member["user"]["id"]);
-                                }
-                              },
-                            ),
-                          ],
+                return Container(
+                  margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.xs,
+                    ),
+                    leading: CircleAvatar(
+                      backgroundColor: AppColors.background,
+                      foregroundColor: AppColors.accessiblePrimary,
+                      child: Text(
+                        (member['user']['name'] as String)
+                            .trim()
+                            .characters
+                            .first
+                            .toUpperCase(),
+                      ),
+                    ),
+                    title: Text(
+                      member['user']['name'],
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    subtitle: Padding(
+                      padding: const EdgeInsets.only(top: AppSpacing.xxs),
+                      child: Text(
+                        member['user']['email'],
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
                         ),
-                    ],
+                      ),
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.sm,
+                            vertical: AppSpacing.xs,
+                          ),
+                          decoration: BoxDecoration(
+                            color: member['role'] == 'OWNER'
+                                ? AppColors.accent.withValues(alpha: 0.20)
+                                : AppColors.background,
+                            borderRadius: BorderRadius.circular(AppRadius.sm),
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: Text(
+                            member['role'],
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  color: AppColors.textPrimary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                          ),
+                        ),
+                        if (myRole == 'OWNER' && member['role'] != 'OWNER')
+                          IconButton(
+                            tooltip: 'Remove member',
+                            icon: const Icon(Icons.delete_outline_rounded),
+                            color: AppColors.error,
+                            onPressed: () async {
+                              final confirm = await showDialog<bool>(
+                                context: context,
+                                builder: (_) => AlertDialog(
+                                  title: const Text('Remove Member'),
+                                  content: Text(
+                                    'Remove ${member['user']['name']} from this project?',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, false),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, true),
+                                      child: const Text('Remove'),
+                                    ),
+                                  ],
+                                ),
+                              );
+
+                              if (confirm == true) {
+                                await removeMember(member['user']['id']);
+                              }
+                            },
+                          ),
+                      ],
+                    ),
                   ),
                 );
               },
