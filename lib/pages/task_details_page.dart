@@ -543,11 +543,8 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
                   const SnackBar(content: Text('Task updated successfully')),
                 );
               } catch (e) {
-                if (!mounted) return;
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Failed to update task: $e')),
-                );
+                debugPrint('UPDATE TASK ERROR: $e');
+                rethrow;
               }
             },
       ),

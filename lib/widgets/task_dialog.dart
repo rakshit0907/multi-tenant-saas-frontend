@@ -67,6 +67,10 @@ class _TaskDialogState extends State<TaskDialog> {
   String? selectedAssigneeId;
   late Set<String> selectedLabelIds;
   String? selectedMilestoneId;
+
+  bool _isSaving = false;
+  String? _saveError;
+
   @override
   void initState() {
     super.initState();
@@ -112,6 +116,41 @@ class _TaskDialogState extends State<TaskDialog> {
     titleController.dispose();
     descriptionController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleSave() async {
+    if (_isSaving) return;
+
+    setState(() {
+      _isSaving = true;
+      _saveError = null;
+    });
+
+    try {
+      await widget.onSave(
+        titleController.text.trim(),
+        descriptionController.text.trim(),
+        dueDate,
+        selectedPriority.name,
+        selectedStatus.name,
+        selectedAssigneeId,
+        selectedLabelIds.toList(),
+        selectedMilestoneId,
+      );
+
+      if (!mounted) return;
+
+      Navigator.pop(context);
+    } catch (e) {
+      debugPrint('SAVE TASK ERROR: $e');
+
+      if (!mounted) return;
+
+      setState(() {
+        _isSaving = false;
+        _saveError = 'Could not save the task. Please try again.';
+      });
+    }
   }
 
   List<DropdownMenuItem<String>> buildAssigneeItems() {
@@ -386,13 +425,37 @@ class _TaskDialogState extends State<TaskDialog> {
                 onTap: pickDate,
               ),
             ),
+
+            if (_saveError != null) ...[
+              const SizedBox(height: AppSpacing.md),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    size: 18,
+                    color: AppColors.error,
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  Expanded(
+                    child: Text(
+                      _saveError!,
+                      style: const TextStyle(
+                        color: AppColors.error,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
 
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: _isSaving ? null : () => Navigator.pop(context),
           style: TextButton.styleFrom(
             foregroundColor: AppColors.textSecondary,
             minimumSize: const Size(48, 48),
@@ -412,21 +475,18 @@ class _TaskDialogState extends State<TaskDialog> {
               borderRadius: BorderRadius.circular(AppRadius.md),
             ),
           ),
-          onPressed: () {
-            widget.onSave(
-              titleController.text.trim(),
-              descriptionController.text.trim(),
-              dueDate,
-              selectedPriority.name,
-              selectedStatus.name,
-              selectedAssigneeId,
-              selectedLabelIds.toList(),
-              selectedMilestoneId,
-            );
-            if (!context.mounted) return;
-            Navigator.pop(context);
-          },
-          child: Text(widget.buttonText),
+          onPressed: _handleSave,
+          child: _isSaving
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.surface,
+                    semanticsLabel: 'Saving',
+                  ),
+                )
+              : Text(widget.buttonText),
         ),
       ],
     );
