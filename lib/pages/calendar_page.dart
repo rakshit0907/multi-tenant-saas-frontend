@@ -145,25 +145,25 @@ class _CalendarPageState extends State<CalendarPage> {
     }
   }
 
- Color _markerColorForTask(dynamic task) {
-  final status = task['status']?.toString();
-  final priority = task['priority']?.toString();
+  Color _markerColorForTask(dynamic task) {
+    final status = task['status']?.toString();
+    final priority = task['priority']?.toString();
 
-  if (status == 'COMPLETED') {
-    return AppColors.accessibleSecondary;
-  }
-
-  switch (priority) {
-    case 'HIGH':
-      return AppColors.accessiblePrimary;
-    case 'MEDIUM':
-      return AppColors.accent;
-    case 'LOW':
+    if (status == 'COMPLETED') {
       return AppColors.accessibleSecondary;
-    default:
-      return AppColors.border;
+    }
+
+    switch (priority) {
+      case 'HIGH':
+        return AppColors.error;
+      case 'MEDIUM':
+        return AppColors.accent;
+      case 'LOW':
+        return AppColors.accessibleSecondary;
+      default:
+        return AppColors.border;
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {

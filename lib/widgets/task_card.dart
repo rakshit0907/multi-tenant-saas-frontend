@@ -20,13 +20,23 @@ class TaskCard extends StatelessWidget {
   Color getPriorityColor(String? priority) {
     switch (priority) {
       case 'HIGH':
-        return AppColors.primary;
+        return AppColors.error;
       case 'MEDIUM':
         return AppColors.accent;
       case 'LOW':
         return AppColors.secondary;
       default:
         return AppColors.border;
+    }
+  }
+
+  Color getPriorityTextColor(String? priority) {
+    switch (priority) {
+      case 'HIGH':
+      case 'LOW':
+        return Colors.white;
+      default:
+        return AppColors.textPrimary;
     }
   }
 
@@ -89,8 +99,8 @@ class TaskCard extends StatelessWidget {
             Chip(
               label: Text(
                 task.priority,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: getPriorityTextColor(task.priority),
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
                 ),

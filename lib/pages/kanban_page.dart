@@ -801,7 +801,7 @@ class KanbanColumn extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: task.priority == 'HIGH'
-                          ? AppColors.accessiblePrimary
+                          ? AppColors.error
                           : task.priority == 'MEDIUM'
                           ? AppColors.accent
                           : AppColors.accessibleSecondary,
