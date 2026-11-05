@@ -7,12 +7,14 @@ class TaskCard extends StatelessWidget {
   final Task task;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final bool canManage;
 
   const TaskCard({
     super.key,
     required this.task,
     required this.onEdit,
     required this.onDelete,
+    this.canManage = true,
   });
 
   Color getPriorityColor(String? priority) {
@@ -161,23 +163,25 @@ class TaskCard extends StatelessWidget {
           ],
         ),
 
-        trailing: PopupMenuButton<String>(
-          onSelected: (value) {
-            switch (value) {
-              case 'edit':
-                onEdit();
-                break;
+        trailing: !canManage
+            ? null
+            : PopupMenuButton<String>(
+                onSelected: (value) {
+                  switch (value) {
+                    case 'edit':
+                      onEdit();
+                      break;
 
-              case 'delete':
-                onDelete();
-                break;
-            }
-          },
-          itemBuilder: (_) => const [
-            PopupMenuItem(value: 'edit', child: Text("Edit")),
-            PopupMenuItem(value: 'delete', child: Text("Delete")),
-          ],
-        ),
+                    case 'delete':
+                      onDelete();
+                      break;
+                  }
+                },
+                itemBuilder: (_) => const [
+                  PopupMenuItem(value: 'edit', child: Text("Edit")),
+                  PopupMenuItem(value: 'delete', child: Text("Delete")),
+                ],
+              ),
       ),
     );
   }
