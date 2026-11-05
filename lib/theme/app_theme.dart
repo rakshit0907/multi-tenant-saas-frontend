@@ -7,7 +7,9 @@ import 'app_spacing.dart';
 /// Central Material 3 theme for the approved Warm Editorial design.
 abstract final class AppTheme {
   static ThemeData get light {
-    final baseTextTheme = GoogleFonts.interTextTheme(ThemeData.light().textTheme);
+    final baseTextTheme = GoogleFonts.interTextTheme(
+      ThemeData.light().textTheme,
+    );
     final textTheme = baseTextTheme.copyWith(
       headlineLarge: baseTextTheme.headlineLarge?.copyWith(
         fontSize: 28,
@@ -58,28 +60,29 @@ abstract final class AppTheme {
       ),
     );
 
-    final colorScheme = ColorScheme.fromSeed(
-      seedColor: AppColors.primary,
-      brightness: Brightness.light,
-    ).copyWith(
-      primary: AppColors.primary,
-      onPrimary: Colors.white,
-      secondary: AppColors.secondary,
-      onSecondary: Colors.white,
-      tertiary: AppColors.accent,
-      onTertiary: AppColors.textPrimary,
-      surface: AppColors.surface,
-      onSurface: AppColors.textPrimary,
-      error: AppColors.error,
-      onError: Colors.white,
-      outline: AppColors.border,
-      outlineVariant: AppColors.border,
-      surfaceContainerLowest: AppColors.surface,
-      surfaceContainerLow: AppColors.surface,
-      surfaceContainer: AppColors.background,
-      surfaceContainerHigh: AppColors.background,
-      surfaceContainerHighest: AppColors.background,
-    );
+    final colorScheme =
+        ColorScheme.fromSeed(
+          seedColor: AppColors.primary,
+          brightness: Brightness.light,
+        ).copyWith(
+          primary: AppColors.primary,
+          onPrimary: Colors.white,
+          secondary: AppColors.secondary,
+          onSecondary: Colors.white,
+          tertiary: AppColors.accent,
+          onTertiary: AppColors.textPrimary,
+          surface: AppColors.surface,
+          onSurface: AppColors.textPrimary,
+          error: AppColors.error,
+          onError: Colors.white,
+          outline: AppColors.border,
+          outlineVariant: AppColors.border,
+          surfaceContainerLowest: AppColors.surface,
+          surfaceContainerLow: AppColors.surface,
+          surfaceContainer: AppColors.background,
+          surfaceContainerHigh: AppColors.background,
+          surfaceContainerHighest: AppColors.background,
+        );
 
     return ThemeData(
       useMaterial3: true,
@@ -120,16 +123,14 @@ abstract final class AppTheme {
         hintStyle: textTheme.bodyMedium?.copyWith(
           color: AppColors.textSecondary,
         ),
-        floatingLabelStyle: const TextStyle(
-          color: AppColors.accessiblePrimary,
-        ),
+        floatingLabelStyle: const TextStyle(color: AppColors.accessiblePrimary),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.sm),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: const BorderSide(color: AppColors.inputBorder),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.sm),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: const BorderSide(color: AppColors.inputBorder),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.sm),
