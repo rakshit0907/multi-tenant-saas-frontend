@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import '../theme/app_colors.dart';
 import 'kanban_page.dart';
 import 'members_page.dart';
 import 'milestones_page.dart';
@@ -180,7 +181,7 @@ class _ProjectDashboardPageState extends State<ProjectDashboardPage> {
                                 child: _statCard(
                                   "Total",
                                   stats?["total"] ?? 0,
-                                  Colors.blue,
+                                  AppColors.textSecondary,
                                   null,
                                 ),
                               ),
@@ -189,7 +190,7 @@ class _ProjectDashboardPageState extends State<ProjectDashboardPage> {
                                 child: _statCard(
                                   "Done",
                                   stats?["completed"] ?? 0,
-                                  Colors.green,
+                                  AppColors.accessibleSecondary,
                                   () {
                                     Navigator.push(
                                       context,
@@ -215,7 +216,7 @@ class _ProjectDashboardPageState extends State<ProjectDashboardPage> {
                                 child: _statCard(
                                   "In Progress",
                                   stats?["inProgress"] ?? 0,
-                                  Colors.orange,
+                                  AppColors.accessiblePrimary,
                                   () {
                                     Navigator.push(
                                       context,
@@ -235,7 +236,7 @@ class _ProjectDashboardPageState extends State<ProjectDashboardPage> {
                                 child: _statCard(
                                   "To Do",
                                   stats?["pending"] ?? 0,
-                                  Colors.red,
+                                  AppColors.warningText,
                                   () {
                                     Navigator.push(
                                       context,
@@ -261,7 +262,7 @@ class _ProjectDashboardPageState extends State<ProjectDashboardPage> {
                                 child: _statCard(
                                   "High Priority",
                                   dashboard?["priority"]?["high"] ?? 0,
-                                  Colors.purple,
+                                  AppColors.error,
                                   null,
                                 ),
                               ),
@@ -270,7 +271,7 @@ class _ProjectDashboardPageState extends State<ProjectDashboardPage> {
                                 child: _statCard(
                                   "Overdue",
                                   stats?["overdue"] ?? 0,
-                                  Colors.deepOrange,
+                                  AppColors.error,
                                   null,
                                 ),
                               ),
@@ -322,7 +323,7 @@ class _ProjectDashboardPageState extends State<ProjectDashboardPage> {
                           if (workload.isEmpty)
                             const Text(
                               "No project members",
-                              style: TextStyle(color: Colors.grey),
+                              style: TextStyle(color: AppColors.textSecondary),
                             )
                           else
                             ...workload.map((member) {
@@ -371,7 +372,8 @@ class _ProjectDashboardPageState extends State<ProjectDashboardPage> {
                                                 "$pending pending",
                                                 style: const TextStyle(
                                                   fontSize: 12,
-                                                  color: Colors.grey,
+                                                  color:
+                                                      AppColors.textSecondary,
                                                 ),
                                               ),
                                             ],
@@ -431,7 +433,7 @@ class _ProjectDashboardPageState extends State<ProjectDashboardPage> {
                           if (upcomingDeadlines.isEmpty)
                             const Text(
                               "No upcoming deadlines",
-                              style: TextStyle(color: Colors.grey),
+                              style: TextStyle(color: AppColors.textSecondary),
                             )
                           else
                             ...upcomingDeadlines.map((task) {
@@ -473,7 +475,7 @@ class _ProjectDashboardPageState extends State<ProjectDashboardPage> {
                                                 : "${dueDate.day}/${dueDate.month}/${dueDate.year}",
                                             style: const TextStyle(
                                               fontSize: 12,
-                                              color: Colors.grey,
+                                              color: AppColors.textSecondary,
                                             ),
                                           ),
 
@@ -482,7 +484,7 @@ class _ProjectDashboardPageState extends State<ProjectDashboardPage> {
                                               "Assigned to ${assignee["name"]}",
                                               style: const TextStyle(
                                                 fontSize: 12,
-                                                color: Colors.grey,
+                                                color: AppColors.textSecondary,
                                               ),
                                             ),
                                         ],
@@ -566,7 +568,7 @@ class _ProjectDashboardPageState extends State<ProjectDashboardPage> {
                           if (milestones.isEmpty)
                             const Text(
                               'No milestones yet',
-                              style: TextStyle(color: Colors.grey),
+                              style: TextStyle(color: AppColors.textSecondary),
                             )
                           else
                             ...milestones.take(3).map((milestone) {
@@ -629,7 +631,7 @@ class _ProjectDashboardPageState extends State<ProjectDashboardPage> {
                                       ),
                                       style: const TextStyle(
                                         fontSize: 12,
-                                        color: Colors.grey,
+                                        color: AppColors.textSecondary,
                                       ),
                                     ),
 
@@ -732,7 +734,7 @@ class _ProjectDashboardPageState extends State<ProjectDashboardPage> {
                           if (activities.isEmpty)
                             const Text(
                               "No recent activity",
-                              style: TextStyle(color: Colors.grey),
+                              style: TextStyle(color: AppColors.textSecondary),
                             )
                           else
                             ...activities.map((activity) {
@@ -853,7 +855,7 @@ class _ProjectDashboardPageState extends State<ProjectDashboardPage> {
                                             ),
                                             style: const TextStyle(
                                               fontSize: 12,
-                                              color: Colors.grey,
+                                              color: AppColors.textSecondary,
                                             ),
                                           ),
                                         ],
