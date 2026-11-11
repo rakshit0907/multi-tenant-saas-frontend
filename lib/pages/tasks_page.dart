@@ -255,12 +255,12 @@ class _TasksPageState extends State<TasksPage> {
       final cleaned = hex.replaceFirst('#', '');
 
       if (cleaned.length != 6) {
-        return Colors.grey;
+        return AppColors.textSecondary;
       }
 
       return Color(int.parse('FF$cleaned', radix: 16));
     } catch (_) {
-      return Colors.grey;
+      return AppColors.textSecondary;
     }
   }
 
@@ -655,11 +655,15 @@ class _TasksPageState extends State<TasksPage> {
                       ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(AppRadius.md),
-                        borderSide: const BorderSide(color: AppColors.border),
+                        borderSide: const BorderSide(
+                          color: AppColors.inputBorder,
+                        ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(AppRadius.md),
-                        borderSide: const BorderSide(color: AppColors.border),
+                        borderSide: const BorderSide(
+                          color: AppColors.inputBorder,
+                        ),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(AppRadius.md),
@@ -759,11 +763,15 @@ class _TasksPageState extends State<TasksPage> {
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(AppRadius.md),
-                          borderSide: const BorderSide(color: AppColors.border),
+                          borderSide: const BorderSide(
+                            color: AppColors.inputBorder,
+                          ),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(AppRadius.md),
-                          borderSide: const BorderSide(color: AppColors.border),
+                          borderSide: const BorderSide(
+                            color: AppColors.inputBorder,
+                          ),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(AppRadius.md),
@@ -828,13 +836,13 @@ class _TasksPageState extends State<TasksPage> {
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(AppRadius.md),
                               borderSide: const BorderSide(
-                                color: AppColors.border,
+                                color: AppColors.inputBorder,
                               ),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(AppRadius.md),
                               borderSide: const BorderSide(
-                                color: AppColors.border,
+                                color: AppColors.inputBorder,
                               ),
                             ),
                             focusedBorder: OutlineInputBorder(

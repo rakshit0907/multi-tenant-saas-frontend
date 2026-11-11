@@ -248,11 +248,11 @@ class _TaskDialogState extends State<TaskDialog> {
                 labelStyle: const TextStyle(color: AppColors.textSecondary),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppRadius.md),
-                  borderSide: const BorderSide(color: AppColors.border),
+                  borderSide: const BorderSide(color: AppColors.inputBorder),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppRadius.md),
-                  borderSide: const BorderSide(color: AppColors.border),
+                  borderSide: const BorderSide(color: AppColors.inputBorder),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppRadius.md),
@@ -273,11 +273,11 @@ class _TaskDialogState extends State<TaskDialog> {
                 labelStyle: const TextStyle(color: AppColors.textSecondary),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppRadius.md),
-                  borderSide: const BorderSide(color: AppColors.border),
+                  borderSide: const BorderSide(color: AppColors.inputBorder),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppRadius.md),
-                  borderSide: const BorderSide(color: AppColors.border),
+                  borderSide: const BorderSide(color: AppColors.inputBorder),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppRadius.md),
@@ -296,11 +296,11 @@ class _TaskDialogState extends State<TaskDialog> {
                 labelText: 'Milestone',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppRadius.md),
-                  borderSide: const BorderSide(color: AppColors.border),
+                  borderSide: const BorderSide(color: AppColors.inputBorder),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppRadius.md),
-                  borderSide: const BorderSide(color: AppColors.border),
+                  borderSide: const BorderSide(color: AppColors.inputBorder),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppRadius.md),
@@ -339,11 +339,11 @@ class _TaskDialogState extends State<TaskDialog> {
                 labelText: 'Priority',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppRadius.md),
-                  borderSide: BorderSide(color: AppColors.border),
+                  borderSide: BorderSide(color: AppColors.inputBorder),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppRadius.md),
-                  borderSide: BorderSide(color: AppColors.border),
+                  borderSide: BorderSide(color: AppColors.inputBorder),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppRadius.md),
@@ -407,7 +407,7 @@ class _TaskDialogState extends State<TaskDialog> {
             Container(
               decoration: BoxDecoration(
                 color: AppColors.background,
-                border: Border.all(color: AppColors.border),
+                border: Border.all(color: AppColors.inputBorder),
                 borderRadius: BorderRadius.circular(AppRadius.md),
               ),
               child: ListTile(

@@ -401,11 +401,15 @@ class _KanbanPageState extends State<KanbanPage> {
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(AppRadius.md),
-                          borderSide: const BorderSide(color: AppColors.border),
+                          borderSide: const BorderSide(
+                            color: AppColors.inputBorder,
+                          ),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(AppRadius.md),
-                          borderSide: const BorderSide(color: AppColors.border),
+                          borderSide: const BorderSide(
+                            color: AppColors.inputBorder,
+                          ),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(AppRadius.md),
@@ -758,7 +762,7 @@ class KanbanColumn extends StatelessWidget {
                       task.description!,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: Colors.grey.shade700),
+                      style: const TextStyle(color: AppColors.textSecondary),
                     ),
                   ),
 
