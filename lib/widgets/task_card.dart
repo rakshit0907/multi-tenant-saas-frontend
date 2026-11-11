@@ -7,24 +7,36 @@ class TaskCard extends StatelessWidget {
   final Task task;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final bool canManage;
 
   const TaskCard({
     super.key,
     required this.task,
     required this.onEdit,
     required this.onDelete,
+    this.canManage = true,
   });
 
   Color getPriorityColor(String? priority) {
     switch (priority) {
       case 'HIGH':
-        return AppColors.primary;
+        return AppColors.error;
       case 'MEDIUM':
         return AppColors.accent;
       case 'LOW':
         return AppColors.secondary;
       default:
         return AppColors.border;
+    }
+  }
+
+  Color getPriorityTextColor(String? priority) {
+    switch (priority) {
+      case 'HIGH':
+      case 'LOW':
+        return Colors.white;
+      default:
+        return AppColors.textPrimary;
     }
   }
 
@@ -87,8 +99,8 @@ class TaskCard extends StatelessWidget {
             Chip(
               label: Text(
                 task.priority,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: getPriorityTextColor(task.priority),
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
                 ),
@@ -161,23 +173,25 @@ class TaskCard extends StatelessWidget {
           ],
         ),
 
-        trailing: PopupMenuButton<String>(
-          onSelected: (value) {
-            switch (value) {
-              case 'edit':
-                onEdit();
-                break;
+        trailing: !canManage
+            ? null
+            : PopupMenuButton<String>(
+                onSelected: (value) {
+                  switch (value) {
+                    case 'edit':
+                      onEdit();
+                      break;
 
-              case 'delete':
-                onDelete();
-                break;
-            }
-          },
-          itemBuilder: (_) => const [
-            PopupMenuItem(value: 'edit', child: Text("Edit")),
-            PopupMenuItem(value: 'delete', child: Text("Delete")),
-          ],
-        ),
+                    case 'delete':
+                      onDelete();
+                      break;
+                  }
+                },
+                itemBuilder: (_) => const [
+                  PopupMenuItem(value: 'edit', child: Text("Edit")),
+                  PopupMenuItem(value: 'delete', child: Text("Delete")),
+                ],
+              ),
       ),
     );
   }

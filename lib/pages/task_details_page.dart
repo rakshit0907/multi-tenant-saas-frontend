@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/task.dart';
+import '../theme/app_colors.dart';
 import '../services/api_service.dart';
 import '../widgets/task_dialog.dart';
 import 'package:file_picker/file_picker.dart';
@@ -543,11 +544,8 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
                   const SnackBar(content: Text('Task updated successfully')),
                 );
               } catch (e) {
-                if (!mounted) return;
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Failed to update task: $e')),
-                );
+                debugPrint('UPDATE TASK ERROR: $e');
+                rethrow;
               }
             },
       ),
@@ -568,7 +566,10 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
               children: [
                 Text(
                   label,
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
                 const SizedBox(height: 3),
                 Text(
@@ -617,7 +618,10 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
               const SizedBox(height: 8),
               Text(
                 currentTask.description!,
-                style: TextStyle(fontSize: 15, color: Colors.grey.shade700),
+                style: const TextStyle(
+                  fontSize: 15,
+                  color: AppColors.textSecondary,
+                ),
               ),
               const SizedBox(height: 24),
             ],
@@ -654,7 +658,7 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
             if (currentTask.labels.isNotEmpty) ...[
               const Text(
                 'Labels',
-                style: TextStyle(fontSize: 12, color: Colors.grey),
+                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
               ),
               const SizedBox(height: 8),
               Wrap(
@@ -716,7 +720,7 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
                 padding: EdgeInsets.symmetric(vertical: 12),
                 child: Text(
                   'No attachments yet',
-                  style: TextStyle(color: Colors.grey),
+                  style: TextStyle(color: AppColors.textSecondary),
                 ),
               )
             else
@@ -782,7 +786,7 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
                 padding: EdgeInsets.symmetric(vertical: 12),
                 child: Text(
                   'No comments yet',
-                  style: TextStyle(color: Colors.grey),
+                  style: TextStyle(color: AppColors.textSecondary),
                 ),
               )
             else
@@ -839,7 +843,7 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
                                 createdAt,
                                 style: TextStyle(
                                   fontSize: 11,
-                                  color: Colors.grey.shade600,
+                                  color: AppColors.textSecondary,
                                 ),
                               ),
                           ],
@@ -868,7 +872,7 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
                           margin: const EdgeInsets.only(bottom: 8),
                           constraints: const BoxConstraints(maxHeight: 180),
                           decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey.shade300),
+                            border: Border.all(color: AppColors.border),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: ListView.separated(

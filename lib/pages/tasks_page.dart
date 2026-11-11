@@ -63,6 +63,8 @@ class _TasksPageState extends State<TasksPage> {
     loadPageData();
   }
 
+  bool get _isProjectOwner => myProjectRole == 'OWNER';
+
   Future<void> loadPageData() async {
     try {
       await Future.wait([
@@ -253,12 +255,12 @@ class _TasksPageState extends State<TasksPage> {
       final cleaned = hex.replaceFirst('#', '');
 
       if (cleaned.length != 6) {
-        return Colors.grey;
+        return AppColors.textSecondary;
       }
 
       return Color(int.parse('FF$cleaned', radix: 16));
     } catch (_) {
-      return Colors.grey;
+      return AppColors.textSecondary;
     }
   }
 
@@ -462,13 +464,57 @@ class _TasksPageState extends State<TasksPage> {
     }
   }
 
-  Future<void> deleteTask(String taskId) async {
+  Future<void> deleteTask(Task task) async {
+    final confirmed =
+        await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) {
+            return AlertDialog(
+              title: const Text('Delete Task'),
+              content: Text('Delete "${task.title}"? This cannot be undone.'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext, false),
+                  child: const Text('Cancel'),
+                ),
+                FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.error,
+                    foregroundColor: AppColors.surface,
+                  ),
+                  onPressed: () => Navigator.pop(dialogContext, true),
+                  child: const Text('Delete'),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false;
+
+    if (!confirmed || !mounted) return;
+
     try {
-      await ApiService.deleteTask(taskId);
+      await ApiService.deleteTask(task.id);
+
+      if (!mounted) return;
 
       await loadTasks();
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Task deleted')));
     } catch (e) {
-      debugPrint(e.toString());
+      debugPrint('DELETE TASK ERROR: $e');
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not delete the task. Please try again.'),
+        ),
+      );
     }
   }
 
@@ -609,11 +655,15 @@ class _TasksPageState extends State<TasksPage> {
                       ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(AppRadius.md),
-                        borderSide: const BorderSide(color: AppColors.border),
+                        borderSide: const BorderSide(
+                          color: AppColors.inputBorder,
+                        ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(AppRadius.md),
-                        borderSide: const BorderSide(color: AppColors.border),
+                        borderSide: const BorderSide(
+                          color: AppColors.inputBorder,
+                        ),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(AppRadius.md),
@@ -713,11 +763,15 @@ class _TasksPageState extends State<TasksPage> {
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(AppRadius.md),
-                          borderSide: const BorderSide(color: AppColors.border),
+                          borderSide: const BorderSide(
+                            color: AppColors.inputBorder,
+                          ),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(AppRadius.md),
-                          borderSide: const BorderSide(color: AppColors.border),
+                          borderSide: const BorderSide(
+                            color: AppColors.inputBorder,
+                          ),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(AppRadius.md),
@@ -782,13 +836,13 @@ class _TasksPageState extends State<TasksPage> {
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(AppRadius.md),
                               borderSide: const BorderSide(
-                                color: AppColors.border,
+                                color: AppColors.inputBorder,
                               ),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(AppRadius.md),
                               borderSide: const BorderSide(
-                                color: AppColors.border,
+                                color: AppColors.inputBorder,
                               ),
                             ),
                             focusedBorder: OutlineInputBorder(
@@ -1027,11 +1081,12 @@ class _TasksPageState extends State<TasksPage> {
 
                             return TaskCard(
                               task: task,
-                              onDelete: () => deleteTask(task.id),
+                              onDelete: () => deleteTask(task),
+                              canManage: _isProjectOwner,
                               onEdit: () async {
                                 await loadMilestones();
 
-                                if (!mounted) return;
+                                if (!context.mounted) return;
 
                                 showDialog(
                                   context: context,
@@ -1085,50 +1140,52 @@ class _TasksPageState extends State<TasksPage> {
               ],
             ),
 
-      floatingActionButton: FloatingActionButton(
-        child: const Icon(Icons.add),
-        onPressed: () async {
-          await loadMilestones();
+      floatingActionButton: !_isProjectOwner
+          ? null
+          : FloatingActionButton(
+              child: const Icon(Icons.add),
+              onPressed: () async {
+                await loadMilestones();
 
-          if (!mounted) return;
+                if (!mounted) return;
 
-          showDialog(
-            context: context,
-            builder: (_) => TaskDialog(
-              title: "Create Task",
-              buttonText: "Create",
-              members: members,
-              labels: labels,
-              milestones: milestones,
-              onSave:
-                  (
-                    title,
-                    description,
-                    dueDate,
-                    priority,
-                    status,
-                    assigneeId,
-                    labelIds,
-                    milestoneId,
-                  ) async {
-                    await ApiService.createTask(
-                      widget.projectId,
-                      title,
-                      description,
-                      dueDate,
-                      priority,
-                      status,
-                      assigneeId,
-                      labelIds: labelIds,
-                      milestoneId: milestoneId,
-                    );
+                showDialog(
+                  context: context,
+                  builder: (_) => TaskDialog(
+                    title: "Create Task",
+                    buttonText: "Create",
+                    members: members,
+                    labels: labels,
+                    milestones: milestones,
+                    onSave:
+                        (
+                          title,
+                          description,
+                          dueDate,
+                          priority,
+                          status,
+                          assigneeId,
+                          labelIds,
+                          milestoneId,
+                        ) async {
+                          await ApiService.createTask(
+                            widget.projectId,
+                            title,
+                            description,
+                            dueDate,
+                            priority,
+                            status,
+                            assigneeId,
+                            labelIds: labelIds,
+                            milestoneId: milestoneId,
+                          );
 
-                    await loadTasks();
-                  },
+                          await loadTasks();
+                        },
+                  ),
+                );
+              },
             ),
-          );
-        },
-      ),
     );
   }
 }

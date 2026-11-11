@@ -37,7 +37,7 @@ class TaskStatsCard extends StatelessWidget {
             _StatItem(
               label: 'Pending',
               value: stats.pending,
-              color: AppColors.accent,
+              color: AppColors.warningText,
             ),
           ],
         ),
