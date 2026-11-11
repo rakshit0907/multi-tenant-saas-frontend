@@ -70,6 +70,7 @@ class _TaskDialogState extends State<TaskDialog> {
 
   bool _isSaving = false;
   String? _saveError;
+  String? _titleError;
 
   @override
   void initState() {
@@ -120,6 +121,13 @@ class _TaskDialogState extends State<TaskDialog> {
 
   Future<void> _handleSave() async {
     if (_isSaving) return;
+
+    if (titleController.text.trim().isEmpty) {
+      setState(() {
+        _titleError = 'Please enter a title.';
+      });
+      return;
+    }
 
     setState(() {
       _isSaving = true;
@@ -243,8 +251,16 @@ class _TaskDialogState extends State<TaskDialog> {
             const SizedBox(height: AppSpacing.xs),
             TextField(
               controller: titleController,
+              onChanged: (_) {
+                if (_titleError != null) {
+                  setState(() {
+                    _titleError = null;
+                  });
+                }
+              },
               decoration: InputDecoration(
                 labelText: 'Title',
+                errorText: _titleError,
                 labelStyle: const TextStyle(color: AppColors.textSecondary),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppRadius.md),
