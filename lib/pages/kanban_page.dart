@@ -30,6 +30,11 @@ class _KanbanPageState extends State<KanbanPage> {
   List<TaskLabel> labels = [];
   List<dynamic> milestones = [];
   bool loading = true;
+  bool loadFailed = false;
+  int _taskRequestId = 0;
+  String? myProjectRole;
+
+  bool get _isProjectOwner => myProjectRole == 'OWNER';
 
   final TextEditingController searchController = TextEditingController();
 
@@ -44,6 +49,7 @@ class _KanbanPageState extends State<KanbanPage> {
   void initState() {
     super.initState();
     loadTasks();
+    loadMyProjectRole();
   }
 
   @override
@@ -53,6 +59,7 @@ class _KanbanPageState extends State<KanbanPage> {
   }
 
   Future<void> loadTasks() async {
+    final requestId = ++_taskRequestId;
     try {
       final results = await Future.wait([
         ApiService.getProjectMembers(widget.projectId),
@@ -69,7 +76,7 @@ class _KanbanPageState extends State<KanbanPage> {
         ApiService.getMilestones(widget.projectId),
       ]);
 
-      if (!mounted) return;
+      if (!mounted || requestId != _taskRequestId) return;
 
       final membersData = results[0];
       final tasksData = results[1];
@@ -83,16 +90,24 @@ class _KanbanPageState extends State<KanbanPage> {
         tasks = tasksData.map<Task>((e) => Task.fromJson(e)).toList();
         labels = labelsData;
         loading = false;
+        loadFailed = false;
         milestones = milestonesData;
       });
     } catch (e) {
       debugPrint('LOAD KANBAN ERROR: $e');
 
-      if (!mounted) return;
+      if (!mounted || requestId != _taskRequestId) return;
 
       setState(() {
         loading = false;
+        loadFailed = true;
       });
+
+      if (tasks.isNotEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not refresh tasks.')),
+        );
+      }
     }
   }
 
@@ -206,6 +221,20 @@ class _KanbanPageState extends State<KanbanPage> {
     nameController.dispose();
   }
 
+  Future<void> loadMyProjectRole() async {
+    try {
+      final role = await ApiService.getMyProjectRole(widget.projectId);
+
+      if (!mounted) return;
+
+      setState(() {
+        myProjectRole = role;
+      });
+    } catch (e) {
+      debugPrint('LOAD PROJECT ROLE ERROR: $e');
+    }
+  }
+
   Future<void> moveTask(Task task, String newColumn) async {
     String status;
 
@@ -231,7 +260,18 @@ class _KanbanPageState extends State<KanbanPage> {
 
       await loadTasks();
     } catch (e) {
-      debugPrint(e.toString());
+      debugPrint('MOVE TASK ERROR: $e');
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Could not change the status. Check your connection, or ask the '
+            'project owner if this task is not assigned to you.',
+          ),
+        ),
+      );
     }
   }
 
@@ -306,53 +346,55 @@ class _KanbanPageState extends State<KanbanPage> {
             ],
           ),
           actions: [
-            IconButton(
-              tooltip: 'Manage labels',
-              icon: const Icon(Icons.label_outline_rounded),
-              color: AppColors.accessibleSecondary,
-              onPressed: showManageLabelsDialog,
-            ),
-            IconButton(
-              tooltip: 'Create task',
-              icon: const Icon(Icons.add_rounded),
-              color: AppColors.accessiblePrimary,
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (_) => TaskDialog(
-                    title: 'Create Task',
-                    buttonText: 'Create',
-                    members: members,
-                    milestones: milestones,
-                    onSave:
-                        (
-                          title,
-                          description,
-                          dueDate,
-                          priority,
-                          status,
-                          assigneeId,
-                          labelIds,
-                          milestoneId,
-                        ) async {
-                          await ApiService.createTask(
-                            widget.projectId,
+            if (_isProjectOwner)
+              IconButton(
+                tooltip: 'Manage labels',
+                icon: const Icon(Icons.label_outline_rounded),
+                color: AppColors.accessibleSecondary,
+                onPressed: showManageLabelsDialog,
+              ),
+            if (_isProjectOwner)
+              IconButton(
+                tooltip: 'Create task',
+                icon: const Icon(Icons.add_rounded),
+                color: AppColors.accessiblePrimary,
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (_) => TaskDialog(
+                      title: 'Create Task',
+                      buttonText: 'Create',
+                      members: members,
+                      milestones: milestones,
+                      onSave:
+                          (
                             title,
                             description,
                             dueDate,
                             priority,
                             status,
                             assigneeId,
-                            labelIds: labelIds,
-                            milestoneId: milestoneId,
-                          );
+                            labelIds,
+                            milestoneId,
+                          ) async {
+                            await ApiService.createTask(
+                              widget.projectId,
+                              title,
+                              description,
+                              dueDate,
+                              priority,
+                              status,
+                              assigneeId,
+                              labelIds: labelIds,
+                              milestoneId: milestoneId,
+                            );
 
-                          await loadTasks();
-                        },
-                  ),
-                );
-              },
-            ),
+                            await loadTasks();
+                          },
+                    ),
+                  );
+                },
+              ),
             const SizedBox(width: AppSpacing.xs),
           ],
         ),
@@ -360,6 +402,41 @@ class _KanbanPageState extends State<KanbanPage> {
             ? const Center(
                 child: CircularProgressIndicator(
                   color: AppColors.accessiblePrimary,
+                ),
+              )
+            : (loadFailed && tasks.isEmpty)
+            ? Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        size: 40,
+                        color: AppColors.error,
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      const Text(
+                        'Could not load tasks.',
+                        style: TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      FilledButton(
+                        onPressed: () {
+                          setState(() {
+                            loading = true;
+                            loadFailed = false;
+                          });
+                          loadTasks();
+                        },
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
                 ),
               )
             : Column(
