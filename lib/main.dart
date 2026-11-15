@@ -125,7 +125,15 @@ class _LoginPageState extends State<LoginPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
+  bool loading = false;
+
   Future<void> login() async {
+    if (loading) return;
+
+    setState(() {
+      loading = true;
+    });
+
     try {
       final url = Uri.parse('http://10.0.2.2:3000/auth/login');
 
@@ -164,7 +172,11 @@ class _LoginPageState extends State<LoginPage> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(data['message']?.toString() ?? 'Login failed'),
+            content: Text(
+              data['message'] is List
+                  ? (data['message'] as List).join(', ')
+                  : (data['message']?.toString() ?? 'Login failed'),
+            ),
           ),
         );
       }
@@ -174,6 +186,12 @@ class _LoginPageState extends State<LoginPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Unable to connect to the server')),
       );
+    } finally {
+      if (mounted) {
+        setState(() {
+          loading = false;
+        });
+      }
     }
   }
 
@@ -181,10 +199,9 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Login')),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             TextField(
               controller: emailController,
@@ -208,7 +225,9 @@ class _LoginPageState extends State<LoginPage> {
 
             const SizedBox(height: 24),
 
-            ElevatedButton(onPressed: login, child: const Text("Login")),
+            loading
+                ? const CircularProgressIndicator()
+                : ElevatedButton(onPressed: login, child: const Text("Login")),
             const SizedBox(height: 16),
             TextButton(
               onPressed: () {
