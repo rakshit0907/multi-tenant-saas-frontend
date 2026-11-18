@@ -12,6 +12,7 @@ import 'dart:async';
 import 'package:app_links/app_links.dart';
 import 'pages/workspace_invite_page.dart';
 import 'theme/app_theme.dart';
+import 'services/api_service.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() {
@@ -135,7 +136,7 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      final url = Uri.parse('http://10.0.2.2:3000/auth/login');
+      final url = Uri.parse('${ApiService.baseUrl}/auth/login');
 
       final response = await http.post(
         url,
