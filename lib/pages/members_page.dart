@@ -288,7 +288,7 @@ class _MembersPageState extends State<MembersPage> {
                       vertical: AppSpacing.xs,
                     ),
                     leading: CircleAvatar(
-                      backgroundColor: AppColors.background,
+                      backgroundColor: AppColors.sage,
                       foregroundColor: AppColors.accessiblePrimary,
                       child: Text(
                         (member['user']['name'] as String)

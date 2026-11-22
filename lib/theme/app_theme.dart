@@ -82,6 +82,10 @@ abstract final class AppTheme {
           surfaceContainer: AppColors.background,
           surfaceContainerHigh: AppColors.background,
           surfaceContainerHighest: AppColors.background,
+          primaryContainer: AppColors.sage,
+          onPrimaryContainer: AppColors.textPrimary,
+          secondaryContainer: AppColors.border,
+          onSecondaryContainer: AppColors.textPrimary,
         );
 
     return ThemeData(
