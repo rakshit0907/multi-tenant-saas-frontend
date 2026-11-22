@@ -1015,8 +1015,8 @@ class _DashboardPageState extends State<DashboardPage> {
 
       body: loading
           ? const Center(child: CircularProgressIndicator())
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          : ListView(
+              padding: const EdgeInsets.only(bottom: 88),
               children: [
                 const SizedBox(height: AppSpacing.lg),
 
@@ -1240,140 +1240,133 @@ class _DashboardPageState extends State<DashboardPage> {
                 const SizedBox(height: 16),
                 const Divider(),
 
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: projects.length,
-                    itemBuilder: (context, index) {
-                      final project = projects[index];
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: projects.length,
+                  itemBuilder: (context, index) {
+                    final project = projects[index];
 
-                      return Card(
-                        child: ListTile(
-                          title: Text(project.name),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (project.description != null &&
-                                  project.description!.trim().isNotEmpty) ...[
-                                const SizedBox(height: 4),
-                                Text(
-                                  project.description!,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-
-                              const SizedBox(height: 6),
-
+                    return Card(
+                      child: ListTile(
+                        title: Text(project.name),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (project.description != null &&
+                                project.description!.trim().isNotEmpty) ...[
+                              const SizedBox(height: 4),
                               Text(
-                                '${formatProjectStatus(project.status)} | '
-                                'Due: ${formatProjectDate(project.dueDate)}',
+                                project.description!,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ],
-                          ),
 
-                          onTap: () {
-                            showModalBottomSheet(
-                              context: context,
-                              builder: (_) => SafeArea(
-                                child: Wrap(
-                                  children: [
-                                    ListTile(
-                                      leading: const Icon(Icons.view_kanban),
-                                      title: const Text("Open Kanban"),
-                                      onTap: () {
-                                        Navigator.pop(context);
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) =>
-                                                ProjectDashboardPage(
-                                                  projectId: project.id,
-                                                  projectName: project.name,
-                                                ),
-                                          ),
-                                        );
-                                      },
-                                    ),
+                            const SizedBox(height: 6),
 
-                                    ListTile(
-                                      leading: const Icon(Icons.group),
-                                      title: const Text("View Members"),
-                                      onTap: () {
-                                        Navigator.pop(context);
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => MembersPage(
-                                              projectId: project.id,
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-
-                          trailing: project.currentUserRole == 'OWNER'
-                              ? Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      tooltip: 'Edit project',
-                                      icon: const Icon(Icons.edit_outlined),
-                                      onPressed: () async {
-                                        await showEditProjectDialog(project);
-                                      },
-                                    ),
-                                    IconButton(
-                                      tooltip: 'Delete project',
-                                      icon: const Icon(Icons.delete_outline),
-                                      onPressed: () {
-                                        showDialog(
-                                          context: context,
-                                          builder: (dialogContext) {
-                                            return AlertDialog(
-                                              title: const Text(
-                                                "Delete Project",
-                                              ),
-                                              content: Text(
-                                                "Delete '${project.name}'?",
-                                              ),
-                                              actions: [
-                                                TextButton(
-                                                  onPressed: () {
-                                                    Navigator.pop(
-                                                      dialogContext,
-                                                    );
-                                                  },
-                                                  child: const Text("Cancel"),
-                                                ),
-                                                ElevatedButton(
-                                                  onPressed: () async {
-                                                    Navigator.pop(
-                                                      dialogContext,
-                                                    );
-                                                    await deleteProject(
-                                                      project.id,
-                                                    );
-                                                  },
-                                                  child: const Text("Delete"),
-                                                ),
-                                              ],
-                                            );
-                                          },
-                                        );
-                                      },
-                                    ),
-                                  ],
-                                )
-                              : null,
+                            Text(
+                              '${formatProjectStatus(project.status)} | '
+                              'Due: ${formatProjectDate(project.dueDate)}',
+                            ),
+                          ],
                         ),
-                      );
-                    },
-                  ),
+
+                        onTap: () {
+                          showModalBottomSheet(
+                            context: context,
+                            builder: (_) => SafeArea(
+                              child: Wrap(
+                                children: [
+                                  ListTile(
+                                    leading: const Icon(Icons.view_kanban),
+                                    title: const Text("Open Kanban"),
+                                    onTap: () {
+                                      Navigator.pop(context);
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => ProjectDashboardPage(
+                                            projectId: project.id,
+                                            projectName: project.name,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+
+                                  ListTile(
+                                    leading: const Icon(Icons.group),
+                                    title: const Text("View Members"),
+                                    onTap: () {
+                                      Navigator.pop(context);
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => MembersPage(
+                                            projectId: project.id,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+
+                        trailing: project.currentUserRole == 'OWNER'
+                            ? Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    tooltip: 'Edit project',
+                                    icon: const Icon(Icons.edit_outlined),
+                                    onPressed: () async {
+                                      await showEditProjectDialog(project);
+                                    },
+                                  ),
+                                  IconButton(
+                                    tooltip: 'Delete project',
+                                    icon: const Icon(Icons.delete_outline),
+                                    onPressed: () {
+                                      showDialog(
+                                        context: context,
+                                        builder: (dialogContext) {
+                                          return AlertDialog(
+                                            title: const Text("Delete Project"),
+                                            content: Text(
+                                              "Delete '${project.name}'?",
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () {
+                                                  Navigator.pop(dialogContext);
+                                                },
+                                                child: const Text("Cancel"),
+                                              ),
+                                              ElevatedButton(
+                                                onPressed: () async {
+                                                  Navigator.pop(dialogContext);
+                                                  await deleteProject(
+                                                    project.id,
+                                                  );
+                                                },
+                                                child: const Text("Delete"),
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      );
+                                    },
+                                  ),
+                                ],
+                              )
+                            : null,
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
