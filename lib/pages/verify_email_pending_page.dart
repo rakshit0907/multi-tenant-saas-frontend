@@ -28,9 +28,13 @@ class _VerifyEmailPendingPageState extends State<VerifyEmailPendingPage> {
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.toString())));
+      debugPrint('RESEND VERIFICATION ERROR: $e');
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not send the email. Please try again.'),
+        ),
+      );
     } finally {
       if (mounted) {
         setState(() {
