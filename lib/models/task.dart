@@ -32,7 +32,9 @@ class Task {
       id: json['id'],
       title: json['title'],
       description: json['description'],
-      dueDate: json['dueDate'] != null ? DateTime.parse(json['dueDate']) : null,
+      dueDate: json['dueDate'] != null
+          ? DateTime.parse(json['dueDate']).toLocal()
+          : null,
       priority: json['priority'] ?? 'MEDIUM',
       status: json['status'] ?? 'PENDING',
       assigneeId: json['assignee']?['id'],
