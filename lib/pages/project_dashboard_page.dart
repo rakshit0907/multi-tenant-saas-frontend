@@ -4,6 +4,7 @@ import '../theme/app_colors.dart';
 import 'kanban_page.dart';
 import 'members_page.dart';
 import 'milestones_page.dart';
+import 'tasks_page.dart';
 
 class ProjectDashboardPage extends StatefulWidget {
   final String projectId;
@@ -513,6 +514,27 @@ class _ProjectDashboardPageState extends State<ProjectDashboardPage> {
                           context,
                           MaterialPageRoute(
                             builder: (_) => KanbanPage(
+                              projectId: widget.projectId,
+                              projectName: widget.projectName,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.view_list),
+                      label: const Text('Open Task List'),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => TasksPage(
                               projectId: widget.projectId,
                               projectName: widget.projectName,
                             ),
