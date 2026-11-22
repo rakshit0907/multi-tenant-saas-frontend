@@ -138,14 +138,16 @@ class _LoginPageState extends State<LoginPage> {
     try {
       final url = Uri.parse('${ApiService.baseUrl}/auth/login');
 
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          "email": emailController.text.trim(),
-          "password": passwordController.text,
-        }),
-      );
+      final response = await http
+          .post(
+            url,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              "email": emailController.text.trim(),
+              "password": passwordController.text,
+            }),
+          )
+          .timeout(const Duration(seconds: 15));
 
       final data = jsonDecode(response.body);
 

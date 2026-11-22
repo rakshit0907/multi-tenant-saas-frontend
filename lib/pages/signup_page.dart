@@ -25,16 +25,18 @@ class _SignupPageState extends State<SignupPage> {
     });
 
     try {
-      final response = await http.post(
-        Uri.parse('${ApiService.baseUrl}/auth/signup'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          "name": nameController.text.trim(),
-          "email": emailController.text.trim(),
-          "password": passwordController.text,
-          "tenantName": tenantController.text.trim(),
-        }),
-      );
+      final response = await http
+          .post(
+            Uri.parse('${ApiService.baseUrl}/auth/signup'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              "name": nameController.text.trim(),
+              "email": emailController.text.trim(),
+              "password": passwordController.text,
+              "tenantName": tenantController.text.trim(),
+            }),
+          )
+          .timeout(const Duration(seconds: 15));
 
       final data = jsonDecode(response.body);
 

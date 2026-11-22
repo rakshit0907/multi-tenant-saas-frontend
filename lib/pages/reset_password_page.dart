@@ -76,7 +76,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Reset Password')),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
