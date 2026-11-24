@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/workspace_member.dart';
 import '../services/api_service.dart';
+import '../theme/app_colors.dart';
 
 class WorkspaceMembersPage extends StatefulWidget {
   final String workspaceRole;
@@ -133,9 +134,10 @@ class _WorkspaceMembersPageState extends State<WorkspaceMembersPage> {
       case 'ADMIN':
         return scheme.secondary;
       case 'MEMBER':
-        return scheme.tertiary;
+        return AppColors.warningText;
+        ;
       default:
-        return scheme.outline;
+        return AppColors.textSecondary;
     }
   }
 
