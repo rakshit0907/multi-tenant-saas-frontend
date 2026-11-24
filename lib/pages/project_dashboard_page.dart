@@ -793,7 +793,8 @@ class _ProjectDashboardPageState extends State<ProjectDashboardPage> {
                                       activity["metadata"]?["newRole"] ??
                                       "a new role";
                                   message =
-                                      "$user changed $name's role to $newRole";
+                                      "$user changed $name's role to "
+                                      "$newRole.toString().toLowerCase()}";
                                   break;
 
                                 case "TASK_CREATED":
@@ -839,6 +840,15 @@ class _ProjectDashboardPageState extends State<ProjectDashboardPage> {
                                   break;
                                 case "TASK_DELETED":
                                   message = "$user deleted task ${task ?? ""}";
+                                  break;
+
+                                case "TASK_ASSIGNED":
+                                  final assignee =
+                                      activity["metadata"]?["newAssigneeName"];
+                                  final taskName = task ?? "a task";
+                                  message = assignee != null
+                                      ? "$user assigned \"$taskName\" to $assignee"
+                                      : "$user unassigned \"$taskName\"";
                                   break;
 
                                 default:
